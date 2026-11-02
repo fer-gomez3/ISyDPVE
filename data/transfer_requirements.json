@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "description": "Editable planning assumptions. Unknown values remain null; priority is NOT a physical data-rate measurement.",
+  "policy": {
+    "priority_max_age_hours": {
+      "1": 168,
+      "2": 72,
+      "3": 24,
+      "4": 12,
+      "5": 6
+    },
+    "priority_scale": "1=low, 5=critical; max age is a design policy, not a PDF requirement",
+    "min_contact_minutes": 15,
+    "setup_minutes": 5,
+    "protocol_overhead_fraction": 0.2,
+    "net_downlink_bps": null,
+    "transmitter_dc_w": null,
+    "transmitter_rf_w": null,
+    "transmitter_standby_w": null
+  },
+  "streams": [
+    {
+      "name": "payload_housekeeping",
+      "priority": 3,
+      "mode": "continuous",
+      "rate_bps": 100,
+      "bytes_per_event": null,
+      "event_interval_hours": null,
+      "max_age_hours": null,
+      "source": "Subsystems PDF 2.7.3; rate provisional"
+    },
+    {
+      "name": "structures_mechanisms",
+      "priority": 3,
+      "mode": "continuous",
+      "rate_bps": 32,
+      "bytes_per_event": null,
+      "event_interval_hours": null,
+      "max_age_hours": null,
+      "source": "Subsystems PDF 7.5.3"
+    },
+    {
+      "name": "aocs",
+      "priority": 4,
+      "mode": "continuous",
+      "rate_bps": null,
+      "bytes_per_event": null,
+      "event_interval_hours": null,
+      "max_age_hours": null,
+      "source": "TBD by subsystem"
+    },
+    {
+      "name": "eps",
+      "priority": 4,
+      "mode": "continuous",
+      "rate_bps": null,
+      "bytes_per_event": null,
+      "event_interval_hours": null,
+      "max_age_hours": null,
+      "source": "TBD by subsystem"
+    },
+    {
+      "name": "thermal",
+      "priority": 3,
+      "mode": "continuous",
+      "rate_bps": null,
+      "bytes_per_event": null,
+      "event_interval_hours": null,
+      "max_age_hours": null,
+      "source": "TBD by subsystem"
+    },
+    {
+      "name": "propulsion",
+      "priority": 4,
+      "mode": "event",
+      "rate_bps": null,
+      "bytes_per_event": null,
+      "event_interval_hours": null,
+      "max_age_hours": null,
+      "source": "TBD by subsystem"
+    },
+    {
+      "name": "obdh",
+      "priority": 5,
+      "mode": "continuous",
+      "rate_bps": null,
+      "bytes_per_event": null,
+      "event_interval_hours": null,
+      "max_age_hours": null,
+      "source": "TBD by subsystem"
+    }
+  ]
+}

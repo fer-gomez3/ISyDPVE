@@ -8,13 +8,13 @@ from datetime import datetime
 from pathlib import Path
 import re
 
-_TIMESTAMP = r"[A-Za-z]{3}\\s+\\d{1,2}\\s+\\d{4}\\s+\\d{2}:\\d{2}:\\d{2}\\.\\d+"
+_TIMESTAMP = r"[A-Za-z]{3}\s+\d{1,2}\s+\d{4}\s+\d{2}:\d{2}:\d{2}\.\d+"
 _PATTERN = re.compile(
-    rf"(?P<station>Goldstone|Madrid|Canberra)\\s*-->\\s*"
-    rf"(?P<satellite>SELENA_\\d+)\\s+"
-    rf"(?P<start>{_TIMESTAMP})\\s+"
-    rf"(?P<end>{_TIMESTAMP})\\s+"
-    rf"(?P<duration>\\d+(?:\\.\\d+)?)",
+    rf"(?P<station>Goldstone|Madrid|Canberra)\s*-->\s*"
+    rf"(?P<satellite>SELENA_\d+)\s+"
+    rf"(?P<start>{_TIMESTAMP})\s+"
+    rf"(?P<end>{_TIMESTAMP})\s+"
+    rf"(?P<duration>\d+(?:\.\d+)?)",
     flags=re.IGNORECASE,
 )
 

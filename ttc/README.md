@@ -1,19 +1,12 @@
-# SELENA — TT&C and DSN contact analysis
+# SELENA — TT&C / DSN visibility
 
-Initial scope: parse propagator contact windows; preserve station, spacecraft, start/end UTC, and the propagator's original duration; check consistency; export normalized CSV and station/satellite summaries.
+Two separate tools:
 
-## Quick start
+1. `python -m ttc.contacts data/raw/Contactos_con_DSN.txt`: import **previously calculated** contact windows.
+2. `python -m ttc.visibility data/raw/satellite_ephemeris.csv`: compute **sampled geometric visibility** from lunar spacecraft positions and time-dependent Earth station positions.
 
-```bash
-python -m ttc.contacts data/raw/Contactos_con_DSN.txt --output outputs/contact_windows.csv
-python -m pytest
-```
+See [`ephemeris_format.md`](ephemeris_format.md) for the strict input coordinate-frame contract. The visibility module does **not yet** extract precise start/end contact windows; this is the next development step.
 
-Place the **original** `Contactos_con_DSN.txt` in `data/raw/` before running the importer. It has not yet been uploaded to this repository. Input times are interpreted as UTC. A small synthetic fixture is included for testing only.
+Install dependencies with `pip install -r requirements.txt` and run `python -m pytest`.
 
-## Next increments
-
-1. Import and validate all 112 real windows (once original file is added).
-2. Model scheduling conflicts, DSN allocation and minimum usable contact duration.
-3. Add telemetry volume, link budget, OBDH storage, EPS, thermal and ADCS interfaces.
-4. Generate a multi-sheet Excel engineering report from the validated model.
+The original 112-contact propagator export and actual spacecraft ephemerides have not yet been uploaded. Station coordinates are approximate and DSN antenna allocation is not modeled.

@@ -36,7 +36,16 @@
       ],
       "notes": "Itemised rate is 0 because no documented channel has count, bits and cadence together. The 100 bps aggregate is kept as a provisional TT&C sizing value; the unitemised remainder is shown separately. Nothing was invented to reach 100 bps.",
       "itemisation_complete": false,
-      "owner_todo": "PAYLOAD OWNER: provide for clock lock status, clock cell temperatures and SSPA RF power the number of channels, bits per sample and sampling interval, and say whether 100 bps includes packet headers or other channels."
+      "owner_todo": "PAYLOAD OWNER: provide for clock lock status, clock cell temperatures and SSPA RF power the number of channels, bits per sample and sampling interval, and say whether 100 bps includes packet headers or other channels.",
+      "telemetry_formula": "R_subsystem_bps = sum(count_i * bits_per_sample_i / interval_seconds_i) for all channels i; only evaluate when all required channel inputs and complete inventory are available",
+      "fallback_policy": "Use pdf_rate_bps for TT&C sizing while inventory is incomplete; do not substitute missing channel values or force the sum to match PDF.",
+      "required_variables": [
+        "components[].count",
+        "components[].bits_per_sample",
+        "components[].interval_seconds",
+        "itemisation_complete"
+      ],
+      "formula_note": "This is a documentation field. Null means unknown. itemisation_complete must be set true only when owner confirms the inventory covers all nominal housekeeping channels. Existing calculator handles fallback and provenance."
     },
     {
       "name": "structures_mechanisms",
@@ -95,7 +104,16 @@
       ],
       "notes": "Documented numbers are kept; every missing number stays null. Itemised rate is 0 because no channel is complete. 32 bps stays a provisional sizing value with the full unitemised remainder.",
       "itemisation_complete": false,
-      "owner_todo": "STRUCTURES/MECHANISMS OWNER: provide the sampling interval of the deployment switches, SADM encoders and HGA resolvers, the RTD bit depth, and whether 32 bps includes headers."
+      "owner_todo": "STRUCTURES/MECHANISMS OWNER: provide the sampling interval of the deployment switches, SADM encoders and HGA resolvers, the RTD bit depth, and whether 32 bps includes headers.",
+      "telemetry_formula": "R_subsystem_bps = sum(count_i * bits_per_sample_i / interval_seconds_i) for all channels i; only evaluate when all required channel inputs and complete inventory are available",
+      "fallback_policy": "Use pdf_rate_bps for TT&C sizing while inventory is incomplete; do not substitute missing channel values or force the sum to match PDF.",
+      "required_variables": [
+        "components[].count",
+        "components[].bits_per_sample",
+        "components[].interval_seconds",
+        "itemisation_complete"
+      ],
+      "formula_note": "This is a documentation field. Null means unknown. itemisation_complete must be set true only when owner confirms the inventory covers all nominal housekeeping channels. Existing calculator handles fallback and provenance."
     },
     {
       "name": "aocs_nominal_hk",
@@ -110,7 +128,16 @@
           "provenance": "ASSUMPTION"
         }
       ],
-      "owner_todo": "Subsystem owner: replace the assumed channel inventory with the real one (counts, bits, cadences)."
+      "owner_todo": "Subsystem owner: replace the assumed channel inventory with the real one (counts, bits, cadences).",
+      "telemetry_formula": "R_subsystem_bps = sum(count_i * bits_per_sample_i / interval_seconds_i) for all channels i; only evaluate when all required channel inputs and complete inventory are available",
+      "fallback_policy": "Use explicitly labelled preliminary channel estimates until owner-provided inventory is available; do not claim PDF validation.",
+      "required_variables": [
+        "components[].count",
+        "components[].bits_per_sample",
+        "components[].interval_seconds",
+        "itemisation_complete"
+      ],
+      "formula_note": "This is a documentation field. Null means unknown. itemisation_complete must be set true only when owner confirms the inventory covers all nominal housekeeping channels. Existing calculator handles fallback and provenance."
     },
     {
       "name": "propulsion_hk",
@@ -125,7 +152,16 @@
           "provenance": "ASSUMPTION"
         }
       ],
-      "owner_todo": "Subsystem owner: replace the assumed channel inventory with the real one (counts, bits, cadences)."
+      "owner_todo": "Subsystem owner: replace the assumed channel inventory with the real one (counts, bits, cadences).",
+      "telemetry_formula": "R_subsystem_bps = sum(count_i * bits_per_sample_i / interval_seconds_i) for all channels i; only evaluate when all required channel inputs and complete inventory are available",
+      "fallback_policy": "Use explicitly labelled preliminary channel estimates until owner-provided inventory is available; do not claim PDF validation.",
+      "required_variables": [
+        "components[].count",
+        "components[].bits_per_sample",
+        "components[].interval_seconds",
+        "itemisation_complete"
+      ],
+      "formula_note": "This is a documentation field. Null means unknown. itemisation_complete must be set true only when owner confirms the inventory covers all nominal housekeeping channels. Existing calculator handles fallback and provenance."
     },
     {
       "name": "eps_hk",
@@ -140,7 +176,16 @@
           "provenance": "ASSUMPTION"
         }
       ],
-      "owner_todo": "Subsystem owner: replace the assumed channel inventory with the real one (counts, bits, cadences)."
+      "owner_todo": "Subsystem owner: replace the assumed channel inventory with the real one (counts, bits, cadences).",
+      "telemetry_formula": "R_subsystem_bps = sum(count_i * bits_per_sample_i / interval_seconds_i) for all channels i; only evaluate when all required channel inputs and complete inventory are available",
+      "fallback_policy": "Use explicitly labelled preliminary channel estimates until owner-provided inventory is available; do not claim PDF validation.",
+      "required_variables": [
+        "components[].count",
+        "components[].bits_per_sample",
+        "components[].interval_seconds",
+        "itemisation_complete"
+      ],
+      "formula_note": "This is a documentation field. Null means unknown. itemisation_complete must be set true only when owner confirms the inventory covers all nominal housekeeping channels. Existing calculator handles fallback and provenance."
     },
     {
       "name": "thermal_hk",
@@ -155,7 +200,16 @@
           "provenance": "ASSUMPTION"
         }
       ],
-      "owner_todo": "Subsystem owner: replace the assumed channel inventory with the real one (counts, bits, cadences)."
+      "owner_todo": "Subsystem owner: replace the assumed channel inventory with the real one (counts, bits, cadences).",
+      "telemetry_formula": "R_subsystem_bps = sum(count_i * bits_per_sample_i / interval_seconds_i) for all channels i; only evaluate when all required channel inputs and complete inventory are available",
+      "fallback_policy": "Use explicitly labelled preliminary channel estimates until owner-provided inventory is available; do not claim PDF validation.",
+      "required_variables": [
+        "components[].count",
+        "components[].bits_per_sample",
+        "components[].interval_seconds",
+        "itemisation_complete"
+      ],
+      "formula_note": "This is a documentation field. Null means unknown. itemisation_complete must be set true only when owner confirms the inventory covers all nominal housekeeping channels. Existing calculator handles fallback and provenance."
     },
     {
       "name": "obdh_hk_logs",
@@ -177,7 +231,16 @@
           "provenance": "ASSUMPTION"
         }
       ],
-      "owner_todo": "Subsystem owner: replace the assumed channel inventory with the real one (counts, bits, cadences)."
+      "owner_todo": "Subsystem owner: replace the assumed channel inventory with the real one (counts, bits, cadences).",
+      "telemetry_formula": "R_subsystem_bps = sum(count_i * bits_per_sample_i / interval_seconds_i) for all channels i; only evaluate when all required channel inputs and complete inventory are available",
+      "fallback_policy": "Use explicitly labelled preliminary channel estimates until owner-provided inventory is available; do not claim PDF validation.",
+      "required_variables": [
+        "components[].count",
+        "components[].bits_per_sample",
+        "components[].interval_seconds",
+        "itemisation_complete"
+      ],
+      "formula_note": "This is a documentation field. Null means unknown. itemisation_complete must be set true only when owner confirms the inventory covers all nominal housekeeping channels. Existing calculator handles fallback and provenance."
     }
   ]
 }

@@ -9,6 +9,8 @@ from ttc.engineering_calculations import calculate
 from ttc.transfer_planning import compute, load_requirements
 from ttc.power_budget import evaluate
 from ttc.link_budget import from_file as evaluate_link
+from ttc.downlink_simulation import compute as simulate_downlink
+from ttc.dsn_allocation import compute_allocation
 
 def main():
     parser=argparse.ArgumentParser(description="SELENA TT&C / OBDH engineering overview")
@@ -27,7 +29,11 @@ def main():
     (out/"power_budget.json").write_text(json.dumps(power,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
     rf_link=evaluate_link(args.link_input)
     (out/"link_budget.json").write_text(json.dumps(rf_link,indent=2)+"\n",encoding="utf-8")
-    summary={"link_budget":"outputs/link_budget.json","link_status":rf_link["status"],"engineering":"outputs/subsystem_interfaces.json",
+    allocation=compute_allocation(args.contacts,output_dir=args.output_dir) if Path(args.contacts).exists() else None
+    simulation=simulate_downlink(contacts_path=args.contacts,output_dir=args.output_dir) if allocation else None
+    summary={"dsn_allocation":"outputs/dsn_allocation_summary.json" if allocation else "SKIPPED",
+             "downlink_simulation":"outputs/downlink_simulation.json" if simulation else "SKIPPED",
+             "link_budget":"outputs/link_budget.json","link_status":rf_link["status"],"engineering":"outputs/subsystem_interfaces.json",
              "power":"outputs/power_budget.json",
              "power_status":power["status"],"power_missing_inputs":power["missing_inputs"]}
     if Path(args.contacts).exists():

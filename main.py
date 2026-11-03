@@ -17,6 +17,7 @@ from ttc.dsn_access_sensitivity import compute as dsn_sensitivity
 from ttc.downlink_simulation import compute as simulate_downlink
 from ttc.dsn_allocation import compute_allocation
 from ttc.hga_sizing import from_files as evaluate_hga
+from ttc.telemetry_generation import compute as compute_telemetry
 
 def main():
     parser=argparse.ArgumentParser(description="SELENA TT&C / OBDH engineering overview")
@@ -36,6 +37,16 @@ def main():
     requirements=load_requirements(args.requirements)
     link=json.loads(Path(args.link_input).read_text(encoding="utf-8"))
     # Keep the original engineering reference and the editable planning model distinct.
+    telemetry=compute_telemetry(output_dir=args.output_dir)
+    generated_cfg=json.loads(Path("data/telemetry_detailed_scenario.json").read_text(encoding="utf-8"))
+    calculated={r["subsystem"]:r for r in telemetry["subsystems"]}
+    for stream in generated_cfg["streams"]:
+        if stream["name"] in calculated:
+            row=calculated[stream["name"]]
+            stream["rate_bps"]=row["rate_bps"]
+            stream["status"]="PDF" if row["source_type"]=="PDF" else "PRE"
+    generated_telemetry_path=out/"telemetry_detailed_generated.json"
+    generated_telemetry_path.write_text(json.dumps(generated_cfg,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
     engineering=calculate()
     (out/"subsystem_interfaces.json").write_text(json.dumps(engineering,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
     power=evaluate(link)
@@ -47,10 +58,10 @@ def main():
     trade=evaluate_xband_trade()
     (out/"xband_trade_study.json").write_text(json.dumps(trade,indent=2)+"\n",encoding="utf-8")
     allocation=compute_allocation(contacts_path,output_dir=args.output_dir) if Path(contacts_path).exists() else None
-    access_sensitivity=dsn_sensitivity(contacts_path,output_dir=args.output_dir) if allocation else None
+    access_sensitivity=dsn_sensitivity(contacts_path,telemetry_path=str(generated_telemetry_path),output_dir=args.output_dir) if allocation else None
     energy_ranking=rank_contacts(windows_path=str(out/'dsn_allocated_windows.csv'),output_path=str(out/'contact_energy_ranking.json')) if allocation else None
-    simulation=simulate_downlink(contacts_path=contacts_path,output_dir=args.output_dir) if allocation else None
-    summary={"hga_sizing":str(out/"hga_sizing.json"),"hga_status":hga["status"],"dsn_access_sensitivity":str(out/"dsn_access_sensitivity.json") if access_sensitivity else "SKIPPED","dsn_allocation":str(out/"dsn_allocation_summary.json") if allocation else "SKIPPED",
+    simulation=simulate_downlink(telemetry_path=str(generated_telemetry_path),contacts_path=contacts_path,output_dir=args.output_dir) if allocation else None
+    summary={"telemetry_generation":str(out/"telemetry_generation.json"),"telemetry_total_bps":telemetry["total_rate_bps_per_spacecraft"],"hga_sizing":str(out/"hga_sizing.json"),"hga_status":hga["status"],"dsn_access_sensitivity":str(out/"dsn_access_sensitivity.json") if access_sensitivity else "SKIPPED","dsn_allocation":str(out/"dsn_allocation_summary.json") if allocation else "SKIPPED",
              "downlink_simulation":str(out/"downlink_simulation.json") if simulation else "SKIPPED",
              "contact_energy_ranking":str(out/"contact_energy_ranking.json") if energy_ranking else "SKIPPED","contact_energy_status":energy_ranking["status"] if energy_ranking else "SKIPPED","xband_trade_study":str(out/"xband_trade_study.json"),"xband_trade_status":trade["status"],"link_budget":"outputs/link_budget.json","link_status":rf_link["status"],"engineering":"outputs/subsystem_interfaces.json",
              "power":"outputs/power_budget.json",

@@ -1,0 +1,20 @@
+{
+  "enabled": true,
+  "description": "Conceptual SELENA 2030 scenario: use supplied contact windows as 2030. Constant range/elevation placeholders do NOT represent actual orbit propagation.",
+  "geometry_assumptions": {
+    "distance_km": 400000,
+    "elevation_deg": 45
+  },
+  "link_assumptions": {
+    "distance_km": 400000,
+    "frequency_hz": 8400000000,
+    "tx_gain_dbi": 33,
+    "rx_gt_db_per_k": 40,
+    "data_rate_bps": 256000,
+    "required_ebn0_db": 10,
+    "losses_db": 3,
+    "margin_db": 3,
+    "pa_efficiency": 0.4,
+    "electronics_w": 5
+  }
+}

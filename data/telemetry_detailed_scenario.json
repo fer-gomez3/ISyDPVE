@@ -1,0 +1,77 @@
+{
+  "description": "Detailed telemetry scenario, per spacecraft. PDF totals override preliminary component sums. Not validated.",
+  "policy": {
+    "priority_max_age_hours": {
+      "1": 168,
+      "2": 72,
+      "3": 24,
+      "4": 12,
+      "5": 6
+    },
+    "min_contact_minutes": 15,
+    "setup_minutes": 5,
+    "protocol_overhead_fraction": 0.2,
+    "net_downlink_bps": 256000,
+    "transmitter_dc_w": null,
+    "transmitter_rf_w": null,
+    "transmitter_standby_w": null
+  },
+  "streams": [
+    {
+      "name": "payload_housekeeping",
+      "mode": "continuous",
+      "rate_bps": 100,
+      "priority": 3,
+      "max_age_hours": 24,
+      "status": "PDF"
+    },
+    {
+      "name": "structures_mechanisms",
+      "mode": "continuous",
+      "rate_bps": 32,
+      "priority": 3,
+      "max_age_hours": 24,
+      "status": "PDF"
+    },
+    {
+      "name": "aocs_nominal_hk",
+      "mode": "continuous",
+      "rate_bps": 1587.2,
+      "priority": 4,
+      "max_age_hours": 12,
+      "status": "PRE"
+    },
+    {
+      "name": "propulsion_hk",
+      "mode": "continuous",
+      "rate_bps": 38.4,
+      "priority": 4,
+      "max_age_hours": 12,
+      "status": "PRE"
+    },
+    {
+      "name": "eps_hk",
+      "mode": "continuous",
+      "rate_bps": 140.8,
+      "priority": 4,
+      "max_age_hours": 12,
+      "status": "PRE"
+    },
+    {
+      "name": "thermal_hk",
+      "mode": "continuous",
+      "rate_bps": 96,
+      "priority": 3,
+      "max_age_hours": 24,
+      "status": "PRE"
+    },
+    {
+      "name": "obdh_hk_logs",
+      "mode": "continuous",
+      "rate_bps": 307.342222,
+      "priority": 5,
+      "max_age_hours": 6,
+      "status": "PRE"
+    }
+  ]
+}

@@ -34,7 +34,6 @@ def main():
         shifted=out/"contacts_2030_scenario.csv"
         shift_contacts(contacts_path,shifted,args.epoch)
         contacts_path=str(shifted)
-    requirements=load_requirements(args.requirements)
     link=json.loads(Path(args.link_input).read_text(encoding="utf-8"))
     # Keep the original engineering reference and the editable planning model distinct.
     telemetry=compute_telemetry(output_dir=args.output_dir)
@@ -47,6 +46,13 @@ def main():
             stream["status"]="PDF" if row["source_type"]=="PDF" else "PRE"
     generated_telemetry_path=out/"telemetry_detailed_generated.json"
     generated_telemetry_path.write_text(json.dumps(generated_cfg,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
+    generated_requirements=json.loads(Path(args.requirements).read_text(encoding="utf-8"))
+    for stream in generated_requirements["streams"]:
+        if stream["name"] in calculated:
+            stream["rate_bps"]=calculated[stream["name"]]["rate_bps"]
+    generated_requirements_path=out/"transfer_requirements_generated.json"
+    generated_requirements_path.write_text(json.dumps(generated_requirements,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
+    requirements=load_requirements(str(generated_requirements_path))
     engineering=calculate()
     (out/"subsystem_interfaces.json").write_text(json.dumps(engineering,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
     power=evaluate(link)

@@ -11,7 +11,7 @@ from ttc.power_budget import evaluate
 from ttc.link_budget import from_file as evaluate_link
 from ttc.xband_trade_study import from_file as evaluate_xband_trade
 from ttc.contact_energy_optimizer import compute as rank_contacts
-from ttc.export_excel import export as export_excel
+from ttc.export_excel_openpyxl import export as export_excel
 from ttc.shift_contact_epoch import shift_contacts
 from ttc.dsn_access_sensitivity import compute as dsn_sensitivity
 from ttc.downlink_simulation import compute as simulate_downlink

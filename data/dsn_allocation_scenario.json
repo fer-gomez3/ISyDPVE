@@ -1,0 +1,12 @@
+{
+  "description": "HYPOTHESIS ONLY. DSN allocation fractions are editable, not confirmed bookings.",
+  "default_fraction": 0.4,
+  "station_fraction": {
+    "Goldstone": 0.4,
+    "Madrid": 0.4,
+    "Canberra": 0.4
+  },
+  "satellite_fraction": {},
+  "setup_minutes": 5,
+  "min_contact_minutes": 15
+}

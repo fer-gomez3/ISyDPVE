@@ -1,21 +1,73 @@
 {
   "schema_version": 1,
   "scope": "Per spacecraft; housekeeping telemetry destined for Earth, excludes lunar PNT broadcast",
-  "notes": "PDF aggregate rates are preserved. Sensor breakdowns for other subsystems are hypothetical, not hardware inventories. Rates describe data logged for downlink, not internal bus traffic.",
+  "notes": "All 7 rates are now calculated from channel counts, bits and cadence. Payload 100bps and Structures 32bps are reverse-engineered illustrative calibrations, NOT independently validated measurements. PDF values remain benchmarks. Replace all placeholders with hardware owners' inventories.",
   "subsystems": [
     {
       "name": "payload_housekeeping",
-      "source_type": "PDF_PRELIMINARY",
-      "source": "SUBSYSTEMS PDF sec 2.7.3",
+      "source_type": "REVERSE_ENGINEERED_PLACEHOLDER",
+      "source": "PDF §2.7.3 aggregate 100 bps; illustrative clock lock, cell temperatures, SSPA RF power. Quantization and cadence NOT specified; calibration pending",
       "pdf_rate_bps": 100,
-      "components": []
+      "components": [
+        {
+          "name": "clock_lock_status",
+          "count": 1,
+          "bits_per_sample": 8,
+          "interval_seconds": 1
+        },
+        {
+          "name": "clock_cell_temperatures",
+          "count": 4,
+          "bits_per_sample": 16,
+          "interval_seconds": 1
+        },
+        {
+          "name": "sspa_rf_power",
+          "count": 1,
+          "bits_per_sample": 16,
+          "interval_seconds": 1
+        },
+        {
+          "name": "payload_health_status",
+          "count": 3,
+          "bits_per_sample": 4,
+          "interval_seconds": 1
+        }
+      ],
+      "notes": "Reverse-engineered to match 100 bps; payload_health_status is an unverified filler, NOT a PDF-listed channel. Replace with real clock/SSPA channel inventory and sampling."
     },
     {
       "name": "structures_mechanisms",
-      "source_type": "PDF",
-      "source": "SUBSYSTEMS PDF sec 7.5.3",
+      "source_type": "REVERSE_ENGINEERED_PLACEHOLDER",
+      "source": "PDF §7.5.3 aggregate 32 bps; 8 microswitch bits, two 16-bit SADM encoders, two 16-bit HGA resolvers, six RTD channels at 0.2Hz. Encoder and resolver cadence/RTD bit depth assumed.",
       "pdf_rate_bps": 32,
-      "components": []
+      "components": [
+        {
+          "name": "deployment_microswitch_bits",
+          "count": 8,
+          "bits_per_sample": 1,
+          "interval_seconds": 2
+        },
+        {
+          "name": "sadm_encoder",
+          "count": 2,
+          "bits_per_sample": 16,
+          "interval_seconds": 4
+        },
+        {
+          "name": "hga_resolver",
+          "count": 2,
+          "bits_per_sample": 16,
+          "interval_seconds": 4
+        },
+        {
+          "name": "structural_rtd",
+          "count": 6,
+          "bits_per_sample": 10,
+          "interval_seconds": 5
+        }
+      ],
+      "notes": "4+8+8+12=32 bps. PDF specifies RTD 0.2Hz and encoder/resolver 16 bits; other cadences and RTD 10-bit are placeholders. Confirm whether 32 bps includes packet headers."
     },
     {
       "name": "aocs_nominal_hk",

@@ -3,7 +3,7 @@
   "rate_bps": 256000.0,
   "effective_data_bps": 204800.0,
   "step_seconds": 60.0,
-  "note": "Historical 2020 geometry shifted to 2030; not DSN booked, not orbit propagation. FIFO delivery by stream priority; data generated during a contact is transmitted when capacity is available. Deadlines are checked against the exact age of the oldest undelivered bit. No event bursts or slew model.",
+  "note": "Historical 2020 geometry shifted to 2030; not DSN booked, not orbit propagation. FIFO delivery by stream priority; data generated during a contact is transmitted when capacity is available. Time-discretized approximation (see step_seconds); deadline ages are checked at step boundaries. Deadlines are checked against the exact age of the oldest undelivered bit. No event bursts or slew model.",
   "contacts": [
     {
       "satellite": "SELENA_21",

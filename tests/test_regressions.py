@@ -170,3 +170,21 @@ def test_all_transfer_streams_resolve_to_a_generated_rate(run_default):
     planning = json.loads((out / "transfer_planning.json").read_text())
     assert planning["missing"] == [] and planning["telemetry_complete"]
     assert planning["contacts"] and all(c["scenario_capacity_mbit"] is not None for c in planning["contacts"])
+
+
+def test_timestep_does_not_change_deadline_results():
+    contacts = [contact("S1", "Madrid", 0, 1), contact("S1", "Madrid", 9, 1), contact("S1", "Madrid", 20, 1)]
+    policy = dict(default_fraction=1, setup_minutes=15, min_contact_minutes=20)
+    cfg = cfg_one_stream(rate=2301.74, deadline=6)
+    coarse, fine = run(cfg, contacts, policy, step_seconds=60), run(cfg, contacts, policy, step_seconds=1)
+    a, b = coarse["satellites"]["S1"], fine["satellites"]["S1"]
+    assert a["deadline_risk_streams"] == b["deadline_risk_streams"]
+    assert a["downloaded_mbit"] == pytest.approx(b["downloaded_mbit"], abs=1e-6)
+    assert abs(a["by_stream"]["hk"]["max_data_age_hours"] - b["by_stream"]["hk"]["max_data_age_hours"]) <= 60 / 3600 + 1e-9
+
+
+def test_overview_paths_point_to_the_actual_output_directory(run_default):
+    out, summary = run_default
+    for key in ("telemetry_generation", "link_budget", "power", "engineering", "planning", "excel_workbook",
+                "hga_sizing", "dsn_allocation", "downlink_simulation", "per_satellite"):
+        assert str(summary[key]).startswith(str(out)) and Path(summary[key]).exists(), key

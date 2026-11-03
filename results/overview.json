@@ -12,10 +12,10 @@
   "contact_energy_status": "RANKED_PRELIMINARY",
   "xband_trade_study": "results/xband_trade_study.json",
   "xband_trade_status": "ASSUMPTIONS_NOT_VERIFIED",
-  "link_budget": "outputs/link_budget.json",
+  "link_budget": "results/link_budget.json",
   "link_status": "MISSING_INPUTS",
-  "engineering": "outputs/subsystem_interfaces.json",
-  "power": "outputs/power_budget.json",
+  "engineering": "results/subsystem_interfaces.json",
+  "power": "results/power_budget.json",
   "power_status": "INCOMPLETE",
   "power_missing_inputs": [
     "distance_km",
@@ -24,7 +24,7 @@
     "losses_db",
     "margin_db"
   ],
-  "planning": "outputs/transfer_planning.json",
+  "planning": "results/transfer_planning.json",
   "missing_telemetry": [],
   "geometry_status": "SCENARIO_NOT_VALIDATED",
   "excel_workbook": "results/SELENA_TTC_Model.xlsx"

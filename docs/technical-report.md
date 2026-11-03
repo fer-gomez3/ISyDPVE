@@ -46,7 +46,7 @@ Contact windows enter as `data/contacts_master.csv` (`contact_id, station, satel
 
 **DSN allocation (`ttc/dsn_allocation.py`).** Candidate segments come from the geometric windows with one antenna per station and one link per satellite. Each UTC day, the assumed network hours are shared by all satellites with max-min fairness: the satellite with the least assigned time is served next (new contact = minimum contact, then one-minute increments, preferring an already started contact). A satellite with no usable segment gets nothing, no contact is created, setup counts against the cap, and no service is guaranteed.
 
-**Backlog simulation (`ttc/downlink_simulation.py`).** Each stream generates at a constant mean rate and is delivered FIFO. Outside a contact, and during setup, data only accumulates. During the useful part of a contact the simulation advances in 60 s steps: data generated in the step joins the backlog and the step capacity (`net rate x step`) is spent in priority order, so data generated during a contact is transmitted when capacity allows. The age of the oldest undelivered bit is exactly `backlog / generation rate`; a stream is flagged when it ever exceeds its maximum data age.
+**Backlog simulation (`ttc/downlink_simulation.py`).** This is a **time-discretized approximation** (60 s steps). Each stream generates at a constant mean rate and is delivered FIFO. Outside a contact, and during setup, data only accumulates. During the useful part of a contact the simulation advances in 60 s steps: data generated in the step joins the backlog and the step capacity (`net rate x step`) is spent in priority order, so data generated during a contact is transmitted when capacity allows. The age of the oldest undelivered bit is exactly `backlog / generation rate`; a stream is flagged when it ever exceeds its maximum data age. Ages are evaluated at step boundaries, so a maximum age can be underestimated by up to one step. Sensitivity to the step was checked on the full scenario with steps of 60, 30, 10 and 1 s: downloaded volumes are identical, the sets of streams at deadline risk are identical, and the maximum data age differs from the 1 s run by at most 0.016 h (about 1 min) at 60 s.
 
 ## 4. Results
 
@@ -69,7 +69,7 @@ ADCS is 69 % of the volume and rests entirely on an assumed channel inventory.
 
 ### 4.2 HGA and downlink (380 mm, 256 kbps)
 
-- Idealized gain **28.27 dBi** (eta 0.6), half-power beamwidth 6.6 deg, link duty cycle needed 1.1 % of the 204.8 kbps net rate.
+- Idealized gain **28.27 dBi** (eta 0.6, assumed), half-power beamwidth 6.6 deg, link duty cycle needed 1.1 % of the 204.8 kbps net rate.
 - Minimum RF power for 256 kbps with the assumed Eb/N0 10 dB, margin 3 dB and other losses 3 dB (total, RF-only; DC power adds PA efficiency and electronics, both assumed 0.4 and 5 W in the trade study). **DSN G/T is an assumption**:
 
 | Distance (km) | G/T 25 dB/K | 30 | 40 | 50 |
@@ -78,7 +78,7 @@ ADCS is 69 % of the volume and rests entirely on an assumed channel inventory.
 | 400 000 | 13.15 W | 4.16 W | 0.42 W | 0.04 W |
 | 420 000 | 14.49 W | 4.58 W | 0.46 W | 0.05 W |
 
-The link is physically feasible; the RF power depends mostly on the DSN G/T and the required Eb/N0, which are not verified.
+These figures are conditional, not a feasibility conclusion: the DSN G/T, required Eb/N0, other losses, margin and distance are unverified assumptions, so the link is **not** considered validated until those inputs are confirmed. The RF power depends mostly on the DSN G/T and the required Eb/N0.
 - The trade scenario also contains 20 to 35 dBi gain cases. A 33 dBi antenna would need about 0.655 m at eta 0.6, so it is inconsistent with the 0.38 m baseline and is shown only as a trade case.
 
 ### 4.3 DSN time and data volume (the main finding)
@@ -97,7 +97,7 @@ Under the sensitivity of `dsn_access_sensitivity.json` (useful hours in the epoc
 
 ### 4.4 Scenario allocation and backlog (3 h/day shared fairly)
 
-140 candidate segments, 31 eligible contacts, 18.0 h assigned (3 h on each of 6 days), 10.25 h of useful transmit time. All eight satellites receive time; the differences come from contact availability in the input windows, not from priority.
+140 candidate segments, 31 eligible contacts, 18.0 h assigned, 10.25 h of useful transmit time. The 18.0 h is 3 h on each of **six UTC calendar days** (14 to 19 July 2030): the daily cap applies per calendar day, and the first and last days are partial, so the simulated period is only about 4.4 days and the assigned hours are not proportional to its duration. All eight satellites receive time; the differences come from contact availability in the input windows, not from priority.
 
 | Satellite | Candidate h | Assigned h | Useful TX h | Contacts | Generated Mbit | Downloaded Mbit | Remaining Mbit | Worst stream (max age / deadline, h) |
 |---|---|---|---|---|---|---|---|---|

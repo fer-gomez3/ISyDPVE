@@ -95,7 +95,7 @@ def compute_allocation(contacts_path="data/contacts_master.csv",
         writer.writeheader();writer.writerows(rows)
     result={"status":"HYPOTHETICAL_NOT_BOOKED",
         "geometry_note":"Contact geometry is a hypothetical input; 2030 timestamps may be calendar-shifted, NOT physically repropagated.",
-        "allocation_note":"Fair (max-min) daily sharing of the assumed network hours among all satellites with available contacts. Fractions apply to conflict-resolved candidate intervals, not full overlapping visibility windows. Assigned portion is modeled at interval start; acquisition/setup subtracted. No real DSN reservation or slew constraints; no service is guaranteed.",
+        "allocation_note":"Fair (max-min) daily sharing of the assumed network hours among all satellites with available contacts. Fractions apply to conflict-resolved candidate intervals, not full overlapping visibility windows. Assigned portion is modeled at interval start; acquisition/setup subtracted. The daily cap applies per UTC calendar day: the first and last days are partial, so total assigned hours are not proportional to the simulated duration. No real DSN reservation or slew constraints; no service is guaranteed.",
         "policy":policy,"daily_network_hours_limit":policy.get("daily_network_hours"),"candidate_segments":len(rows),
         "eligible_segments":sum(r["eligible"] for r in rows),
         "total_candidate_hours":sum(r["geometric_candidate_seconds"] for r in rows)/3600,

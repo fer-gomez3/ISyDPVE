@@ -1,7 +1,7 @@
 {
   "status": "HYPOTHETICAL_NOT_BOOKED",
   "geometry_note": "Contact geometry is a hypothetical input; 2030 timestamps may be calendar-shifted, NOT physically repropagated.",
-  "allocation_note": "Fair (max-min) daily sharing of the assumed network hours among all satellites with available contacts. Fractions apply to conflict-resolved candidate intervals, not full overlapping visibility windows. Assigned portion is modeled at interval start; acquisition/setup subtracted. No real DSN reservation or slew constraints; no service is guaranteed.",
+  "allocation_note": "Fair (max-min) daily sharing of the assumed network hours among all satellites with available contacts. Fractions apply to conflict-resolved candidate intervals, not full overlapping visibility windows. Assigned portion is modeled at interval start; acquisition/setup subtracted. The daily cap applies per UTC calendar day: the first and last days are partial, so total assigned hours are not proportional to the simulated duration. No real DSN reservation or slew constraints; no service is guaranteed.",
   "policy": {
     "description": "Hypothetical total DSN network access for all eight SELENA spacecraft; 3 h/day nominal, 1/6 h sensitivity. NOT a NASA allocation or guarantee. Setup is spacecraft-side approximation, not DSN station precal.",
     "default_fraction": 1,

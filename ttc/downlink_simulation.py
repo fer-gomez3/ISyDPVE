@@ -12,6 +12,11 @@ Model
   * Because delivery is FIFO and generation is constant, the age of the oldest undelivered bit
     of a stream is exactly backlog / generation rate. A stream is flagged when that age ever
     exceeds its maximum data age.
+
+This is a time-discretized approximation (default 60 s steps). Ages are checked at step
+boundaries, so a maximum age can be underestimated by up to one step. On the full scenario,
+steps of 60, 30, 10 and 1 s give identical downloaded volumes and identical deadline-risk
+sets; maximum ages differ by at most 0.016 h.
 """
 import csv
 from datetime import datetime, timedelta
@@ -128,7 +133,7 @@ def run(cfg, contacts, policy, step_seconds=STEP_SECONDS):
     log.sort(key=lambda c: (c["start_utc"], c["satellite"]))
     return {"status": "HYPOTHETICAL_SCENARIO", "rate_bps": rate, "effective_data_bps": effective,
             "step_seconds": step_seconds,
-            "note": "Historical 2020 geometry shifted to 2030; not DSN booked, not orbit propagation. FIFO delivery by stream priority; data generated during a contact is transmitted when capacity is available. Deadlines are checked against the exact age of the oldest undelivered bit. No event bursts or slew model.",
+            "note": "Historical 2020 geometry shifted to 2030; not DSN booked, not orbit propagation. FIFO delivery by stream priority; data generated during a contact is transmitted when capacity is available. Time-discretized approximation (see step_seconds); deadline ages are checked at step boundaries. Deadlines are checked against the exact age of the oldest undelivered bit. No event bursts or slew model.",
             "contacts": log, "satellites": satellites}
 
 

@@ -81,12 +81,12 @@ def main():
     summary={"geometry_source":"SHIFTED_2020_HISTORICAL_SCENARIO_NOT_PROPAGATION" if shifted_scenario else "CONTACTS_AS_SUPPLIED","telemetry_generation":str(out/"telemetry_generation.json"),"telemetry_total_bps":telemetry["total_rate_bps_per_spacecraft"],"hga_sizing":str(out/"hga_sizing.json"),"hga_status":hga["status"],"dsn_access_sensitivity":str(out/"dsn_access_sensitivity.json") if access_sensitivity else "SKIPPED","dsn_allocation":str(out/"dsn_allocation_summary.json") if allocation else "SKIPPED",
              "downlink_simulation":str(out/"downlink_simulation.json") if simulation else "SKIPPED",
              "per_satellite":str(out/"per_satellite") if per_satellite else "SKIPPED",
-             "contact_energy_ranking":str(out/"contact_energy_ranking.json") if energy_ranking else "SKIPPED","contact_energy_status":energy_ranking["status"] if energy_ranking else "SKIPPED","xband_trade_study":str(out/"xband_trade_study.json"),"xband_trade_status":trade["status"],"link_budget":"outputs/link_budget.json","link_status":rf_link["status"],"engineering":"outputs/subsystem_interfaces.json",
-             "power":"outputs/power_budget.json",
+             "contact_energy_ranking":str(out/"contact_energy_ranking.json") if energy_ranking else "SKIPPED","contact_energy_status":energy_ranking["status"] if energy_ranking else "SKIPPED","xband_trade_study":str(out/"xband_trade_study.json"),"xband_trade_status":trade["status"],"link_budget":str(out/"link_budget.json"),"link_status":rf_link["status"],"engineering":str(out/"subsystem_interfaces.json"),
+             "power":str(out/"power_budget.json"),
              "power_status":power["status"],"power_missing_inputs":power["missing_inputs"]}
     if Path(contacts_path).exists():
         planning=compute(requirements,contacts_path=contacts_path,output_dir=args.output_dir)
-        summary.update(planning="outputs/transfer_planning.json",
+        summary.update(planning=str(out/"transfer_planning.json"),
                        missing_telemetry=planning["missing"],
                        geometry_status=planning["status"])
     else:

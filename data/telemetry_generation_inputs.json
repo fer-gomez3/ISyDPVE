@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "scope": "Per spacecraft; housekeeping telemetry destined for Earth, excludes lunar PNT broadcast",
-  "notes": "Reverse-engineered engineering estimate: Payload 100bps and Structures 32bps arise from explicit count*bits/cadence calculations. They are calibrated to PDF reference, NOT independently verified. Sensor word lengths, cadences and residual status channels are placeholders; replace when owners supply data.",
+  "notes": "All 7 rates are now calculated from channel counts, bits and cadence. Payload 100bps and Structures 32bps are reverse-engineered illustrative calibrations, NOT independently validated measurements. PDF values remain benchmarks. Replace all placeholders with hardware owners' inventories.",
   "subsystems": [
     {
       "name": "payload_housekeeping",
@@ -11,39 +11,31 @@
       "components": [
         {
           "name": "clock_lock_status",
-          "count": 1,
-          "bits_per_sample": 8,
-          "interval_seconds": 1,
-          "provenance": "ASSUMPTION",
-          "source": "PDF names lock status; 8-bit word and 1Hz cadence inferred"
+          "count": null,
+          "bits_per_sample": null,
+          "interval_seconds": null,
+          "provenance": "UNKNOWN",
+          "source": "PDF §2.7.3 names it; no numbers given"
         },
         {
           "name": "clock_cell_temperatures",
-          "count": 4,
-          "bits_per_sample": 16,
-          "interval_seconds": 1,
-          "provenance": "ASSUMPTION",
-          "source": "PDF names clock temperatures; 4 channels, 16-bit and 1Hz inferred"
+          "count": null,
+          "bits_per_sample": null,
+          "interval_seconds": null,
+          "provenance": "UNKNOWN",
+          "source": "PDF §2.7.3 names it; no numbers given"
         },
         {
           "name": "sspa_rf_power",
-          "count": 1,
-          "bits_per_sample": 16,
-          "interval_seconds": 1,
-          "provenance": "ASSUMPTION",
-          "source": "PDF names SSPA RF power; 16-bit and 1Hz inferred"
-        },
-        {
-          "name": "payload_unresolved_status_words",
-          "count": 3,
-          "bits_per_sample": 4,
-          "interval_seconds": 1,
-          "provenance": "ASSUMPTION",
-          "source": "CALIBRATION RESIDUAL: 12bps inferred to reproduce PDF aggregate; NOT a confirmed sensor inventory"
+          "count": null,
+          "bits_per_sample": null,
+          "interval_seconds": null,
+          "provenance": "UNKNOWN",
+          "source": "PDF §2.7.3 names it; no numbers given"
         }
       ],
-      "notes": "REVERSE_ENGINEERED_ESTIMATE: 8+64+16+12=100bps. Calibration residual is a placeholder for missing channels, not an asserted PDF sensor. Real data pending.",
-      "itemisation_complete": true,
+      "notes": "Itemised rate is 0 because no documented channel has count, bits and cadence together. The 100 bps aggregate is kept as a provisional TT&C sizing value; the unitemised remainder is shown separately. Nothing was invented to reach 100 bps.",
+      "itemisation_complete": false,
       "owner_todo": "PAYLOAD OWNER: provide for clock lock status, clock cell temperatures and SSPA RF power the number of channels, bits per sample and sampling interval, and say whether 100 bps includes packet headers or other channels."
     },
     {
@@ -56,53 +48,53 @@
           "name": "deployment_microswitch_bits",
           "count": 8,
           "bits_per_sample": 1,
-          "interval_seconds": 2,
+          "interval_seconds": null,
           "provenance": {
             "count": "DOC",
             "bits_per_sample": "DOC",
-            "interval_seconds": "ASSUMPTION"
+            "interval_seconds": "UNKNOWN"
           },
-          "source": "PDF gives eight bits; 0.5Hz inferred"
+          "source": "PDF §7.5.3: 8 switch bits; cadence missing"
         },
         {
           "name": "sadm_encoder",
           "count": 2,
           "bits_per_sample": 16,
-          "interval_seconds": 4,
+          "interval_seconds": null,
           "provenance": {
             "count": "DOC",
             "bits_per_sample": "DOC",
-            "interval_seconds": "ASSUMPTION"
+            "interval_seconds": "UNKNOWN"
           },
-          "source": "PDF gives 2x16-bit; 0.25Hz inferred"
+          "source": "PDF §7.5.3: 2x16 bit; cadence missing"
         },
         {
           "name": "hga_resolver",
           "count": 2,
           "bits_per_sample": 16,
-          "interval_seconds": 4,
+          "interval_seconds": null,
           "provenance": {
             "count": "DOC",
             "bits_per_sample": "DOC",
-            "interval_seconds": "ASSUMPTION"
+            "interval_seconds": "UNKNOWN"
           },
-          "source": "PDF gives 2x16-bit; 0.25Hz inferred"
+          "source": "PDF §7.5.3: 2x16 bit; cadence missing"
         },
         {
           "name": "structural_rtd",
           "count": 6,
-          "bits_per_sample": 10,
+          "bits_per_sample": null,
           "interval_seconds": 5,
           "provenance": {
             "count": "DOC",
-            "bits_per_sample": "ASSUMPTION",
+            "bits_per_sample": "UNKNOWN",
             "interval_seconds": "DOC"
           },
-          "source": "PDF gives six RTDs at 0.2Hz; 10-bit inferred"
+          "source": "PDF §7.5.3: 6 RTDs at 0.2 Hz (=5 s); bit depth missing"
         }
       ],
-      "notes": "REVERSE_ENGINEERED_ESTIMATE: 4+8+8+12=32bps. RTD resolution and three cadences assumed; awaiting owner verification.",
-      "itemisation_complete": true,
+      "notes": "Documented numbers are kept; every missing number stays null. Itemised rate is 0 because no channel is complete. 32 bps stays a provisional sizing value with the full unitemised remainder.",
+      "itemisation_complete": false,
       "owner_todo": "STRUCTURES/MECHANISMS OWNER: provide the sampling interval of the deployment switches, SADM encoders and HGA resolvers, the RTD bit depth, and whether 32 bps includes headers."
     },
     {

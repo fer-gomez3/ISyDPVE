@@ -43,41 +43,67 @@ def _row(cfg, name):
     return {r["subsystem"]: r for r in calculate(cfg, configs()[1])["subsystems"]}[name]
 
 
-def test_reverse_engineered_pdf_targets_are_calculated_and_unverified():
-    t, e = configs()
-    rows = {r["subsystem"]: r for r in calculate(t, e)["subsystems"]}
-    for name, reference in (("payload_housekeeping", 100), ("structures_mechanisms", 32)):
-        row = rows[name]
-        assert row["rate_bps"] == pytest.approx(reference)
-        assert row["itemised_bps"] == pytest.approx(reference)
-        assert row["unitemised_remainder_bps"] == pytest.approx(0)
-        assert row["rate_basis"] == "REVERSE_ENGINEERED_ESTIMATE"
-        assert row["validation_status"] == "REVERSE_ENGINEERED_MATCH_UNVERIFIED"
-        assert row["requires_confirmation"]
-        assert all(c["counted"] for c in row["channels"])
-    p = next(s for s in t["subsystems"] if s["name"] == "payload_housekeeping")
-    p["components"][0]["interval_seconds"] = 2
-    altered = {r["subsystem"]: r for r in calculate(t, e)["subsystems"]}
-    assert altered["payload_housekeeping"]["rate_bps"] == pytest.approx(96)
-    assert altered["payload_housekeeping"]["difference_from_pdf_bps"] == pytest.approx(-4)
-    assert altered["payload_housekeeping"]["validation_status"] == "REVERSE_ENGINEERED_DIFFERS_FROM_PDF"
+def test_payload_and_structures_use_unitemised_remainder_and_invent_nothing():
+    t, _ = configs()
+    for name, pdf in (("payload_housekeeping", 100), ("structures_mechanisms", 32)):
+        row = _row(t, name)
+        assert row["rate_bps"] == pdf and row["pdf_reference_bps"] == pdf
+        assert row["itemised_bps"] == 0                      # no documented channel has count, bits and cadence
+        assert row["unitemised_remainder_bps"] == pdf
+        assert row["rate_basis"] == "PDF_AGGREGATE_PROVISIONAL"
+        assert row["validation_status"] == "PDF_AGGREGATE_PROVISIONAL_ITEMISATION_PENDING"
+        assert row["requires_confirmation"] and row["owner_todo"]
+        assert row["source_type"] == "PDF"
+    names = {c["name"] for c in _row(t, "payload_housekeeping")["channels"]}
+    assert names == {"clock_lock_status", "clock_cell_temperatures", "sspa_rf_power"}   # no invented filler channel
 
 
-def test_structures_preserves_pdf_provenance_and_inferred_parameters():
+def test_structures_keeps_only_documented_numbers():
     t, _ = configs()
     ch = {c["name"]: c for c in _row(t, "structures_mechanisms")["channels"]}
-    assert ch["sadm_encoder"]["provenance"]["count"] == "DOC"
-    assert ch["sadm_encoder"]["provenance"]["interval_seconds"] == "ASSUMPTION"
-    assert ch["structural_rtd"]["provenance"]["interval_seconds"] == "DOC"
-    assert ch["structural_rtd"]["provenance"]["bits_per_sample"] == "ASSUMPTION"
+    assert (ch["deployment_microswitch_bits"]["count"], ch["deployment_microswitch_bits"]["bits_per_sample"]) == (8, 1)
+    assert (ch["sadm_encoder"]["count"], ch["sadm_encoder"]["bits_per_sample"]) == (2, 16)
+    assert (ch["hga_resolver"]["count"], ch["hga_resolver"]["bits_per_sample"]) == (2, 16)
+    assert (ch["structural_rtd"]["count"], ch["structural_rtd"]["interval_seconds"]) == (6, 5)
+    assert ch["structural_rtd"]["bits_per_sample"] is None and ch["sadm_encoder"]["interval_seconds"] is None
+    assert all(not c["counted"] and c["rate_bps"] is None for c in ch.values())
 
 
-def test_totals_stay_consistent():
+def test_complete_channels_are_itemised_and_remainder_is_the_difference():
+    t, _ = configs()
+    sub = next(x for x in t["subsystems"] if x["name"] == "payload_housekeeping")
+    sub["components"][0].update(count=2, bits_per_sample=16, interval_seconds=1, provenance="OWNER")
+    row = _row(t, "payload_housekeeping")
+    assert row["itemised_bps"] == 32 and row["unitemised_remainder_bps"] == 68 and row["rate_bps"] == 100
+    assert row["channels"][0]["provenance"]["count"] == "OWNER"
+
+
+def test_owner_confirmed_complete_itemisation_replaces_the_aggregate_and_shows_the_difference():
+    t, _ = configs()
+    sub = next(x for x in t["subsystems"] if x["name"] == "payload_housekeeping")
+    sub["components"][0].update(count=2, bits_per_sample=16, interval_seconds=1, provenance="OWNER")
+    sub["itemisation_complete"] = True
+    row = _row(t, "payload_housekeeping")
+    assert row["rate_bps"] == 32 and row["unitemised_remainder_bps"] == 0 and row["difference_from_pdf_bps"] == -68
+    assert row["validation_status"] == "ITEMISATION_COMPLETE_DIFFERS_FROM_PDF_SEE_DIFFERENCE"
+
+
+def test_itemised_above_the_aggregate_is_flagged_not_hidden():
+    t, _ = configs()
+    sub = next(x for x in t["subsystems"] if x["name"] == "payload_housekeeping")
+    sub["components"][0].update(count=10, bits_per_sample=16, interval_seconds=1)
+    row = _row(t, "payload_housekeeping")
+    assert row["rate_bps"] == 160 and row["unitemised_remainder_bps"] == 0
+    assert row["validation_status"] == "ITEMISED_EXCEEDS_PDF_AGGREGATE_INVESTIGATE"
+
+
+def test_totals_stay_consistent_and_separate_itemised_from_remainder():
     t, e = configs()
     r = calculate(t, e)
     assert r["total_rate_bps_per_spacecraft"] == pytest.approx(2301.742222222)
-    assert r["total_unitemised_remainder_bps_per_spacecraft"] == pytest.approx(0)
-    assert r["total_itemised_bps_per_spacecraft"] == pytest.approx(r["total_rate_bps_per_spacecraft"])
+    assert r["total_itemised_bps_per_spacecraft"] + r["total_unitemised_remainder_bps_per_spacecraft"] == pytest.approx(
+        r["total_rate_bps_per_spacecraft"])
+    assert r["total_unitemised_remainder_bps_per_spacecraft"] == 132
 
 
 def test_eps_single_methodology_and_pdf_differences_visible():

@@ -106,8 +106,6 @@ def telemetry_rows(telemetry_cfg):
         else:
             rate, remainder, basis = reference, reference - itemised, "PDF_AGGREGATE_PROVISIONAL"
         estimated = any("ASSUMPTION" in c["provenance"].values() for c in counted_channels)
-        if complete and estimated and reference is not None:
-            basis = "REVERSE_ENGINEERED_ESTIMATE"
         public_type = ("MISSING_INPUT" if rate is None else
                        "PDF" if basis == "PDF_AGGREGATE_PROVISIONAL" or (not estimated and basis != "CHANNELS_ASSUMED") else
                        "PRELIMINARY_ESTIMATE")
@@ -123,9 +121,8 @@ def telemetry_rows(telemetry_cfg):
                      "pdf_reference_bps": reference,
                      "difference_from_pdf_bps": None if rate is None or reference is None else rate - reference,
                      "itemised_minus_pdf_bps": None if reference is None else itemised - reference,
-                     "validation_status": ("REVERSE_ENGINEERED_MATCH_UNVERIFIED" if basis == "REVERSE_ENGINEERED_ESTIMATE" and abs(itemised-reference) < 1e-9 else
-                                           "REVERSE_ENGINEERED_DIFFERS_FROM_PDF" if basis == "REVERSE_ENGINEERED_ESTIMATE" else
-                                           validation_status(reference, itemised, remainder, complete, bool(counted_channels), incomplete)),
+                     "validation_status": validation_status(reference, itemised, remainder, complete,
+                                                            bool(counted_channels), incomplete),
                      "incomplete_channels": [{"name": c["name"], "missing_parameters": c["missing_parameters"]}
                                              for c in channels if not c["counted"]],
                      "owner_todo": subsystem.get("owner_todo"),

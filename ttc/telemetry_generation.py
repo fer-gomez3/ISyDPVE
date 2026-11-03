@@ -55,22 +55,15 @@ def apply_computed_rates(cfg, rows, set_status=False):
 
 
 def compute(input_path="data/telemetry_generation_inputs.json", output_dir="outputs"):
-    """Calculate only telemetry data volumes for OBDH and the Earth downlink.
-
-    IMPORTANT: EPS solar power, AOCS torques, propulsion delta-v and other hardware
-    sizing equations DO NOT produce telemetry bits. Those models are optional,
-    separate engineering analyses and must never control the downlink data budget.
-    PDF aggregate telemetry is a provisional sizing fallback when channels are
-    incomplete; it is not a derived sensor measurement.
-    """
-    cfg = json.loads(Path(input_path).read_text(encoding="utf-8"))
-    model = calculate(cfg)
-    rows = model["subsystems"]
-    result = {**model,
-              "n_satellites": int(load_parameters()["n_satellites"]),
-              "total_mbit_per_day_constellation": model["total_mbit_per_day_per_spacecraft"] * int(load_parameters()["n_satellites"]),
-              "total_mb_per_day_constellation": model["total_mb_per_day_per_spacecraft"] * int(load_parameters()["n_satellites"]),
-              "validation_warning": "PDF aggregates are provisional sizing fallbacks, NOT independent verification of sensor-derived rates. Hardware sizing equations do not generate telemetry; only channel count, bits/sample and sampling interval do."}
+    """Calculate subsystem engineering first, then feed computed rates to TT&C."""
+    from .subsystem_models import compute as compute_subsystems
+    model = compute_subsystems(telemetry_path=input_path, output_dir=output_dir)
+    rows = [_public(r) for r in model["subsystems"]]
+    result = {"status": model["status"], "scope": model["scope"], "subsystems": rows,
+              **{k: model[k] for k in TOTAL_KEYS + ("total_mbit_per_day_constellation",
+                                       "total_mb_per_day_constellation", "n_satellites", "missing_subsystems",
+                                       "telemetry_complete")},
+              "validation_warning": model["validation_warning"], "warning": model["warning"]}
     out = Path(output_dir)
     out.mkdir(parents=True, exist_ok=True)
     (out / "telemetry_generation.json").write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")

@@ -25,6 +25,7 @@ from pathlib import Path
 from .contact_analysis import load_contacts
 from .dsn_allocation import allocate
 from .parameters import apply_policy
+from .telemetry_generation import calculate as calculate_telemetry, apply_computed_rates
 from .transfer_planning import stream_requirements
 
 STEP_SECONDS = 60.0
@@ -139,9 +140,14 @@ def run(cfg, contacts, policy, step_seconds=STEP_SECONDS):
 
 def compute(telemetry_path="data/telemetry_detailed_scenario.json",
             contacts_path="data/contacts_master.csv",
-            policy_path="data/dsn_allocation_scenario.json", output_dir="outputs"):
+            policy_path="data/dsn_allocation_scenario.json", output_dir="outputs",
+            telemetry_inputs_path="data/telemetry_generation_inputs.json"):
     cfg = json.loads(Path(telemetry_path).read_text(encoding="utf-8"))
     cfg["policy"] = apply_policy(cfg.get("policy", {}))
+    if any(s.get("rate_bps") is None for s in cfg["streams"]):
+        # Rates are never stored in the scenario file: derive them from the sensor inventories.
+        inputs = json.loads(Path(telemetry_inputs_path).read_text(encoding="utf-8"))
+        apply_computed_rates(cfg, calculate_telemetry(inputs)["subsystems"])
     policy = apply_policy(json.loads(Path(policy_path).read_text(encoding="utf-8")))
     result = run(cfg, load_contacts(contacts_path), policy)
     out = Path(output_dir)

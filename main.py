@@ -17,7 +17,9 @@ from ttc.dsn_access_sensitivity import compute as dsn_sensitivity
 from ttc.downlink_simulation import compute as simulate_downlink
 from ttc.dsn_allocation import compute_allocation
 from ttc.hga_sizing import from_files as evaluate_hga
-from ttc.telemetry_generation import compute as compute_telemetry
+from ttc.telemetry_generation import compute as compute_telemetry, apply_computed_rates
+from ttc.transfer_planning import stream_requirements
+from ttc import data_interface
 from ttc.parameters import apply_policy, hga_link_defaults
 from ttc.satellite_outputs import write as write_satellite_outputs
 
@@ -27,6 +29,7 @@ def main():
     parser.add_argument("--contacts",default="data/contacts_master.csv")
     parser.add_argument("--no-epoch-shift",action="store_true",help="Use the contacts file as supplied (e.g. real propagated 2030 windows). By default the historical 2020 windows are shifted to the 2030 epoch as a HYPOTHETICAL scenario.")
     parser.add_argument("--epoch",default="2030-07-14T22:10:10.811Z")
+    parser.add_argument("--telemetry-input",default="data/telemetry_generation_inputs.json",help="Sensor/channel inventories (what-if runs without editing the repository data)")
     parser.add_argument("--link-input",default="data/link_budget_inputs.json")
     parser.add_argument("--output-dir",default="outputs")
     args=parser.parse_args()
@@ -39,25 +42,19 @@ def main():
         contacts_path=str(shifted)
     link=json.loads(Path(args.link_input).read_text(encoding="utf-8"))
     # Keep the original engineering reference and the editable planning model distinct.
-    telemetry=compute_telemetry(output_dir=args.output_dir)
+    telemetry=compute_telemetry(input_path=args.telemetry_input,output_dir=args.output_dir)
     generated_cfg=json.loads(Path("data/telemetry_detailed_scenario.json").read_text(encoding="utf-8"))
     generated_cfg["policy"]=apply_policy(generated_cfg["policy"])
-    calculated={r["subsystem"]:r for r in telemetry["subsystems"]}
-    for stream in generated_cfg["streams"]:
-        if stream["name"] in calculated:
-            row=calculated[stream["name"]]
-            stream["rate_bps"]=row["rate_bps"]
-            stream["status"]="PDF" if row["source_type"]=="PDF" else "PRE"
+    apply_computed_rates(generated_cfg,telemetry["subsystems"],set_status=True)
     generated_telemetry_path=out/"telemetry_detailed_generated.json"
     generated_telemetry_path.write_text(json.dumps(generated_cfg,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
     generated_requirements=json.loads(Path(args.requirements).read_text(encoding="utf-8"))
     generated_requirements["policy"]=apply_policy(generated_requirements["policy"])
-    for stream in generated_requirements["streams"]:
-        if stream["name"] in calculated:
-            stream["rate_bps"]=calculated[stream["name"]]["rate_bps"]
+    apply_computed_rates(generated_requirements,telemetry["subsystems"])
     generated_requirements_path=out/"transfer_requirements_generated.json"
     generated_requirements_path.write_text(json.dumps(generated_requirements,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
     requirements=load_requirements(str(generated_requirements_path))
+    interface=data_interface.write(telemetry,stream_requirements(requirements),args.output_dir,{s["name"]:s["mode"] for s in requirements["streams"]})
     engineering=calculate()
     (out/"subsystem_interfaces.json").write_text(json.dumps(engineering,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
     hga=evaluate_hga(link_path=args.link_input)
@@ -78,7 +75,7 @@ def main():
     energy_ranking=rank_contacts(windows_path=str(out/'dsn_allocated_windows.csv'),output_path=str(out/'contact_energy_ranking.json')) if allocation else None
     simulation=simulate_downlink(telemetry_path=str(generated_telemetry_path),contacts_path=contacts_path,output_dir=args.output_dir) if allocation else None
     per_satellite=write_satellite_outputs(args.output_dir) if simulation else None
-    summary={"geometry_source":"SHIFTED_2020_HISTORICAL_SCENARIO_NOT_PROPAGATION" if shifted_scenario else "CONTACTS_AS_SUPPLIED","telemetry_generation":str(out/"telemetry_generation.json"),"telemetry_total_bps":telemetry["total_rate_bps_per_spacecraft"],"hga_sizing":str(out/"hga_sizing.json"),"hga_status":hga["status"],"dsn_access_sensitivity":str(out/"dsn_access_sensitivity.json") if access_sensitivity else "SKIPPED","dsn_allocation":str(out/"dsn_allocation_summary.json") if allocation else "SKIPPED",
+    summary={"geometry_source":"SHIFTED_2020_HISTORICAL_SCENARIO_NOT_PROPAGATION" if shifted_scenario else "CONTACTS_AS_SUPPLIED","telemetry_generation":str(out/"telemetry_generation.json"),"telemetry_total_bps":telemetry["total_rate_bps_per_spacecraft"],"data_generation_interface":str(out/"data_generation_interface.csv"),"subsystem_engineering":str(out/"subsystem_engineering.json"),"hga_sizing":str(out/"hga_sizing.json"),"hga_status":hga["status"],"dsn_access_sensitivity":str(out/"dsn_access_sensitivity.json") if access_sensitivity else "SKIPPED","dsn_allocation":str(out/"dsn_allocation_summary.json") if allocation else "SKIPPED",
              "downlink_simulation":str(out/"downlink_simulation.json") if simulation else "SKIPPED",
              "per_satellite":str(out/"per_satellite") if per_satellite else "SKIPPED",
              "contact_energy_ranking":str(out/"contact_energy_ranking.json") if energy_ranking else "SKIPPED","contact_energy_status":energy_ranking["status"] if energy_ranking else "SKIPPED","xband_trade_study":str(out/"xband_trade_study.json"),"xband_trade_status":trade["status"],"link_budget":str(out/"link_budget.json"),"link_status":rf_link["status"],"engineering":str(out/"subsystem_interfaces.json"),

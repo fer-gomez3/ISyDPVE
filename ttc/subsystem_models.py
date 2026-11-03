@@ -7,6 +7,7 @@ All outputs are PER SPACECRAFT; lunar PNT broadcast is excluded.
 import json
 import math
 from pathlib import Path
+from .parameters import load as load_parameters
 
 DAY = 86400
 G0 = 9.80665
@@ -59,37 +60,83 @@ def engineering(name, p):
                 "source_equations": "lecture OBDH 1.2-1.3"}
     raise ValueError("Unknown subsystem: " + name)
 
-def calculate(telemetry_cfg, engineering_cfg):
-    models = engineering_cfg["subsystems"]
+def validation_status(source_type, origin, reference, delta):
+    """Say what a match with the PDF aggregate does and does not prove."""
+    if origin == "MISSING_INPUT":
+        return "MISSING_INPUT"
+    if origin == "PDF_AGGREGATE_FALLBACK":
+        return "DOC_AGGREGATE_ONLY_NO_CHANNEL_INVENTORY"
+    if reference is None:
+        return "ASSUMED_INVENTORY_NO_PDF_REFERENCE"
+    if abs(delta) < 1e-9:
+        if str(source_type).startswith("REVERSE_ENGINEERED"):
+            return "MATCHES_PDF_BY_CONSTRUCTION_NOT_INDEPENDENT_VERIFICATION"
+        return "MATCHES_PDF_REFERENCE"
+    return "DIFFERS_FROM_PDF_REFERENCE_INVESTIGATE"
+
+
+def telemetry_rows(telemetry_cfg):
+    """Single implementation of the per-subsystem data-generation rate.
+
+    Channels win: rate = sum(count x bits / interval). The documented (PDF) aggregate is only a
+    reference (shown with its difference) or, when no channel inventory exists, the fallback.
+    A subsystem with neither is reported as MISSING_INPUT (rate None), never as zero.
+    """
     rows = []
     for subsystem in telemetry_cfg["subsystems"]:
-        name = subsystem["name"]
+        channels = subsystem.get("components", [])
+        reference = subsystem.get("pdf_rate_bps")
+        reference = None if reference is None else float(reference)
+        if channels:
+            rate = sum(channel_rate(c) for c in channels)
+            origin = "CALCULATED_FROM_CHANNELS" if subsystem["source_type"] == "PDF" else "CALCULATED_FROM_CHANNELS_PLACEHOLDER"
+        elif reference is not None:
+            rate, origin = reference, "PDF_AGGREGATE_FALLBACK"
+        else:
+            rate, origin = None, "MISSING_INPUT"
+        delta = None if rate is None or reference is None else rate - reference
+        public_type = ("MISSING_INPUT" if rate is None else
+                       "PDF" if origin == "PDF_AGGREGATE_FALLBACK" or subsystem["source_type"] == "PDF" else
+                       "PRELIMINARY_ESTIMATE")
+        rows.append({"subsystem": subsystem["name"], "rate_bps": rate,
+                     "mbit_per_day": None if rate is None else rate*DAY/1e6,
+                     "mb_per_day": None if rate is None else rate*DAY/8e6,
+                     "telemetry_origin": origin, "source_type": public_type,
+                     "input_source_type": subsystem["source_type"], "source": subsystem.get("source"),
+                     "requires_confirmation": public_type != "PDF",
+                     "pdf_reference_bps": reference, "difference_from_pdf_bps": delta,
+                     "validation_status": validation_status(subsystem["source_type"], origin, reference, delta),
+                     "channel_count": sum(c["count"] for c in channels),
+                     "channels": [{**c, "rate_bps": channel_rate(c)} for c in channels]})
+    return rows
+
+
+def totals(rows, n_satellites):
+    known = [r["rate_bps"] for r in rows if r["rate_bps"] is not None]
+    total = sum(known)
+    return {"total_rate_bps_per_spacecraft": total,
+            "total_mbit_per_day_per_spacecraft": total*DAY/1e6,
+            "total_mb_per_day_per_spacecraft": total*DAY/8e6,
+            "total_mbit_per_day_constellation": total*DAY/1e6*n_satellites,
+            "total_mb_per_day_constellation": total*DAY/8e6*n_satellites,
+            "n_satellites": n_satellites,
+            "missing_subsystems": [r["subsystem"] for r in rows if r["rate_bps"] is None],
+            "telemetry_complete": all(r["rate_bps"] is not None for r in rows)}
+
+
+def calculate(telemetry_cfg, engineering_cfg):
+    models = engineering_cfg["subsystems"]
+    rows = telemetry_rows(telemetry_cfg)
+    for row in rows:
+        name = row["subsystem"]
         if name not in models:
             raise ValueError("Missing engineering model: " + name)
-        channels = subsystem.get("components", [])
-        computed = sum(channel_rate(c) for c in channels)
-        reference = subsystem.get("pdf_rate_bps")
-        # The reference is a validation benchmark, never silently overrides channel calculation.
-        if not channels and reference is not None:
-            rate = float(reference)
-            origin = "PDF_AGGREGATE_FALLBACK"
-        else:
-            rate = computed
-            origin = "CALCULATED_FROM_CHANNELS_PLACEHOLDER" if subsystem["source_type"] != "PDF" else "CALCULATED_FROM_CHANNELS"
-        rows.append({"subsystem": name, "rate_bps": rate, "mbit_per_day": rate*DAY/1e6,
-                     "mb_per_day": rate*DAY/8e6, "telemetry_origin": origin,
-                     "pdf_reference_bps": reference, "difference_from_pdf_bps": rate-reference if reference is not None else None,
-                     "channel_count": sum(c["count"] for c in channels),
-                     "channels": [{**c, "rate_bps": channel_rate(c)} for c in channels],
-                     "engineering": engineering(name, models[name]),
-                     "engineering_input_origin": models[name]["origin"]})
-    total = sum(r["rate_bps"] for r in rows)
+        row["engineering"] = engineering(name, models[name])
+        row["engineering_input_origin"] = models[name]["origin"]
     return {"status": "PRELIMINARY_PLACEHOLDERS_NOT_VALIDATED",
             "scope": "one spacecraft; housekeeping for Earth downlink, no lunar PNT broadcast",
-            "subsystems": rows, "total_rate_bps_per_spacecraft": total,
-            "total_mbit_per_day_per_spacecraft": total*DAY/1e6,
-            "total_mbit_per_day_constellation": total*DAY/1e6*engineering_cfg["n_satellites"],
-            "n_satellites": engineering_cfg["n_satellites"],
+            "subsystems": rows, **totals(rows, int(load_parameters()["n_satellites"])),
+            "validation_warning": "A rate that matches a PDF aggregate by reverse engineering is NOT independent verification. Engineering equations (EPS, AOCS, propulsion, thermal, structures, OBDH) size hardware; they do not determine the telemetry rates, which come only from the channel inventories.",
             "warning": "Engineering outputs and sensor inventories are preliminary; equations do not determine sampling rates."}
 
 def compute(telemetry_path="data/telemetry_generation_inputs.json",

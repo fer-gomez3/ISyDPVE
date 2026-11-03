@@ -23,6 +23,8 @@ Run from the repository root (scenario paths are relative). Results go to `outpu
 |---|---|
 | `outputs/SELENA_TTC_Model.xlsx` | Formula-based workbook: Inputs, Telemetry, Capacity, HGA, Link, Power (live formulas), Satellites, Stations, DSN Allocation, Downlink Contacts, RF Trade Cases, Checks, Limitations |
 | `outputs/per_satellite/SELENA_xx.json`, `outputs/per_satellite_summary.csv` | Results for each of the 8 satellites |
+| `outputs/data_generation_interface.csv`, `.json` | **Data generated per subsystem for the satellite-to-Earth calculations**: rate, bits/day, priority, maximum data age, origin, PDF reference, validation status, totals per spacecraft and constellation |
+| `outputs/subsystem_engineering.json` | Preliminary engineering outputs per subsystem (placeholders) |
 | `outputs/overview.json` | Run summary and statuses |
 | `outputs/*.json`, `*.csv` | Telemetry, link, HGA, power, DSN allocation, downlink simulation, trade study |
 
@@ -33,7 +35,7 @@ In the workbook, edit the blue input cells on `Inputs` and `Telemetry`; the calc
 | Parameter | File |
 |---|---|
 | Downlink rate (256 kbps), protocol overhead, DSN setup (15 min), minimum useful transmit, DSN hours/day, number of satellites | `data/ttc_parameters.json` (single source) |
-| Sensor counts, sample sizes, intervals | `data/telemetry_generation_inputs.json` |
+| Sensor counts, sample sizes, intervals | `data/telemetry_generation_inputs.json` (or `python main.py --telemetry-input my_inventory.json` for a what-if run) |
 | HGA diameter, efficiency, frequency, masses | `data/hga_preliminary_design.json` |
 | Link inputs (distance, G/T, Eb/N0, losses, margin, RF power, PA efficiency) | `data/link_budget_inputs.json` |
 | Priorities and data-age deadlines | `data/telemetry_detailed_scenario.json`, `data/transfer_requirements.json` |

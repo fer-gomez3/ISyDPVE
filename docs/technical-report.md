@@ -56,8 +56,8 @@ All results are for the **hypothetical shifted scenario** (2030-07-14 22:25 UTC 
 
 | Subsystem | Rate (bit/s) | Mbit/day | Status |
 |---|---|---|---|
-| Payload housekeeping | 100 | 8.64 | DOC (provisional) |
-| Structures | 32 | 2.77 | DOC |
+| Payload housekeeping (illustrative split of the documented 100 bit/s) | 100 | 8.64 | DOC aggregate; channel split ASSUMPTION, matches by construction |
+| Structures (illustrative split of the documented 32 bit/s) | 32 | 2.77 | DOC aggregate; channel split ASSUMPTION, matches by construction |
 | ADCS (31 ch x 32 bit / 0.625 s) | 1587.2 | 137.13 | ASSUMPTION |
 | Propulsion (12 x 16 bit / 5 s) | 38.4 | 3.32 | ASSUMPTION |
 | EPS (22 x 32 bit / 5 s) | 140.8 | 12.17 | ASSUMPTION |
@@ -65,7 +65,9 @@ All results are for the **hypothetical shifted scenario** (2030-07-14 22:25 UTC 
 | OBDH (12 x 32 bit / 1.25 s + 1024 bit / 7200 s) | 307.34 | 26.55 | ASSUMPTION |
 | **Total** | **2301.74** | **198.87** (24.86 MB/day; 198.87 MB/day for 8 satellites) | CALC |
 
-ADCS is 69 % of the volume and rests entirely on an assumed channel inventory.
+ADCS is 69 % of the volume and rests entirely on an assumed channel inventory. Payload and Structures were reverse-engineered to reproduce the documented aggregates (including one filler channel in Payload and assumed cadences and RTD bit depth in Structures): a match with 100 and 32 bit/s is **not independent verification**. The telemetry rates come only from the channel inventories; the engineering equations (EPS, AOCS, propulsion, thermal, structures, OBDH) size hardware and do not determine them.
+
+The satellite-to-Earth calculations read `outputs/data_generation_interface.csv/json`: per subsystem the rate, bits/day, mode, priority, maximum data age, origin (DOC / ASSUMPTION / INPUT NEEDED), PDF reference, difference and validation status, plus totals per spacecraft and for the constellation.
 
 ### 4.2 HGA and downlink (380 mm, 256 kbps)
 
@@ -157,4 +159,17 @@ Data volume is conserved for every satellite (generated = downloaded + remaining
 - Backlog simulation transmits data generated during a contact; deadline check uses the exact age of the oldest bit.
 - HGA gain, frequency and rate wired into the link budget, power budget and contact-energy ranking (the 33 dBi placeholder was removed).
 - Per-satellite JSON/CSV outputs; X-band trade study includes the HGA baseline gain.
+- Data-generation review: one telemetry code path (channels win, PDF aggregate is only a reference or fallback), a subsystem without inventory is `MISSING_INPUT` instead of 0 bit/s, stream rates are never stored in `telemetry_detailed_scenario.json`, the number of satellites has one source, `--telemetry-input` for what-if runs, and the Excel Telemetry tab shows PDF reference, difference and `PENDING REAL DATA`.
 - Earlier fixes: transfer-stream names matched to the generated telemetry; power-budget margin test; `--output-dir` honoured by the workbook; `--no-epoch-shift` option added.
+
+## 9. Review of the subsystem engineering models: open engineering decisions
+
+Not applied; they change engineering assumptions and need your decision.
+
+| # | Observation | Proposal |
+|---|---|---|
+| 1 | Payload (3 x 4-bit "health status", marked unverified filler) and Structures (cadences 2 s and 4 s, RTD 10 bit) were chosen so the sums equal 100 and 32 bit/s | Either keep and flag (current), or use the documented aggregate as the rate and show the known channels as an itemised part plus an explicit "not itemised remainder" line |
+| 2 | EPS: the area is `required power / eol_specific_power_w_m2` (264.516, which equals 410 W / 1.55 m^2, so it looks back-solved), while the computed `p_eol_w` (423 W/m^2 if `cell_power_w` is W/m^2) is never used. Area 1.47 m^2 vs 0.92 m^2 by the lecture route. The input `cell_power_w` has a W/m^2 magnitude but a W label | Decide which route is authoritative and fix the unit label; confirm with the EPS owner |
+| 3 | EPS eclipse hours (6.5068) reproduce the documented 1.8 kWh battery, which also looks tuned | Replace with the eclipse duration from the orbit analysis |
+| 4 | AOCS gravity-gradient torque uses one orbit radius (6200 km); for an elliptical orbit the worst case is at periapsis. The wheel torque takes the maximum of slew and disturbance rather than their sum | Use the periapsis radius from the orbit data; confirm the combination rule with the ADCS owner |
+| 5 | No equation links hardware sizing to the number of telemetry channels | Request real channel lists from each owner (section 7) |

@@ -1,0 +1,279 @@
+{
+  "status": "PRELIMINARY_PLACEHOLDERS_NOT_VALIDATED",
+  "scope": "one spacecraft; housekeeping for Earth downlink, no lunar PNT broadcast",
+  "subsystems": [
+    {
+      "subsystem": "payload_housekeeping",
+      "rate_bps": 100.0,
+      "mbit_per_day": 8.64,
+      "mb_per_day": 1.08,
+      "telemetry_origin": "CALCULATED_FROM_CHANNELS_PLACEHOLDER",
+      "source_type": "PRELIMINARY_ESTIMATE",
+      "input_source_type": "REVERSE_ENGINEERED_PLACEHOLDER",
+      "source": "PDF §2.7.3 aggregate 100 bps; illustrative clock lock, cell temperatures, SSPA RF power. Quantization and cadence NOT specified; calibration pending",
+      "requires_confirmation": true,
+      "pdf_reference_bps": 100.0,
+      "difference_from_pdf_bps": 0.0,
+      "validation_status": "MATCHES_PDF_BY_CONSTRUCTION_NOT_INDEPENDENT_VERIFICATION",
+      "channel_count": 9,
+      "channels": [
+        {
+          "name": "clock_lock_status",
+          "count": 1,
+          "bits_per_sample": 8,
+          "interval_seconds": 1,
+          "rate_bps": 8.0
+        },
+        {
+          "name": "clock_cell_temperatures",
+          "count": 4,
+          "bits_per_sample": 16,
+          "interval_seconds": 1,
+          "rate_bps": 64.0
+        },
+        {
+          "name": "sspa_rf_power",
+          "count": 1,
+          "bits_per_sample": 16,
+          "interval_seconds": 1,
+          "rate_bps": 16.0
+        },
+        {
+          "name": "payload_health_status",
+          "count": 3,
+          "bits_per_sample": 4,
+          "interval_seconds": 1,
+          "rate_bps": 12.0
+        }
+      ],
+      "engineering": {
+        "pnt_broadcast_excluded": true,
+        "note": "Lunar PNT RF broadcast is not Earth-directed housekeeping; optical/SAR lecture formulas do not apply to SELENA PNT."
+      },
+      "engineering_input_origin": "PDF section 2.7.3 reference 100bps; lecture optical/SAR formulas not applicable to lunar PNT"
+    },
+    {
+      "subsystem": "structures_mechanisms",
+      "rate_bps": 32.0,
+      "mbit_per_day": 2.7648,
+      "mb_per_day": 0.3456,
+      "telemetry_origin": "CALCULATED_FROM_CHANNELS_PLACEHOLDER",
+      "source_type": "PRELIMINARY_ESTIMATE",
+      "input_source_type": "REVERSE_ENGINEERED_PLACEHOLDER",
+      "source": "PDF §7.5.3 aggregate 32 bps; 8 microswitch bits, two 16-bit SADM encoders, two 16-bit HGA resolvers, six RTD channels at 0.2Hz. Encoder and resolver cadence/RTD bit depth assumed.",
+      "requires_confirmation": true,
+      "pdf_reference_bps": 32.0,
+      "difference_from_pdf_bps": 0.0,
+      "validation_status": "MATCHES_PDF_BY_CONSTRUCTION_NOT_INDEPENDENT_VERIFICATION",
+      "channel_count": 18,
+      "channels": [
+        {
+          "name": "deployment_microswitch_bits",
+          "count": 8,
+          "bits_per_sample": 1,
+          "interval_seconds": 2,
+          "rate_bps": 4.0
+        },
+        {
+          "name": "sadm_encoder",
+          "count": 2,
+          "bits_per_sample": 16,
+          "interval_seconds": 4,
+          "rate_bps": 8.0
+        },
+        {
+          "name": "hga_resolver",
+          "count": 2,
+          "bits_per_sample": 16,
+          "interval_seconds": 4,
+          "rate_bps": 8.0
+        },
+        {
+          "name": "structural_rtd",
+          "count": 6,
+          "bits_per_sample": 10,
+          "interval_seconds": 5,
+          "rate_bps": 12.0
+        }
+      ],
+      "engineering": {
+        "design_load_n": 1250.0,
+        "margin_of_safety": 0.6000000000000001,
+        "source_equations": "lecture Structures 9"
+      },
+      "engineering_input_origin": "PLACEHOLDER; lecture Structures 9"
+    },
+    {
+      "subsystem": "aocs_nominal_hk",
+      "rate_bps": 1587.2,
+      "mbit_per_day": 137.13408,
+      "mb_per_day": 17.14176,
+      "telemetry_origin": "CALCULATED_FROM_CHANNELS_PLACEHOLDER",
+      "source_type": "PRELIMINARY_ESTIMATE",
+      "input_source_type": "PRELIMINARY_ESTIMATE",
+      "source": "Assumed logged attitude/actuator channels; confirm with ADCS",
+      "requires_confirmation": true,
+      "pdf_reference_bps": null,
+      "difference_from_pdf_bps": null,
+      "validation_status": "ASSUMED_INVENTORY_NO_PDF_REFERENCE",
+      "channel_count": 31,
+      "channels": [
+        {
+          "name": "attitude_and_actuator_channels",
+          "count": 31,
+          "bits_per_sample": 32,
+          "interval_seconds": 0.625,
+          "rate_bps": 1587.2
+        }
+      ],
+      "engineering": {
+        "slew_torque_nm": 0.0048481368110953596,
+        "gravity_gradient_torque_nm": 8.129915979818466e-08,
+        "reaction_wheel_torque_requirement_nm": 0.007272205216643039,
+        "source_equations": "lecture AOCS 4.1-4.2"
+      },
+      "engineering_input_origin": "PLACEHOLDER; lecture AOCS 4.1-4.2; lunar gravitational parameter"
+    },
+    {
+      "subsystem": "propulsion_hk",
+      "rate_bps": 38.4,
+      "mbit_per_day": 3.31776,
+      "mb_per_day": 0.41472,
+      "telemetry_origin": "CALCULATED_FROM_CHANNELS_PLACEHOLDER",
+      "source_type": "PRELIMINARY_ESTIMATE",
+      "input_source_type": "PRELIMINARY_ESTIMATE",
+      "source": "Assumed nominal sensors; burns and event bursts not included",
+      "requires_confirmation": true,
+      "pdf_reference_bps": null,
+      "difference_from_pdf_bps": null,
+      "validation_status": "ASSUMED_INVENTORY_NO_PDF_REFERENCE",
+      "channel_count": 12,
+      "channels": [
+        {
+          "name": "tank_valve_and_thruster_status",
+          "count": 12,
+          "bits_per_sample": 16,
+          "interval_seconds": 5,
+          "rate_bps": 38.4
+        }
+      ],
+      "engineering": {
+        "propellant_required_kg": 123.60191248100391,
+        "final_mass_kg": 226.39808751899608,
+        "source_equations": "lecture Propulsion 5.1 Tsiolkovsky"
+      },
+      "engineering_input_origin": "PLACEHOLDER; lecture Propulsion 5.1; SELENA earlier 350kg wet, 1350m/s, 316s"
+    },
+    {
+      "subsystem": "eps_hk",
+      "rate_bps": 140.8,
+      "mbit_per_day": 12.165120000000002,
+      "mb_per_day": 1.5206400000000002,
+      "telemetry_origin": "CALCULATED_FROM_CHANNELS_PLACEHOLDER",
+      "source_type": "PRELIMINARY_ESTIMATE",
+      "input_source_type": "PRELIMINARY_ESTIMATE",
+      "source": "Assumed battery, array, bus and temperature channels",
+      "requires_confirmation": true,
+      "pdf_reference_bps": null,
+      "difference_from_pdf_bps": null,
+      "validation_status": "ASSUMED_INVENTORY_NO_PDF_REFERENCE",
+      "channel_count": 22,
+      "channels": [
+        {
+          "name": "electrical_telemetry",
+          "count": 22,
+          "bits_per_sample": 32,
+          "interval_seconds": 5,
+          "rate_bps": 140.8
+        }
+      ],
+      "engineering": {
+        "p_bol_w": 467.7836826807988,
+        "p_eol_w": 423.0551775981209,
+        "required_solar_power_w": 387.82801642204987,
+        "solar_area_m2": 1.4661790864736033,
+        "battery_capacity_required_wh": 1797.9315789473685,
+        "source_equations": "lecture EPS 6.1-6.2"
+      },
+      "engineering_input_origin": "PLACEHOLDER + PDF reference: 28V bus, 1.8kWh battery, 410W EOL solar array; lecture EPS 6.1-6.2"
+    },
+    {
+      "subsystem": "thermal_hk",
+      "rate_bps": 96.0,
+      "mbit_per_day": 8.2944,
+      "mb_per_day": 1.0368,
+      "telemetry_origin": "CALCULATED_FROM_CHANNELS_PLACEHOLDER",
+      "source_type": "PRELIMINARY_ESTIMATE",
+      "input_source_type": "PRELIMINARY_ESTIMATE",
+      "source": "Assumed temperature sensor logging",
+      "requires_confirmation": true,
+      "pdf_reference_bps": null,
+      "difference_from_pdf_bps": null,
+      "validation_status": "ASSUMED_INVENTORY_NO_PDF_REFERENCE",
+      "channel_count": 30,
+      "channels": [
+        {
+          "name": "temperature_sensors",
+          "count": 30,
+          "bits_per_sample": 16,
+          "interval_seconds": 5,
+          "rate_bps": 96.0
+        }
+      ],
+      "engineering": {
+        "equilibrium_temperature_k": 264.5227164812573,
+        "absorbed_heat_w": 589.96,
+        "source_equations": "lecture TCS 7.1; excludes albedo and IR for lunar scenario"
+      },
+      "engineering_input_origin": "PLACEHOLDER; lecture TCS 7.1; simplified solar and internal heat only"
+    },
+    {
+      "subsystem": "obdh_hk_logs",
+      "rate_bps": 307.34222222222223,
+      "mbit_per_day": 26.554368,
+      "mb_per_day": 3.319296,
+      "telemetry_origin": "CALCULATED_FROM_CHANNELS_PLACEHOLDER",
+      "source_type": "PRELIMINARY_ESTIMATE",
+      "input_source_type": "PRELIMINARY_ESTIMATE",
+      "source": "Own OBDH housekeeping only; excludes other subsystem data",
+      "requires_confirmation": true,
+      "pdf_reference_bps": null,
+      "difference_from_pdf_bps": null,
+      "validation_status": "ASSUMED_INVENTORY_NO_PDF_REFERENCE",
+      "channel_count": 13,
+      "channels": [
+        {
+          "name": "processor_memory_and_fault_status",
+          "count": 12,
+          "bits_per_sample": 32,
+          "interval_seconds": 1.25,
+          "rate_bps": 307.2
+        },
+        {
+          "name": "diagnostic_event_average",
+          "count": 1,
+          "bits_per_sample": 1024,
+          "interval_seconds": 7200,
+          "rate_bps": 0.14222222222222222
+        }
+      ],
+      "engineering": {
+        "software_memory_bytes": 350000,
+        "cpu_kips_reference": 16,
+        "note": "KIPS is processing load, not telemetry bits/s.",
+        "source_equations": "lecture OBDH 1.2-1.3"
+      },
+      "engineering_input_origin": "PLACEHOLDER; lecture OBDH 1.2-1.3; CPU load does not equal downlink"
+    }
+  ],
+  "total_rate_bps_per_spacecraft": 2301.742222222222,
+  "total_mbit_per_day_per_spacecraft": 198.870528,
+  "total_mb_per_day_per_spacecraft": 24.858816,
+  "total_mbit_per_day_constellation": 1590.964224,
+  "total_mb_per_day_constellation": 198.870528,
+  "n_satellites": 8,
+  "missing_subsystems": [],
+  "telemetry_complete": true,
+  "validation_warning": "A rate that matches a PDF aggregate by reverse engineering is NOT independent verification. Engineering equations (EPS, AOCS, propulsion, thermal, structures, OBDH) size hardware; they do not determine the telemetry rates, which come only from the channel inventories.",
+  "warning": "Engineering outputs and sensor inventories are preliminary; equations do not determine sampling rates."
+}

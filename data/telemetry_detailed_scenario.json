@@ -1,5 +1,5 @@
 {
-  "description": "Detailed telemetry scenario, per spacecraft. PDF totals override preliminary component sums. Not validated.",
+  "description": "Detailed telemetry scenario, per spacecraft. PDF totals override preliminary component sums. Not validated. Stream rates are NOT stored here: they are always computed from data/telemetry_generation_inputs.json (null = filled at run time).",
   "policy": {
     "priority_max_age_hours": {
       "1": 168,
@@ -17,7 +17,7 @@
     {
       "name": "payload_housekeeping",
       "mode": "continuous",
-      "rate_bps": 100,
+      "rate_bps": null,
       "priority": 3,
       "max_age_hours": 24,
       "status": "PDF"
@@ -25,7 +25,7 @@
     {
       "name": "structures_mechanisms",
       "mode": "continuous",
-      "rate_bps": 32,
+      "rate_bps": null,
       "priority": 3,
       "max_age_hours": 24,
       "status": "PDF"
@@ -33,7 +33,7 @@
     {
       "name": "aocs_nominal_hk",
       "mode": "continuous",
-      "rate_bps": 1587.2,
+      "rate_bps": null,
       "priority": 4,
       "max_age_hours": 12,
       "status": "PRE"
@@ -41,7 +41,7 @@
     {
       "name": "propulsion_hk",
       "mode": "continuous",
-      "rate_bps": 38.4,
+      "rate_bps": null,
       "priority": 4,
       "max_age_hours": 12,
       "status": "PRE"
@@ -49,7 +49,7 @@
     {
       "name": "eps_hk",
       "mode": "continuous",
-      "rate_bps": 140.8,
+      "rate_bps": null,
       "priority": 4,
       "max_age_hours": 12,
       "status": "PRE"
@@ -57,7 +57,7 @@
     {
       "name": "thermal_hk",
       "mode": "continuous",
-      "rate_bps": 96,
+      "rate_bps": null,
       "priority": 3,
       "max_age_hours": 24,
       "status": "PRE"
@@ -65,7 +65,7 @@
     {
       "name": "obdh_hk_logs",
       "mode": "continuous",
-      "rate_bps": 307.342222,
+      "rate_bps": null,
       "priority": 5,
       "max_age_hours": 6,
       "status": "PRE"

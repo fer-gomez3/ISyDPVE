@@ -2,6 +2,8 @@
   "geometry_source": "SHIFTED_2020_HISTORICAL_SCENARIO_NOT_PROPAGATION",
   "telemetry_generation": "results/telemetry_generation.json",
   "telemetry_total_bps": 2301.742222222222,
+  "data_generation_interface": "results/data_generation_interface.csv",
+  "subsystem_engineering": "results/subsystem_engineering.json",
   "hga_sizing": "results/hga_sizing.json",
   "hga_status": "PRELIMINARY_HYPOTHETICAL",
   "dsn_access_sensitivity": "results/dsn_access_sensitivity.json",

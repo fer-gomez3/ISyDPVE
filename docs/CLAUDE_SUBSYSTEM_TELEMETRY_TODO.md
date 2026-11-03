@@ -38,3 +38,19 @@ Do not interpret these intervals as flight requirements. Check whether microswit
 7. When real channels become available, do not force their sum to equal 100 or 32 bps. Report differences and investigate.
 
 **Source distinction:** PDF §§2.7.3 and 7.5.3 supply aggregate rates and partial channel descriptions. The sensor bit allocations and periods shown in bold are engineering placeholders, not statements from the PDF.
+
+## Review status (Claude follow-up)
+
+| # | Item | Status |
+| --- | --- | --- |
+| 1 | Replace placeholder inventories with real sensor lists | **OPEN, needs the owners.** PDF totals are references only (not overrides) |
+| 2 | Packet framing, time tags, bursts, modes, compression | **Not added**: no defined inputs. Protocol overhead is applied once, in the downlink model (`data/ttc_parameters.json`) |
+| 3 | Excel Telemetry tab: same equations, PDF reference, difference, label | **Done**: formulas per channel, `PDF reference`, `Calculated - PDF`, `Status` with `PENDING REAL DATA` |
+| 4 | Computed rates used by DSN/backlog/planning, not stale values | **Done**: `telemetry_detailed_scenario.json` no longer stores rates; `apply_computed_rates` is the single source; standalone `ttc.downlink_simulation` derives them from the inventories |
+| 5 | Interval change propagates to telemetry and planning; conservation | **Done**: `tests/test_data_generation.py` (via `main.py --telemetry-input`) |
+| 6 | Warning that matching a PDF aggregate is not independent verification | **Done**: `validation_status`, `validation_warning`, Excel status and technical report |
+| 7 | Do not force sums to 100 or 32 | **Done**: the difference is reported, never forced |
+
+Programming defects fixed in this review: (a) `telemetry_generation.calculate` still let the PDF aggregate override the channels, so the two entry points gave different rates for the same input; (b) a subsystem without inventory or reference was counted as 0 bit/s; (c) the source text of every subsystem was replaced by an origin code; (d) the number of satellites had a second source in `subsystem_engineering_inputs.json`.
+
+The engineering decisions found in the review are in section 9 of `docs/technical-report.md`.

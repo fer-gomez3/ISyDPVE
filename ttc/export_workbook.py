@@ -154,11 +154,13 @@ def export(output="outputs/SELENA_TTC_Model.xlsx", root=".", link_input="data/li
             tl.cell(r, 7).fill = PatternFill("solid", fgColor=FILL[origin])
     last = tl.max_row
     tl.append([])
-    tl.append(["Summary per subsystem", None, None, None, None, "Rate bit/s", "Mbit/day", "MB/day"])
+    tl.append(["Summary per subsystem", None, None, None, None, "Rate bit/s", "Mbit/day", "MB/day",
+               "PDF reference bit/s (DOC)", "Calculated - PDF bit/s", "Status"])
     hdr = tl.max_row
     for c in tl[hdr]:
         if c.value:
             c.font = Font(bold=True)
+            c.alignment = Alignment(wrap_text=True, vertical="top")
     first_sum = hdr + 1
     for s in tel_cfg.get("subsystems", []):
         tl.append([s["name"]])
@@ -166,6 +168,16 @@ def export(output="outputs/SELENA_TTC_Model.xlsx", root=".", link_input="data/li
         tl.cell(r, 6).value = f"=SUMIF($A$2:$A${last},A{r},$F$2:$F${last})"
         tl.cell(r, 7).value = f"=F{r}*86400/1000000"
         tl.cell(r, 8).value = f"=F{r}*86400/8000000"
+        ref = s.get("pdf_rate_bps")
+        if ref is not None:
+            tl.cell(r, 9).value = ref
+            tl.cell(r, 9).fill = PatternFill("solid", fgColor=FILL["DOC"])
+            tl.cell(r, 10).value = f"=F{r}-I{r}"
+        pending = s["source_type"] != "PDF"
+        head = (f'IF(ISNUMBER(I{r}),IF(ABS(J{r})<0.000000001,"Matches PDF aggregate'
+                + (' by construction - NOT independent verification"' if str(s["source_type"]).startswith("REVERSE_ENGINEERED") else '"')
+                + ',"DIFFERS from PDF aggregate - investigate"),"No PDF reference")')
+        tl.cell(r, 11).value = f'={head}&" | PENDING REAL DATA"' if pending else f'={head}'
     last_sum = tl.max_row
     tl.append(["TOTAL per satellite"])
     r = tl.max_row
@@ -185,7 +197,7 @@ def export(output="outputs/SELENA_TTC_Model.xlsx", root=".", link_input="data/li
             tl.cell(rr, col).fill = PatternFill("solid", fgColor=FILL["CALC"])
             tl.cell(rr, col).number_format = "#,##0.00"
     _header(tl)
-    _widths(tl, [26, 36, 10, 14, 12, 14, 14, 52])
+    _widths(tl, [26, 36, 10, 14, 12, 14, 14, 52, 20, 18, 70])
     wb.defined_names["tel_total_bps"] = DefinedName("tel_total_bps", attr_text=f"Telemetry!$F${tot_row}")
     wb.defined_names["tel_mbit_day"] = DefinedName("tel_mbit_day", attr_text=f"Telemetry!$G${tot_row}")
 

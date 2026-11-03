@@ -1,5 +1,4 @@
 {
-  "n_satellites": 8,
   "notes": "All engineering values are placeholders unless validated by subsystem owners. Equations from user's ISyDPVE lecture summary; PDF used for reference only.",
   "subsystems": {
     "eps_hk": {
@@ -68,5 +67,6 @@
         2
       ]
     }
-  }
+  },
+  "_shared_parameters": "Number of satellites lives only in data/ttc_parameters.json."
 }

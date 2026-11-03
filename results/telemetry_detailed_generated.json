@@ -1,5 +1,5 @@
 {
-  "description": "Detailed telemetry scenario, per spacecraft. PDF totals override preliminary component sums. Not validated.",
+  "description": "Detailed telemetry scenario, per spacecraft. PDF totals override preliminary component sums. Not validated. Stream rates are NOT stored here: they are always computed from data/telemetry_generation_inputs.json (null = filled at run time).",
   "policy": {
     "priority_max_age_hours": {
       "1": 168,
@@ -43,7 +43,7 @@
       "rate_bps": 32.0,
       "priority": 3,
       "max_age_hours": 24,
-      "status": "PDF"
+      "status": "PRE"
     },
     {
       "name": "aocs_nominal_hk",

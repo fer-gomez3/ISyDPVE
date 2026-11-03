@@ -1,0 +1,8 @@
+subsystem,rate_bps,bits_per_day,mbit_per_day,mb_per_day,mode,priority,max_data_age_hours,min_transfers_per_day,origin,pending_real_data,pdf_reference_bps,difference_from_pdf_bps,validation_status,source
+payload_housekeeping,100.0,8640000.0,8.64,1.08,continuous,3,24.0,1.0,ASSUMPTION,True,100.0,0.0,MATCHES_PDF_BY_CONSTRUCTION_NOT_INDEPENDENT_VERIFICATION,"PDF §2.7.3 aggregate 100 bps; illustrative clock lock, cell temperatures, SSPA RF power. Quantization and cadence NOT specified; calibration pending"
+structures_mechanisms,32.0,2764800.0,2.7648,0.3456,continuous,3,24.0,1.0,ASSUMPTION,True,32.0,0.0,MATCHES_PDF_BY_CONSTRUCTION_NOT_INDEPENDENT_VERIFICATION,"PDF §7.5.3 aggregate 32 bps; 8 microswitch bits, two 16-bit SADM encoders, two 16-bit HGA resolvers, six RTD channels at 0.2Hz. Encoder and resolver cadence/RTD bit depth assumed."
+aocs_nominal_hk,1587.2,137134080.0,137.13408,17.14176,continuous,4,12.0,2.0,ASSUMPTION,True,,,ASSUMED_INVENTORY_NO_PDF_REFERENCE,Assumed logged attitude/actuator channels; confirm with ADCS
+propulsion_hk,38.4,3317760.0,3.31776,0.41472,event,4,12.0,2.0,ASSUMPTION,True,,,ASSUMED_INVENTORY_NO_PDF_REFERENCE,Assumed nominal sensors; burns and event bursts not included
+eps_hk,140.8,12165120.000000002,12.165120000000002,1.5206400000000002,continuous,4,12.0,2.0,ASSUMPTION,True,,,ASSUMED_INVENTORY_NO_PDF_REFERENCE,"Assumed battery, array, bus and temperature channels"
+thermal_hk,96.0,8294400.0,8.2944,1.0368,continuous,3,24.0,1.0,ASSUMPTION,True,,,ASSUMED_INVENTORY_NO_PDF_REFERENCE,Assumed temperature sensor logging
+obdh_hk_logs,307.34222222222223,26554368.0,26.554368,3.319296,continuous,5,6.0,4.0,ASSUMPTION,True,,,ASSUMED_INVENTORY_NO_PDF_REFERENCE,Own OBDH housekeeping only; excludes other subsystem data

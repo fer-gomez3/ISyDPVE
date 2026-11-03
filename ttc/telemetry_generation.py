@@ -70,7 +70,7 @@ def compute(input_path="data/telemetry_generation_inputs.json", output_dir="outp
               "n_satellites": int(load_parameters()["n_satellites"]),
               "total_mbit_per_day_constellation": model["total_mbit_per_day_per_spacecraft"] * int(load_parameters()["n_satellites"]),
               "total_mb_per_day_constellation": model["total_mb_per_day_per_spacecraft"] * int(load_parameters()["n_satellites"]),
-              "validation_warning": "PDF aggregates are provisional sizing fallbacks, NOT sensor-derived rates. Hardware sizing equations do not generate telemetry; only channel count, bits/sample and sampling interval do."}
+              "validation_warning": "PDF aggregates are provisional sizing fallbacks, NOT independent verification of sensor-derived rates. Hardware sizing equations do not generate telemetry; only channel count, bits/sample and sampling interval do."}
     out = Path(output_dir)
     out.mkdir(parents=True, exist_ok=True)
     (out / "telemetry_generation.json").write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")

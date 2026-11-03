@@ -48,12 +48,20 @@ def export(output="outputs/SELENA_TTC_Model.xlsx",root="."):
     if link_path.exists():
         link=json.loads(link_path.read_text(encoding="utf-8"))
         sheet("Link Budget",["Parameter","Value"],[[k,str(v) if isinstance(v,(dict,list)) else v] for k,v in link.items()])
+    for filename,tab,columns in [("contact_energy_ranking.json","Contact Ranking",["satellite","station","candidate_start_utc","geometry_source","distance_km","elevation_deg","minimum_tx_rf_w","estimated_tx_dc_w","energy_j_per_payload_bit","rank_status"]),("xband_trade_study.json","RF Sensitivity",["distance_km","rx_gt_db_per_k","tx_gain_dbi","data_rate_bps","minimum_tx_rf_w_with_design_margin","estimated_tx_dc_w"])]:
+        p=root/"outputs"/filename
+        if p.exists():
+            obj=json.loads(p.read_text(encoding="utf-8"))
+            entries=obj.get("ranked_windows",obj.get("cases",[]))
+            if tab=="RF Sensitivity":
+                entries=[{**e,**e.get("inputs",{})} for e in entries]
+            sheet(tab,columns,[[e.get(k,"") for k in columns] for e in entries])
     sheet("Assumptions",["Parameter","Value","Status"],[
         ["Allocation default",policy["default_fraction"],"PRE"],
         ["Setup minutes",policy["setup_minutes"],"PRE"],
         ["Protocol overhead",cfg["policy"]["protocol_overhead_fraction"],"PRE"],
         ["X-band gross bps",cfg["policy"]["net_downlink_bps"],"PRE"],
-        ["Geometry","Historical 2020, not mission 2030","NOT VALIDATED"],
+        ["Geometry","Contact windows assumed 2030; range/elevation nominal placeholders","SCENARIO"],
         ["DSN booking","None confirmed","NOT VALIDATED"],
         ["Telemetry components","Aggregated rates; PDF totals override individual estimates","PRE"]])
     dest=root/output;dest.parent.mkdir(parents=True,exist_ok=True)

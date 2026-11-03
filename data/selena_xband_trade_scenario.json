@@ -1,0 +1,62 @@
+{
+  "description": "SELENA X-band parametric trade study. Every numeric value below is an engineering assumption, not an approved component specification.",
+  "antenna": {
+    "candidate": "Anywaves deployable reflectarray concept",
+    "guaranteed_gain_dbi": null,
+    "verified_mass_kg": null,
+    "assumed_gain_dbi": 33,
+    "assumed_mass_limit_kg": 3
+  },
+  "ground_station": {
+    "candidate": "DSN 34 m",
+    "verified_gt_db_per_k": null
+  },
+  "coding": {
+    "modulation": null,
+    "fec": null,
+    "target_ber": null,
+    "verified_required_ebn0_db": null
+  },
+  "baseline": {
+    "frequency_hz": 8400000000,
+    "assumed_required_ebn0_db": 10,
+    "design_margin_db": 3,
+    "assumed_pa_efficiency": 0.4,
+    "assumed_electronics_w": 5,
+    "assumed_antenna_pointing_w": 0
+  },
+  "losses_db": {
+    "pointing": 1,
+    "feed": 0.5,
+    "polarization": 0.5,
+    "atmosphere_weather": 1
+  },
+  "distance_cases_km": [
+    384400,
+    400000,
+    420000
+  ],
+  "ground_gt_cases_db_per_k": [
+    25,
+    30,
+    40,
+    50
+  ],
+  "antenna_gain_cases_dbi": [
+    20,
+    25,
+    30,
+    33,
+    35
+  ],
+  "data_rate_cases_bps": [
+    64000,
+    128000,
+    256000
+  ],
+  "notes": [
+    "All numbers illustrative",
+    "2020 shifted timestamps are not 2030 propagation",
+    "Antenna gain and mass require manufacturer verification"
+  ]
+}

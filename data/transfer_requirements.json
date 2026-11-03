@@ -40,7 +40,7 @@
       "source": "Subsystems PDF 7.5.3"
     },
     {
-      "name": "aocs",
+      "name": "aocs_nominal_hk",
       "priority": 4,
       "mode": "continuous",
       "rate_bps": null,
@@ -50,7 +50,7 @@
       "source": "TBD by subsystem"
     },
     {
-      "name": "eps",
+      "name": "eps_hk",
       "priority": 4,
       "mode": "continuous",
       "rate_bps": null,
@@ -60,7 +60,7 @@
       "source": "TBD by subsystem"
     },
     {
-      "name": "thermal",
+      "name": "thermal_hk",
       "priority": 3,
       "mode": "continuous",
       "rate_bps": null,
@@ -70,7 +70,7 @@
       "source": "TBD by subsystem"
     },
     {
-      "name": "propulsion",
+      "name": "propulsion_hk",
       "priority": 4,
       "mode": "event",
       "rate_bps": null,
@@ -80,7 +80,7 @@
       "source": "TBD by subsystem"
     },
     {
-      "name": "obdh",
+      "name": "obdh_hk_logs",
       "priority": 5,
       "mode": "continuous",
       "rate_bps": null,

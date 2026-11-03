@@ -10,7 +10,9 @@ from artifact_tool import Workbook, SpreadsheetFile
 
 def export(output="outputs/SELENA_TTC_Model.xlsx",root="."):
     root=Path(root)
-    cfg=json.loads((root/"data/telemetry_detailed_scenario.json").read_text(encoding="utf-8"))
+    telemetry_path=root/"outputs/telemetry_detailed_generated.json"
+    if not telemetry_path.exists(): telemetry_path=root/"data/telemetry_detailed_scenario.json"
+    cfg=json.loads(telemetry_path.read_text(encoding="utf-8"))
     policy=json.loads((root/"data/dsn_allocation_scenario.json").read_text(encoding="utf-8"))
     wb=Workbook.create()
     def sheet(name,headers,rows):

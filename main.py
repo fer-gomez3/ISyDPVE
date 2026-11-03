@@ -11,6 +11,7 @@ from ttc.power_budget import evaluate
 from ttc.link_budget import from_file as evaluate_link
 from ttc.xband_trade_study import from_file as evaluate_xband_trade
 from ttc.contact_energy_optimizer import compute as rank_contacts
+from ttc.export_excel import export as export_excel
 from ttc.downlink_simulation import compute as simulate_downlink
 from ttc.dsn_allocation import compute_allocation
 
@@ -48,6 +49,9 @@ def main():
                        geometry_status=planning["status"])
     else:
         summary["planning"]="SKIPPED: contacts CSV not found"
+    (out/"overview.json").write_text(json.dumps(summary,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
+    workbook=export_excel(output=str(out/"SELENA_TTC_Model.xlsx"))
+    summary["excel_workbook"]=str(workbook)
     (out/"overview.json").write_text(json.dumps(summary,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
     print(json.dumps(summary,indent=2,ensure_ascii=False))
     return summary

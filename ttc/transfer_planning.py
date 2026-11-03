@@ -21,7 +21,11 @@ def stream_rate(s):
         return None if v is None else float(v)
     if mode=="event":
         size=s.get("bytes_per_event"); period=s.get("event_interval_hours")
-        return None if size is None or period is None else float(size)*8/(float(period)*3600)
+        if size is not None and period is not None:
+            if float(period)<=0: raise ValueError("event_interval_hours must be positive")
+            return float(size)*8/(float(period)*3600)
+        v=s.get("rate_bps")
+        return None if v is None else float(v)  # Explicit preliminary average for event stream
     raise ValueError("Unsupported mode: "+str(mode))
 
 def recurrence_display(hours):

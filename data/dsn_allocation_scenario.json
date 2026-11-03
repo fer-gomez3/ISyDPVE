@@ -1,12 +1,23 @@
 {
-  "description": "HYPOTHESIS ONLY. DSN allocation fractions are editable, not confirmed bookings.",
-  "default_fraction": 0.4,
-  "station_fraction": {
-    "Goldstone": 0.4,
-    "Madrid": 0.4,
-    "Canberra": 0.4
-  },
+  "description": "Hypothetical total DSN network access for all eight SELENA spacecraft; 3 h/day nominal, 1/6 h sensitivity. NOT a NASA allocation or guarantee. Setup is spacecraft-side approximation, not DSN station precal.",
+  "default_fraction": 1,
+  "station_fraction": {},
   "satellite_fraction": {},
-  "setup_minutes": 5,
-  "min_contact_minutes": 15
+  "setup_minutes": 15,
+  "min_contact_minutes": 15,
+  "daily_network_hours": 3,
+  "daily_network_hours_sensitivity": [
+    1,
+    3,
+    6
+  ],
+  "setup_minutes_sensitivity": [
+    5,
+    15,
+    30
+  ],
+  "sources": [
+    "https://deepspace.jpl.nasa.gov/files/875-0001-H1.pdf",
+    "https://www.nasa.gov/wp-content/uploads/2023/09/dsn-services-catalog.pdf"
+  ]
 }

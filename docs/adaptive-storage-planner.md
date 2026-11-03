@@ -33,3 +33,20 @@ The scheduler currently plans using **memory and latency urgency**, not a full i
 4. Introduce a timestamped FIFO packet queue to evaluate exact data age during bursts.
 5. Integrate HGA pointing and link-budget variations, plus independent scheduling optimization.
 6. Run sensitivity cases for memory capacity, event severity, DSN access and setup overhead.
+
+## OBDH capacity sizing (design variable, not fixed)
+
+Run `python -m ttc.memory_sizing`. This sweeps 128–8192 Mbit per spacecraft, writes
+`outputs/memory_sizing.csv` and `outputs/memory_sizing.json`, and reports:
+- smallest **tested** memory capacity that avoids overflow and reserve violations;
+- smallest **tested** capacity that also has no contact-gap or age-proxy warnings;
+- per-satellite and per-orbital-group results.
+
+All eight spacecraft have identical memory hardware in each trial, sized against the
+worst-case spacecraft. The 3+3+2 orbital groups share neither RAM nor DSN booking.
+A feasible memory value alone does not establish a feasible downlink schedule.
+The 24-hour contact condition and stricter stream-specific deadlines must be
+validated with a timestamped queue and realistic ground resource availability.
+
+**Important:** Results are not yet independently executed or validated. The memory
+sweep is discrete, not a proof of a global optimum; the current scheduler is greedy.

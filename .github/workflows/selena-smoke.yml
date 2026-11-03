@@ -1,0 +1,41 @@
+name: SELENA TT&C smoke test
+on:
+  push:
+    branches: [feature/ttc-initial-structure]
+  workflow_dispatch:
+jobs:
+  model:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Run regression tests
+        run: python -m pytest -q
+      - name: Run full scenario and export Excel
+        run: python main.py
+      - name: Verify workbook and 2030 scenario
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from zipfile import ZipFile
+          out=Path('outputs')
+          workbook=out/'SELENA_TTC_Model.xlsx'
+          assert workbook.exists() and workbook.stat().st_size>1000
+          with ZipFile(workbook) as z:
+              assert 'xl/workbook.xml' in z.namelist()
+          overview=json.loads((out/'overview.json').read_text())
+          assert overview['excel_workbook']==str(workbook)
+          dates=(out/'contacts_2030_scenario.csv').read_text()
+          assert '2030-07-14' in dates
+          print('SELENA Excel and 2030 scenario verified')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: selena-ttc-outputs
+          path: outputs/

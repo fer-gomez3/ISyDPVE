@@ -76,6 +76,9 @@ def plan(config_path=None, output_dir=None):
     allowed = cfg.get("ground_station_enabled", {})
     initial = float(cfg.get("initial_memory_fraction", 0))
     if not 0 <= initial < 1: raise ValueError("Invalid initial fill")
+    # Time-stamped FIFO chunks: [generation_time, bits] for exact age checks.
+    fifo = {sat: {stream["name"]: [] for stream in streams} for sat in sats}
+    dropped = defaultdict(float)
     backlog = {sat: {s["name"]: capacity * initial / len(streams) for s in streams} for sat in sats}
     last_downlink = {sat: target for sat in sats}
     produced = defaultdict(float); sent = defaultdict(float)
@@ -94,6 +97,7 @@ def plan(config_path=None, output_dir=None):
                                   if not e.get("subsystems") or s["name"] in e["subsystems"]] or [1.])
                 bits = s["mean_rate_bps"] * dt * multiplier
                 backlog[sat][s["name"]] += bits
+                fifo[sat][s["name"]].append([t, bits])
                 produced[(sat,s["name"])] += bits
         # Advance ongoing contacts. Station and satellite resources stay locked.
         for sat, link in list(active_links.items()):
@@ -106,6 +110,13 @@ def plan(config_path=None, output_dir=None):
                     name=s["name"]
                     bits=min(budget, backlog[sat][name])
                     backlog[sat][name]-=bits
+                    remaining_to_remove=bits
+                    queue=fifo[sat][name]
+                    while remaining_to_remove>1e-7 and queue:
+                        consumed=min(remaining_to_remove,queue[0][1])
+                        queue[0][1]-=consumed
+                        remaining_to_remove-=consumed
+                        if queue[0][1]<=1e-7: queue.pop(0)
                     sent[(sat,name)]+=bits
                     link["sent_bits"]+=bits
                     budget-=bits
@@ -123,9 +134,9 @@ def plan(config_path=None, output_dir=None):
             if total>capacity: violations[sat].add("MEMORY_OVERFLOW")
             if total>capacity*(1-reserve): violations[sat].add("MEMORY_RESERVE_EXCEEDED")
             for s in streams:
-                if s["mean_rate_bps"] and backlog[sat][s["name"]]/s["mean_rate_bps"] > s["deadline_hours"]*3600:
-                    # Conservative proxy for age during events: actual FIFO age requires timestamped queues.
-                    violations[sat].add("AGE_PROXY_"+s["name"])
+                queue=fifo[sat][s["name"]]
+                if queue and (t-queue[0][0]).total_seconds()>s["deadline_hours"]*3600:
+                    violations[sat].add("DATA_AGE_"+s["name"])
             if (t-last_downlink[sat]).total_seconds()>max_gap: violations[sat].add("24H_CONTACT_GAP")
             last_sample[sat]={"satellite":sat,"time_utc":iso(t),"memory_mbit":round(total/1e6,4),
                 "occupancy_fraction":round(total/capacity,5),
@@ -145,8 +156,8 @@ def plan(config_path=None, output_dir=None):
             base_rate=sum(s["mean_rate_bps"] for s in streams)
             hours_left=max(0,(capacity*(1-reserve)-total)/max(1,base_rate)/3600)
             since=(t-last_downlink[sat]).total_seconds()/3600
-            age_risk=max(backlog[sat][s["name"]]/max(1,s["mean_rate_bps"])/3600/
-                         s["deadline_hours"] for s in streams)
+            age_risk=max(((t-fifo[sat][s["name"]][0][0]).total_seconds()/3600 /
+                         s["deadline_hours"] if fifo[sat][s["name"]] else 0) for s in streams)
             urgency=max(total/(capacity*(1-reserve)),since/(max_gap/3600),age_risk)
             # Begin earlier when the next contact opportunity is scarce; also allow
             # a proactive fill-level trigger so short windows are not wasted.
@@ -193,7 +204,7 @@ def plan(config_path=None, output_dir=None):
                          "end_utc":iso(end),"downloaded_mbit":round(link["sent_bits"]/1e6,5),
                          "reason":"truncated_at_horizon"})
     summary={"status":"PRELIMINARY_HYPOTHETICAL_NOT_BOOKED",
-      "note":"2020 windows shifted by calendar to 2030, NOT repropagated. DSN cap is hypothetical; memory and environment events are assumptions. Greedy rolling heuristic, not a proven global optimum. AGE_PROXY uses backlog/nominal generation and is not an exact FIFO timestamp age under event bursts.",
+      "note":"2020 windows shifted by calendar to 2030, NOT repropagated. DSN cap is hypothetical; memory and environment events are assumptions. Greedy rolling heuristic, not a proven global optimum. FIFO age uses timestamps at 5-minute resolution.",
       "scenario_start_utc":iso(target),"scenario_end_utc":iso(end),
       "effective_downlink_bps":effective,"memory_capacity_mbit_per_satellite":capacity/1e6,
       "satellites":{},"contacts":len(schedule),"dsn_assigned_hours":round(sum(daily_used.values())/3600,3)}
@@ -201,6 +212,7 @@ def plan(config_path=None, output_dir=None):
         summary["satellites"][sat]={"generated_mbit":round(sum(produced[(sat,s["name"])] for s in streams)/1e6,4),
            "downlinked_mbit":round(sum(sent[(sat,s["name"])] for s in streams)/1e6,4),
            "remaining_mbit":round(sum(backlog[sat].values())/1e6,4),
+           "dropped_mbit":round(sum(dropped[(sat,x["name"])] for x in streams)/1e6,4),
            "peak_memory_mbit":round(peak[sat]/1e6,4),
            "peak_occupancy_fraction":round(peak[sat]/capacity,5),
            "contacts":sum(x["satellite"]==sat for x in schedule),
@@ -208,6 +220,21 @@ def plan(config_path=None, output_dir=None):
            "by_subsystem":{s["name"]:{"generated_mbit":round(produced[(sat,s["name"])]/1e6,4),
                    "downlinked_mbit":round(sent[(sat,s["name"])]/1e6,4),
                    "remaining_mbit":round(backlog[sat][s["name"]]/1e6,4)} for s in streams}}
+    # Post-run checks: never silently accept impossible storage or resource assignments.
+    for sat in sats:
+        for stream in streams:
+            name=stream["name"]
+            residual=produced[(sat,name)]-sent[(sat,name)]-dropped[(sat,name)]-backlog[sat][name]
+            if abs(residual)>max(1e-3,produced[(sat,name)]*1e-9):
+                raise AssertionError("Telemetry conservation failure: "+sat+"/"+name)
+    for i,a in enumerate(schedule):
+        a0=datetime.fromisoformat(a["start_utc"].replace("Z","+00:00"))
+        a1=datetime.fromisoformat(a["end_utc"].replace("Z","+00:00"))
+        for b in schedule[i+1:]:
+            if a["satellite"]!=b["satellite"] and a["station"]!=b["station"]: continue
+            b0=datetime.fromisoformat(b["start_utc"].replace("Z","+00:00"))
+            b1=datetime.fromisoformat(b["end_utc"].replace("Z","+00:00"))
+            if a0<b1 and b0<a1: raise AssertionError("Conflicting station/satellite contacts")
     out=Path(output_dir or ROOT/"outputs")
     out.mkdir(parents=True,exist_ok=True)
     (out/"adaptive_storage_summary.json").write_text(json.dumps(summary,indent=2)+"\n",encoding="utf-8")

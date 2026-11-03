@@ -22,10 +22,10 @@ def inputs():
 def test_both_entry_points_give_the_same_rates():
     """Regression: telemetry_generation.calculate used to let the PDF aggregate override channels."""
     cfg = inputs()
-    cfg["subsystems"][0]["components"][0]["interval_seconds"] = 2   # payload clock lock 1 s -> 2 s
+    cfg["subsystems"][2]["components"][0]["interval_seconds"] = 2   # AOCS first channel slower
     a = {r["subsystem"]: r["rate_bps"] for r in telemetry_calculate(cfg)["subsystems"]}
     b = {r["subsystem"]: r["rate_bps"] for r in telemetry_rows(cfg)}
-    assert a == b and a["payload_housekeeping"] == pytest.approx(96)
+    assert a == b and a["aocs_nominal_hk"] < 1587.2
 
 
 def test_subsystem_without_inventory_or_reference_is_missing_not_zero():
@@ -38,30 +38,48 @@ def test_subsystem_without_inventory_or_reference_is_missing_not_zero():
     assert result["total_rate_bps_per_spacecraft"] == pytest.approx(2301.7422222222)  # unknown never counted as 0 bps data
 
 
-def test_pdf_aggregate_is_fallback_only_without_channels():
-    cfg = inputs()
-    cfg["subsystems"][0]["components"] = []
-    row = telemetry_rows(cfg)[0]
-    assert row["rate_bps"] == 100 and row["telemetry_origin"] == "PDF_AGGREGATE_FALLBACK" and row["source_type"] == "PDF"
+def test_pdf_aggregate_is_used_when_no_channel_is_complete():
+    row = telemetry_rows(inputs())[0]
+    assert row["rate_bps"] == 100 and row["itemised_bps"] == 0 and row["rate_basis"] == "PDF_AGGREGATE_PROVISIONAL"
 
 
-def test_match_with_pdf_is_labelled_as_not_independent_verification():
+def test_pdf_aggregate_is_provisional_not_verified():
     rows = {r["subsystem"]: r for r in telemetry_rows(inputs())}
     for name in ("payload_housekeeping", "structures_mechanisms"):
-        assert rows[name]["difference_from_pdf_bps"] == pytest.approx(0)
-        assert rows[name]["validation_status"] == "MATCHES_PDF_BY_CONSTRUCTION_NOT_INDEPENDENT_VERIFICATION"
+        assert rows[name]["unitemised_remainder_bps"] == rows[name]["pdf_reference_bps"]
+        assert rows[name]["validation_status"] == "PDF_AGGREGATE_PROVISIONAL_ITEMISATION_PENDING"
         assert rows[name]["requires_confirmation"] is True
     assert rows["aocs_nominal_hk"]["validation_status"] == "ASSUMED_INVENTORY_NO_PDF_REFERENCE"
-    cfg = inputs(); cfg["subsystems"][0]["components"][0]["count"] = 3
-    assert {r["subsystem"]: r for r in telemetry_rows(cfg)}["payload_housekeeping"]["validation_status"].startswith("DIFFERS")
 
 
-def test_source_text_is_kept_next_to_the_origin(run_default):
+def test_source_text_is_kept_next_to_the_basis(run_default):
     out, _ = run_default
     t = json.loads((out / "telemetry_generation.json").read_text())
     for r in t["subsystems"]:
-        assert r["source"] and r["telemetry_origin"] and r["validation_status"]
+        assert r["source"] and r["rate_basis"] and r["validation_status"]
     assert "NOT independent verification" in t["validation_warning"]
+    assert t["total_unitemised_remainder_bps_per_spacecraft"] == 132
+
+
+def test_traceability_csv_lists_every_channel_with_provenance(run_default):
+    out, _ = run_default
+    rows = list(csv.DictReader((out / "telemetry_traceability.csv").open()))
+    assert {r["subsystem"] for r in rows} >= {"payload_housekeeping", "structures_mechanisms", "aocs_nominal_hk"}
+    rtd = next(r for r in rows if r["channel"] == "structural_rtd")
+    assert rtd["counted"] == "False" and rtd["missing_parameters"] == "bits_per_sample" and rtd["interval_provenance"] == "DOC"
+    aocs = [r for r in rows if r["subsystem"] == "aocs_nominal_hk"]
+    assert all(r["counted"] == "True" and r["count_provenance"] == "ASSUMPTION" for r in aocs)
+
+
+def test_interface_and_per_satellite_outputs_carry_the_breakdown(run_default):
+    out, _ = run_default
+    iface = json.loads((out / "data_generation_interface.json").read_text())
+    pay = next(r for r in iface["subsystems"] if r["subsystem"] == "payload_housekeeping")
+    assert pay["itemised_bps"] == 0 and pay["unitemised_remainder_bps"] == 100 and pay["pending_real_data"] is True
+    assert iface["per_spacecraft"]["unitemised_remainder_bps"] == 132
+    sat = json.loads(next((out / "per_satellite").glob("*.json")).read_text())
+    assert sat["telemetry_unitemised_remainder_bps"] == 132 and sat["telemetry_breakdown"]
+    assert sat["obdh_buffer"]["minimum_buffer_mbit_from_peak_backlog"] == sat["downlink"]["peak_backlog_mbit"]
 
 
 def test_number_of_satellites_has_a_single_source():
@@ -137,9 +155,10 @@ def test_interface_output_for_the_link_calculations(run_default):
     assert j["telemetry_complete"] is True and j["missing_subsystems"] == []
 
 
-def test_excel_telemetry_shows_pdf_reference_delta_and_pending_label(run_default):
+def test_excel_telemetry_shows_itemised_remainder_and_pending_label(run_default):
     out, _ = run_default
     ws = openpyxl.load_workbook(out / "SELENA_TTC_Model.xlsx")["Telemetry"]
     rows = {r[0]: r for r in ws.iter_rows(values_only=True) if r[0]}
-    assert rows["payload_housekeeping"][8] == 100 and str(rows["payload_housekeeping"][9]).startswith("=")
-    assert "PENDING REAL DATA" in rows["payload_housekeeping"][10] and "NOT independent verification" in rows["payload_housekeeping"][10]
+    pay = rows["payload_housekeeping"]
+    assert pay[8] == 100 and str(pay[9]).startswith("=") and str(pay[10]).startswith("=")
+    assert "PROVISIONAL" in str(pay[13])

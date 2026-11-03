@@ -136,26 +136,30 @@ def export(output="outputs/SELENA_TTC_Model.xlsx", root=".", link_input="data/li
 
     # ---------------- Telemetry ----------------
     tl = wb.create_sheet("Telemetry")
-    tl.append(["Subsystem", "Component", "Count", "Bits / sample", "Interval s", "Rate bit/s", "Origin", "Source"])
+    tl.append(["Subsystem", "Component", "Count", "Bits / sample", "Interval s", "Rate bit/s", "Provenance (count / bits / interval)", "Source"])
     for s in tel_cfg.get("subsystems", []):
-        origin = "DOC" if s["source_type"] == "PDF" else "ASSUMPTION"
         comps = s.get("components") or []
-        if s.get("pdf_rate_bps") is not None and not comps:
-            tl.append([s["name"], "aggregate rate from documentation", None, None, None, s["pdf_rate_bps"], origin, s["source"]])
-            r = tl.max_row
-            tl.cell(r, 6).font = Font(color="0000FF")
         for c in comps:
-            tl.append([s["name"], c["name"], c["count"], c["bits_per_sample"], c["interval_seconds"], None, origin, s["source"]])
+            prov = c.get("provenance", "ASSUMPTION")
+            if isinstance(prov, str):
+                prov = {k: prov for k in ("count", "bits_per_sample", "interval_seconds")}
+            vals = [c.get(k) for k in ("count", "bits_per_sample", "interval_seconds")]
+            tags = [("UNKNOWN" if v is None else prov.get(k, "ASSUMPTION"))
+                    for v, k in zip(vals, ("count", "bits_per_sample", "interval_seconds"))]
+            tl.append([s["name"], c["name"], *vals, None, " / ".join(tags), c.get("source", s["source"])])
             r = tl.max_row
-            tl.cell(r, 6).value = f"=C{r}*D{r}/E{r}"
+            # only a COMPLETE channel yields a rate; unknown parameters are never filled in
+            tl.cell(r, 6).value = f'=IF(COUNT(C{r}:E{r})=3,C{r}*D{r}/E{r},"INPUT NEEDED")'
             for col in (3, 4, 5):
-                tl.cell(r, col).font = Font(color="0000FF")
-        for r in range(tl.max_row - max(len(comps), 1) + 1, tl.max_row + 1):
-            tl.cell(r, 7).fill = PatternFill("solid", fgColor=FILL[origin])
+                cell = tl.cell(r, col)
+                cell.font = Font(color="0000FF")
+                tag = tags[col - 3]
+                cell.fill = PatternFill("solid", fgColor=FILL["DOC" if tag in ("DOC", "OWNER") else "ASSUMPTION" if tag == "ASSUMPTION" else "INPUT NEEDED"])
     last = tl.max_row
     tl.append([])
-    tl.append(["Summary per subsystem", None, None, None, None, "Rate bit/s", "Mbit/day", "MB/day",
-               "PDF reference bit/s (DOC)", "Calculated - PDF bit/s", "Status"])
+    tl.append(["Summary per subsystem", None, None, None, None, "Rate used bit/s", "Mbit/day", "MB/day",
+               "PDF reference bit/s (DOC)", "Itemised (documented channels) bit/s", "Unitemised remainder bit/s",
+               "Itemised - PDF bit/s", "Itemisation complete? (owner)", "Status"])
     hdr = tl.max_row
     for c in tl[hdr]:
         if c.value:
@@ -165,23 +169,31 @@ def export(output="outputs/SELENA_TTC_Model.xlsx", root=".", link_input="data/li
     for s in tel_cfg.get("subsystems", []):
         tl.append([s["name"]])
         r = tl.max_row
-        tl.cell(r, 6).value = f"=SUMIF($A$2:$A${last},A{r},$F$2:$F${last})"
-        tl.cell(r, 7).value = f"=F{r}*86400/1000000"
-        tl.cell(r, 8).value = f"=F{r}*86400/8000000"
         ref = s.get("pdf_rate_bps")
+        tl.cell(r, 10).value = f"=SUMIF($A$2:$A${last},A{r},$F$2:$F${last})"
+        tl.cell(r, 13).value = bool(s.get("itemisation_complete", False))
+        tl.cell(r, 13).font = Font(color="0000FF")
         if ref is not None:
             tl.cell(r, 9).value = ref
             tl.cell(r, 9).fill = PatternFill("solid", fgColor=FILL["DOC"])
-            tl.cell(r, 10).value = f"=F{r}-I{r}"
-        pending = s["source_type"] != "PDF"
-        head = (f'IF(ISNUMBER(I{r}),IF(ABS(J{r})<0.000000001,"Matches PDF aggregate'
-                + (' by construction - NOT independent verification"' if str(s["source_type"]).startswith("REVERSE_ENGINEERED") else '"')
-                + ',"DIFFERS from PDF aggregate - investigate"),"No PDF reference")')
-        tl.cell(r, 11).value = f'={head}&" | PENDING REAL DATA"' if pending else f'={head}'
+            tl.cell(r, 9).font = Font(color="0000FF")
+            tl.cell(r, 6).value = f"=IF(M{r},J{r},MAX(I{r},J{r}))"
+            tl.cell(r, 11).value = f"=IF(M{r},0,MAX(0,I{r}-J{r}))"
+            tl.cell(r, 12).value = f"=J{r}-I{r}"
+            tl.cell(r, 14).value = (f'=IF(M{r},IF(ABS(L{r})<0.000000001,"Itemisation complete, matches PDF","Itemisation complete, DIFFERS from PDF"),'
+                                    f'IF(L{r}>0.000000001,"Itemised EXCEEDS PDF aggregate - investigate",'
+                                    f'"PDF aggregate PROVISIONAL - itemisation pending (remainder shown)"))')
+        else:
+            tl.cell(r, 6).value = f'=IF(COUNTIF($A$2:$A${last},A{r})=0,"INPUT NEEDED",IF(J{r}>0,J{r},"INPUT NEEDED"))'
+            tl.cell(r, 11).value = "n/a"
+            tl.cell(r, 14).value = f'=IF(ISNUMBER(F{r}),"{"ASSUMED inventory - PENDING REAL DATA" if s["source_type"] != "PDF" else "Documented inventory"}","INPUT NEEDED")'
+        tl.cell(r, 7).value = f'=IF(ISNUMBER(F{r}),F{r}*86400/1000000,"INPUT NEEDED")'
+        tl.cell(r, 8).value = f'=IF(ISNUMBER(F{r}),F{r}*86400/8000000,"INPUT NEEDED")'
     last_sum = tl.max_row
     tl.append(["TOTAL per satellite"])
     r = tl.max_row
-    tl.cell(r, 6).value = f"=SUM(F{first_sum}:F{last_sum})"
+    for col, L in ((6, "F"), (10, "J"), (11, "K")):
+        tl.cell(r, col).value = f"=SUM({L}{first_sum}:{L}{last_sum})"
     tl.cell(r, 7).value = f"=F{r}*86400/1000000"
     tl.cell(r, 8).value = f"=F{r}*86400/8000000"
     tot_row = r
@@ -193,13 +205,17 @@ def export(output="outputs/SELENA_TTC_Model.xlsx", root=".", link_input="data/li
     tl.cell(r, 7).value = f"=G{tot_row}*n_sats"
     tl.cell(r, 8).value = f"=H{tot_row}*n_sats"
     for rr in range(first_sum, tl.max_row + 1):
-        for col in (6, 7, 8):
+        for col in (6, 7, 8, 10, 11, 12):
             tl.cell(rr, col).fill = PatternFill("solid", fgColor=FILL["CALC"])
             tl.cell(rr, col).number_format = "#,##0.00"
+    tl.append([])
+    tl.append(["Unitemised remainder is NOT measured data: it is the part of a documented (PDF) aggregate that no documented channel explains yet. Owner TODOs are in data/telemetry_generation_inputs.json."])
     _header(tl)
-    _widths(tl, [26, 36, 10, 14, 12, 14, 14, 52, 20, 18, 70])
+    _widths(tl, [26, 36, 10, 14, 12, 16, 34, 52, 20, 22, 20, 16, 18, 62])
     wb.defined_names["tel_total_bps"] = DefinedName("tel_total_bps", attr_text=f"Telemetry!$F${tot_row}")
     wb.defined_names["tel_mbit_day"] = DefinedName("tel_mbit_day", attr_text=f"Telemetry!$G${tot_row}")
+    wb.defined_names["tel_itemised_bps"] = DefinedName("tel_itemised_bps", attr_text=f"Telemetry!$J${tot_row}")
+    wb.defined_names["tel_remainder_bps"] = DefinedName("tel_remainder_bps", attr_text=f"Telemetry!$K${tot_row}")
 
     # ---------------- HGA ----------------
     ha = wb.create_sheet("HGA")
@@ -357,6 +373,8 @@ def export(output="outputs/SELENA_TTC_Model.xlsx", root=".", link_input="data/li
     link_json = _load(out / "link_budget.json")
     linked = link_json.get("status") == "PRELIMINARY"
     rows_c = [("Telemetry total per satellite (bit/s)", "=tel_total_bps", tel_json.get("total_rate_bps_per_spacecraft"), 1e-9),
+              ("Itemised telemetry (bit/s)", "=tel_itemised_bps", tel_json.get("total_itemised_bps_per_spacecraft"), 1e-9),
+              ("Unitemised remainder (bit/s)", "=tel_remainder_bps", tel_json.get("total_unitemised_remainder_bps_per_spacecraft"), 1e-9),
               ("HGA idealized gain (dBi)", "=hga_gain_dbi", hga_json.get("calculated_idealized_gain_dbi"), 1e-9),
               ("Free-space path loss (dB)", "=Link!B2", link_json.get("free_space_path_loss_db") if linked else None, 1e-9),
               ("Minimum RF power (W)", "=Link!B5", link_json.get("minimum_tx_rf_w_with_design_margin") if linked else None, 1e-3)]
@@ -374,7 +392,7 @@ def export(output="outputs/SELENA_TTC_Model.xlsx", root=".", link_input="data/li
     for row in [["Issue", "Status"],
                 ["Orbit geometry", "Historical windows shifted to 2030; NOT physical propagation"],
                 ["DSN", "Hypothetical allocation; NOT booked"],
-                ["Telemetry", "PDF values or explicitly PRELIMINARY assumptions"],
+                ["Telemetry", "Itemised channels + unitemised remainder of PDF aggregates (Payload 100 bps, Structures 32 bps); other subsystems are ASSUMED inventories"],
                 ["HGA", "0.38 m assumed, not selected hardware"],
                 ["Link budget", "Distance, G/T, Eb/N0, losses and margin are assumptions until verified"],
                 ["Mass", "11.40 kg TT&C/OBDH allocation, not itemized verified mass"]]:

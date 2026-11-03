@@ -7,41 +7,104 @@
       "rate_bps": 100.0,
       "mbit_per_day": 8.64,
       "mb_per_day": 1.08,
-      "source_type": "PRELIMINARY_ESTIMATE",
+      "source_type": "PDF",
       "requires_confirmation": true,
-      "source": "PDF §2.7.3 aggregate 100 bps; illustrative clock lock, cell temperatures, SSPA RF power. Quantization and cadence NOT specified; calibration pending",
-      "telemetry_origin": "CALCULATED_FROM_CHANNELS_PLACEHOLDER",
+      "source": "PDF §2.7.3 (p.14): 100 bps continuous housekeeping. Names clock lock status, clock cell temperatures and SSPA RF power; the PDF gives no channel count, bit depth or cadence.",
+      "rate_basis": "PDF_AGGREGATE_PROVISIONAL",
+      "itemised_bps": 0,
+      "unitemised_remainder_bps": 100.0,
+      "itemisation_complete": false,
       "pdf_reference_bps": 100.0,
       "difference_from_pdf_bps": 0.0,
-      "validation_status": "MATCHES_PDF_BY_CONSTRUCTION_NOT_INDEPENDENT_VERIFICATION",
+      "itemised_minus_pdf_bps": -100.0,
+      "validation_status": "PDF_AGGREGATE_PROVISIONAL_ITEMISATION_PENDING",
+      "owner_todo": "PAYLOAD OWNER: provide for clock lock status, clock cell temperatures and SSPA RF power the number of channels, bits per sample and sampling interval, and say whether 100 bps includes packet headers or other channels.",
       "components": [
         {
           "name": "clock_lock_status",
-          "count": 1,
-          "bits_per_sample": 8,
-          "interval_seconds": 1,
-          "rate_bps": 8.0
+          "count": null,
+          "bits_per_sample": null,
+          "interval_seconds": null,
+          "rate_bps": null,
+          "counted": false,
+          "provenance": {
+            "count": "UNKNOWN",
+            "bits_per_sample": "UNKNOWN",
+            "interval_seconds": "UNKNOWN"
+          },
+          "missing_parameters": [
+            "count",
+            "bits_per_sample",
+            "interval_seconds"
+          ],
+          "source": "PDF §2.7.3 names it; no numbers given",
+          "owner_todo": null
         },
         {
           "name": "clock_cell_temperatures",
-          "count": 4,
-          "bits_per_sample": 16,
-          "interval_seconds": 1,
-          "rate_bps": 64.0
+          "count": null,
+          "bits_per_sample": null,
+          "interval_seconds": null,
+          "rate_bps": null,
+          "counted": false,
+          "provenance": {
+            "count": "UNKNOWN",
+            "bits_per_sample": "UNKNOWN",
+            "interval_seconds": "UNKNOWN"
+          },
+          "missing_parameters": [
+            "count",
+            "bits_per_sample",
+            "interval_seconds"
+          ],
+          "source": "PDF §2.7.3 names it; no numbers given",
+          "owner_todo": null
         },
         {
           "name": "sspa_rf_power",
-          "count": 1,
-          "bits_per_sample": 16,
-          "interval_seconds": 1,
-          "rate_bps": 16.0
+          "count": null,
+          "bits_per_sample": null,
+          "interval_seconds": null,
+          "rate_bps": null,
+          "counted": false,
+          "provenance": {
+            "count": "UNKNOWN",
+            "bits_per_sample": "UNKNOWN",
+            "interval_seconds": "UNKNOWN"
+          },
+          "missing_parameters": [
+            "count",
+            "bits_per_sample",
+            "interval_seconds"
+          ],
+          "source": "PDF §2.7.3 names it; no numbers given",
+          "owner_todo": null
+        }
+      ],
+      "incomplete_channels": [
+        {
+          "name": "clock_lock_status",
+          "missing_parameters": [
+            "count",
+            "bits_per_sample",
+            "interval_seconds"
+          ]
         },
         {
-          "name": "payload_health_status",
-          "count": 3,
-          "bits_per_sample": 4,
-          "interval_seconds": 1,
-          "rate_bps": 12.0
+          "name": "clock_cell_temperatures",
+          "missing_parameters": [
+            "count",
+            "bits_per_sample",
+            "interval_seconds"
+          ]
+        },
+        {
+          "name": "sspa_rf_power",
+          "missing_parameters": [
+            "count",
+            "bits_per_sample",
+            "interval_seconds"
+          ]
         }
       ],
       "engineering": {
@@ -54,41 +117,116 @@
       "rate_bps": 32.0,
       "mbit_per_day": 2.7648,
       "mb_per_day": 0.3456,
-      "source_type": "PRELIMINARY_ESTIMATE",
+      "source_type": "PDF",
       "requires_confirmation": true,
-      "source": "PDF §7.5.3 aggregate 32 bps; 8 microswitch bits, two 16-bit SADM encoders, two 16-bit HGA resolvers, six RTD channels at 0.2Hz. Encoder and resolver cadence/RTD bit depth assumed.",
-      "telemetry_origin": "CALCULATED_FROM_CHANNELS_PLACEHOLDER",
+      "source": "PDF §7.5.3 (p.52): 32 bps. Documents 8 deployment switch bits, 2x16-bit SADM encoders, 2x16-bit HGA resolvers and 6 RTDs at 0.2 Hz. Cadences of switches/encoders/resolvers and RTD bit depth are not given.",
+      "rate_basis": "PDF_AGGREGATE_PROVISIONAL",
+      "itemised_bps": 0,
+      "unitemised_remainder_bps": 32.0,
+      "itemisation_complete": false,
       "pdf_reference_bps": 32.0,
       "difference_from_pdf_bps": 0.0,
-      "validation_status": "MATCHES_PDF_BY_CONSTRUCTION_NOT_INDEPENDENT_VERIFICATION",
+      "itemised_minus_pdf_bps": -32.0,
+      "validation_status": "PDF_AGGREGATE_PROVISIONAL_ITEMISATION_PENDING",
+      "owner_todo": "STRUCTURES/MECHANISMS OWNER: provide the sampling interval of the deployment switches, SADM encoders and HGA resolvers, the RTD bit depth, and whether 32 bps includes headers.",
       "components": [
         {
           "name": "deployment_microswitch_bits",
           "count": 8,
           "bits_per_sample": 1,
-          "interval_seconds": 2,
-          "rate_bps": 4.0
+          "interval_seconds": null,
+          "rate_bps": null,
+          "counted": false,
+          "provenance": {
+            "count": "DOC",
+            "bits_per_sample": "DOC",
+            "interval_seconds": "UNKNOWN"
+          },
+          "missing_parameters": [
+            "interval_seconds"
+          ],
+          "source": "PDF §7.5.3: 8 switch bits; cadence missing",
+          "owner_todo": null
         },
         {
           "name": "sadm_encoder",
           "count": 2,
           "bits_per_sample": 16,
-          "interval_seconds": 4,
-          "rate_bps": 8.0
+          "interval_seconds": null,
+          "rate_bps": null,
+          "counted": false,
+          "provenance": {
+            "count": "DOC",
+            "bits_per_sample": "DOC",
+            "interval_seconds": "UNKNOWN"
+          },
+          "missing_parameters": [
+            "interval_seconds"
+          ],
+          "source": "PDF §7.5.3: 2x16 bit; cadence missing",
+          "owner_todo": null
         },
         {
           "name": "hga_resolver",
           "count": 2,
           "bits_per_sample": 16,
-          "interval_seconds": 4,
-          "rate_bps": 8.0
+          "interval_seconds": null,
+          "rate_bps": null,
+          "counted": false,
+          "provenance": {
+            "count": "DOC",
+            "bits_per_sample": "DOC",
+            "interval_seconds": "UNKNOWN"
+          },
+          "missing_parameters": [
+            "interval_seconds"
+          ],
+          "source": "PDF §7.5.3: 2x16 bit; cadence missing",
+          "owner_todo": null
         },
         {
           "name": "structural_rtd",
           "count": 6,
-          "bits_per_sample": 10,
+          "bits_per_sample": null,
           "interval_seconds": 5,
-          "rate_bps": 12.0
+          "rate_bps": null,
+          "counted": false,
+          "provenance": {
+            "count": "DOC",
+            "bits_per_sample": "UNKNOWN",
+            "interval_seconds": "DOC"
+          },
+          "missing_parameters": [
+            "bits_per_sample"
+          ],
+          "source": "PDF §7.5.3: 6 RTDs at 0.2 Hz (=5 s); bit depth missing",
+          "owner_todo": null
+        }
+      ],
+      "incomplete_channels": [
+        {
+          "name": "deployment_microswitch_bits",
+          "missing_parameters": [
+            "interval_seconds"
+          ]
+        },
+        {
+          "name": "sadm_encoder",
+          "missing_parameters": [
+            "interval_seconds"
+          ]
+        },
+        {
+          "name": "hga_resolver",
+          "missing_parameters": [
+            "interval_seconds"
+          ]
+        },
+        {
+          "name": "structural_rtd",
+          "missing_parameters": [
+            "bits_per_sample"
+          ]
         }
       ],
       "engineering": {
@@ -105,24 +243,43 @@
       "source_type": "PRELIMINARY_ESTIMATE",
       "requires_confirmation": true,
       "source": "Assumed logged attitude/actuator channels; confirm with ADCS",
-      "telemetry_origin": "CALCULATED_FROM_CHANNELS_PLACEHOLDER",
+      "rate_basis": "CHANNELS_ASSUMED",
+      "itemised_bps": 1587.2,
+      "unitemised_remainder_bps": null,
+      "itemisation_complete": false,
       "pdf_reference_bps": null,
       "difference_from_pdf_bps": null,
+      "itemised_minus_pdf_bps": null,
       "validation_status": "ASSUMED_INVENTORY_NO_PDF_REFERENCE",
+      "owner_todo": "Subsystem owner: replace the assumed channel inventory with the real one (counts, bits, cadences).",
       "components": [
         {
           "name": "attitude_and_actuator_channels",
           "count": 31,
           "bits_per_sample": 32,
           "interval_seconds": 0.625,
-          "rate_bps": 1587.2
+          "rate_bps": 1587.2,
+          "counted": true,
+          "provenance": {
+            "count": "ASSUMPTION",
+            "bits_per_sample": "ASSUMPTION",
+            "interval_seconds": "ASSUMPTION"
+          },
+          "missing_parameters": [],
+          "source": "Assumed logged attitude/actuator channels; confirm with ADCS",
+          "owner_todo": null
         }
       ],
+      "incomplete_channels": [],
       "engineering": {
         "slew_torque_nm": 0.0048481368110953596,
         "gravity_gradient_torque_nm": 8.129915979818466e-08,
-        "reaction_wheel_torque_requirement_nm": 0.007272205216643039,
-        "source_equations": "lecture AOCS 4.1-4.2"
+        "radius_used_m": 6200000,
+        "radius_basis": "CIRCULAR_RADIUS_LOWER_BOUND_PERIAPSIS_INPUT_NEEDED",
+        "reaction_wheel_torque_requirement_nm": 0.007272327165382737,
+        "reaction_wheel_torque_max_only_nm": 0.007272205216643039,
+        "torque_combination": "worst case: slew + gravity gradient at the same time, times margin; other disturbances (solar pressure, residual dipole, thrust misalignment) not available: owner TODO",
+        "source_equations": "lecture AOCS 4.1-4.2; r(nu) = a(1-e^2)/(1+e cos nu)"
       }
     },
     {
@@ -133,19 +290,34 @@
       "source_type": "PRELIMINARY_ESTIMATE",
       "requires_confirmation": true,
       "source": "Assumed nominal sensors; burns and event bursts not included",
-      "telemetry_origin": "CALCULATED_FROM_CHANNELS_PLACEHOLDER",
+      "rate_basis": "CHANNELS_ASSUMED",
+      "itemised_bps": 38.4,
+      "unitemised_remainder_bps": null,
+      "itemisation_complete": false,
       "pdf_reference_bps": null,
       "difference_from_pdf_bps": null,
+      "itemised_minus_pdf_bps": null,
       "validation_status": "ASSUMED_INVENTORY_NO_PDF_REFERENCE",
+      "owner_todo": "Subsystem owner: replace the assumed channel inventory with the real one (counts, bits, cadences).",
       "components": [
         {
           "name": "tank_valve_and_thruster_status",
           "count": 12,
           "bits_per_sample": 16,
           "interval_seconds": 5,
-          "rate_bps": 38.4
+          "rate_bps": 38.4,
+          "counted": true,
+          "provenance": {
+            "count": "ASSUMPTION",
+            "bits_per_sample": "ASSUMPTION",
+            "interval_seconds": "ASSUMPTION"
+          },
+          "missing_parameters": [],
+          "source": "Assumed nominal sensors; burns and event bursts not included",
+          "owner_todo": null
         }
       ],
+      "incomplete_channels": [],
       "engineering": {
         "propellant_required_kg": 123.60191248100391,
         "final_mass_kg": 226.39808751899608,
@@ -160,26 +332,51 @@
       "source_type": "PRELIMINARY_ESTIMATE",
       "requires_confirmation": true,
       "source": "Assumed battery, array, bus and temperature channels",
-      "telemetry_origin": "CALCULATED_FROM_CHANNELS_PLACEHOLDER",
+      "rate_basis": "CHANNELS_ASSUMED",
+      "itemised_bps": 140.8,
+      "unitemised_remainder_bps": null,
+      "itemisation_complete": false,
       "pdf_reference_bps": null,
       "difference_from_pdf_bps": null,
+      "itemised_minus_pdf_bps": null,
       "validation_status": "ASSUMED_INVENTORY_NO_PDF_REFERENCE",
+      "owner_todo": "Subsystem owner: replace the assumed channel inventory with the real one (counts, bits, cadences).",
       "components": [
         {
           "name": "electrical_telemetry",
           "count": 22,
           "bits_per_sample": 32,
           "interval_seconds": 5,
-          "rate_bps": 140.8
+          "rate_bps": 140.8,
+          "counted": true,
+          "provenance": {
+            "count": "ASSUMPTION",
+            "bits_per_sample": "ASSUMPTION",
+            "interval_seconds": "ASSUMPTION"
+          },
+          "missing_parameters": [],
+          "source": "Assumed battery, array, bus and temperature channels",
+          "owner_todo": null
         }
       ],
+      "incomplete_channels": [],
       "engineering": {
-        "p_bol_w": 467.7836826807988,
-        "p_eol_w": 423.0551775981209,
+        "p_bol_w_m2": 467.7836826807988,
+        "p_eol_w_m2": 423.0551775981209,
         "required_solar_power_w": 387.82801642204987,
-        "solar_area_m2": 1.4661790864736033,
+        "solar_area_m2": 0.916731520989598,
         "battery_capacity_required_wh": 1797.9315789473685,
-        "source_equations": "lecture EPS 6.1-6.2"
+        "area_method": "A = P_sa / P_EOL (lecture); no back-solved specific power",
+        "source_equations": "lecture EPS 6.1-6.2",
+        "pdf_reference": {
+          "array_eol_w": 410,
+          "battery_wh": 1800,
+          "required_solar_power_minus_pdf_array_w": -22.17198357795013,
+          "battery_capacity_minus_pdf_wh": -2.068421052631493,
+          "area_for_pdf_array_at_modelled_eol_power_m2": 0.9691407213776672,
+          "pdf_solar_area_m2": null,
+          "note": "The PDF gives no solar array area; differences are shown, not removed. eclipse_hours and cell_specific_power_w_m2 are owner TODOs."
+        }
       }
     },
     {
@@ -190,19 +387,34 @@
       "source_type": "PRELIMINARY_ESTIMATE",
       "requires_confirmation": true,
       "source": "Assumed temperature sensor logging",
-      "telemetry_origin": "CALCULATED_FROM_CHANNELS_PLACEHOLDER",
+      "rate_basis": "CHANNELS_ASSUMED",
+      "itemised_bps": 96.0,
+      "unitemised_remainder_bps": null,
+      "itemisation_complete": false,
       "pdf_reference_bps": null,
       "difference_from_pdf_bps": null,
+      "itemised_minus_pdf_bps": null,
       "validation_status": "ASSUMED_INVENTORY_NO_PDF_REFERENCE",
+      "owner_todo": "Subsystem owner: replace the assumed channel inventory with the real one (counts, bits, cadences).",
       "components": [
         {
           "name": "temperature_sensors",
           "count": 30,
           "bits_per_sample": 16,
           "interval_seconds": 5,
-          "rate_bps": 96.0
+          "rate_bps": 96.0,
+          "counted": true,
+          "provenance": {
+            "count": "ASSUMPTION",
+            "bits_per_sample": "ASSUMPTION",
+            "interval_seconds": "ASSUMPTION"
+          },
+          "missing_parameters": [],
+          "source": "Assumed temperature sensor logging",
+          "owner_todo": null
         }
       ],
+      "incomplete_channels": [],
       "engineering": {
         "equilibrium_temperature_k": 264.5227164812573,
         "absorbed_heat_w": 589.96,
@@ -217,26 +429,50 @@
       "source_type": "PRELIMINARY_ESTIMATE",
       "requires_confirmation": true,
       "source": "Own OBDH housekeeping only; excludes other subsystem data",
-      "telemetry_origin": "CALCULATED_FROM_CHANNELS_PLACEHOLDER",
+      "rate_basis": "CHANNELS_ASSUMED",
+      "itemised_bps": 307.34222222222223,
+      "unitemised_remainder_bps": null,
+      "itemisation_complete": false,
       "pdf_reference_bps": null,
       "difference_from_pdf_bps": null,
+      "itemised_minus_pdf_bps": null,
       "validation_status": "ASSUMED_INVENTORY_NO_PDF_REFERENCE",
+      "owner_todo": "Subsystem owner: replace the assumed channel inventory with the real one (counts, bits, cadences).",
       "components": [
         {
           "name": "processor_memory_and_fault_status",
           "count": 12,
           "bits_per_sample": 32,
           "interval_seconds": 1.25,
-          "rate_bps": 307.2
+          "rate_bps": 307.2,
+          "counted": true,
+          "provenance": {
+            "count": "ASSUMPTION",
+            "bits_per_sample": "ASSUMPTION",
+            "interval_seconds": "ASSUMPTION"
+          },
+          "missing_parameters": [],
+          "source": "Own OBDH housekeeping only; excludes other subsystem data",
+          "owner_todo": null
         },
         {
           "name": "diagnostic_event_average",
           "count": 1,
           "bits_per_sample": 1024,
           "interval_seconds": 7200,
-          "rate_bps": 0.14222222222222222
+          "rate_bps": 0.14222222222222222,
+          "counted": true,
+          "provenance": {
+            "count": "ASSUMPTION",
+            "bits_per_sample": "ASSUMPTION",
+            "interval_seconds": "ASSUMPTION"
+          },
+          "missing_parameters": [],
+          "source": "Own OBDH housekeeping only; excludes other subsystem data",
+          "owner_todo": null
         }
       ],
+      "incomplete_channels": [],
       "engineering": {
         "software_memory_bytes": 350000,
         "cpu_kips_reference": 16,
@@ -246,6 +482,8 @@
     }
   ],
   "total_rate_bps_per_spacecraft": 2301.742222222222,
+  "total_itemised_bps_per_spacecraft": 2169.742222222222,
+  "total_unitemised_remainder_bps_per_spacecraft": 132.0,
   "total_mbit_per_day_per_spacecraft": 198.870528,
   "total_mb_per_day_per_spacecraft": 24.858816,
   "total_mbit_per_day_constellation": 1590.964224,
@@ -253,6 +491,6 @@
   "n_satellites": 8,
   "missing_subsystems": [],
   "telemetry_complete": true,
-  "validation_warning": "A rate that matches a PDF aggregate by reverse engineering is NOT independent verification. Engineering equations (EPS, AOCS, propulsion, thermal, structures, OBDH) size hardware; they do not determine the telemetry rates, which come only from the channel inventories.",
+  "validation_warning": "Documented (PDF) aggregates are provisional sizing values: the part not itemised by documented channels is shown separately as the unitemised remainder. A rate that matches a PDF aggregate only by construction is NOT independent verification. Engineering equations (EPS, AOCS, propulsion, thermal, structures, OBDH) size hardware; they do not determine the telemetry rates, which come only from the channel inventories.",
   "warning": "Engineering outputs and sensor inventories are preliminary; equations do not determine sampling rates."
 }

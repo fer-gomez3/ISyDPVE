@@ -3,7 +3,6 @@
   "subsystems": {
     "eps_hk": {
       "origin": "PLACEHOLDER + PDF reference: 28V bus, 1.8kWh battery, 410W EOL solar array; lecture EPS 6.1-6.2",
-      "cell_power_w": 500,
       "assembly_factor": 0.95,
       "incidence_deg": 10,
       "annual_degradation": 0.01,
@@ -17,7 +16,15 @@
       "max_dod": 0.4,
       "battery_branches": 1,
       "discharge_efficiency": 0.95,
-      "eol_specific_power_w_m2": 264.51612903225805
+      "cell_specific_power_w_m2": 500,
+      "pdf_reference": {
+        "array_eol_w": 410,
+        "battery_wh": 1800,
+        "bus_voltage_v": 28,
+        "nominal_load_w": 311,
+        "peak_load_w": 336
+      },
+      "owner_todo": "EPS OWNER: confirm cell_specific_power_w_m2 (500 W/m2 implies about 37% efficiency at 1361 W/m2, above typical flight cells; unchanged, not justified), eclipse_hours (6.5068 reproduces 1.8 kWh; orbit not defined), array area and the real orbit."
     },
     "aocs_nominal_hk": {
       "origin": "PLACEHOLDER; lecture AOCS 4.1-4.2; lunar gravitational parameter",
@@ -29,7 +36,10 @@
       "inertia_y": 89,
       "gravity_angle_deg": 10,
       "orbit_radius_m": 6200000,
-      "torque_margin_factor": 1.5
+      "torque_margin_factor": 1.5,
+      "periapsis_radius_m": null,
+      "apoapsis_radius_m": null,
+      "owner_todo": "MISSION ANALYSIS / AOCS OWNER: provide periapsis and apoapsis radius (same orbit as EPS eclipse_hours); orbit_radius_m 6.2e6 is the radius used so far, treated as a circular lower bound. Provide other disturbance torques and the wheel margin."
     },
     "propulsion_hk": {
       "origin": "PLACEHOLDER; lecture Propulsion 5.1; SELENA earlier 350kg wet, 1350m/s, 316s",

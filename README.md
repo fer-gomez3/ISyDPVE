@@ -44,6 +44,10 @@ In the workbook, edit the blue input cells on `Inputs` and `Telemetry`; the calc
 
 Provide contact windows as CSV (`contact_id, station, satellite, start_utc, end_utc`), then run `python main.py --contacts my_windows.csv --no-epoch-shift`. See `ttc/ephemeris_format.md` for the ephemeris contract. No orbit propagator is included.
 
+## Data provenance
+
+Telemetry rates come only from `data/telemetry_generation_inputs.json` (count x bits / interval per channel, with per-parameter provenance DOC / OWNER / ASSUMPTION / UNKNOWN). Payload (100 bps) and Structures (32 bps) use the PDF aggregate as a provisional value and show the unitemised remainder separately (`outputs/telemetry_traceability.csv`, `data_generation_interface.*`, Excel Telemetry sheet). See `docs/subsystem-data-provenance.md` for what is PDF data, calculated, placeholder or pending, and the owner TODOs.
+
 ## Known limitations
 
 See section 6 of the technical report. Inputs still needed from other subsystems are in section 7.

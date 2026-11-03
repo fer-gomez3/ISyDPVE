@@ -35,7 +35,7 @@
       "rate_bps": 100.0,
       "priority": 3,
       "max_age_hours": 24,
-      "status": "PRE"
+      "status": "PDF"
     },
     {
       "name": "structures_mechanisms",
@@ -43,7 +43,7 @@
       "rate_bps": 32.0,
       "priority": 3,
       "max_age_hours": 24,
-      "status": "PRE"
+      "status": "PDF"
     },
     {
       "name": "aocs_nominal_hk",

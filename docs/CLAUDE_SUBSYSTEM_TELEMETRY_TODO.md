@@ -1,3 +1,5 @@
+> **Superseded for Payload and Structures:** the reverse-engineered channels (including the invented payload filler and assumed cadences) were removed. The PDF aggregates are now provisional and the unitemised remainder is shown separately; see `docs/subsystem-data-provenance.md`. The text below is the original request, kept for history.
+
 # TODO for Claude and subsystem owners — reverse-engineered PDF telemetry
 
 **Status: PLACEHOLDER — MUST BE REPLACED BY REAL SENSOR DATA.** These calculations intentionally reproduce published PDF aggregate rates using invented sampling/quantization choices. A match to a PDF number does **not** validate the underlying sensor model. Do not label these rates as physically derived or verified.

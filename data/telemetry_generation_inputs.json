@@ -5,69 +5,97 @@
   "subsystems": [
     {
       "name": "payload_housekeeping",
-      "source_type": "REVERSE_ENGINEERED_PLACEHOLDER",
-      "source": "PDF §2.7.3 aggregate 100 bps; illustrative clock lock, cell temperatures, SSPA RF power. Quantization and cadence NOT specified; calibration pending",
+      "source_type": "DOC_AGGREGATE_PROVISIONAL",
+      "source": "PDF §2.7.3 (p.14): 100 bps continuous housekeeping. Names clock lock status, clock cell temperatures and SSPA RF power; the PDF gives no channel count, bit depth or cadence.",
       "pdf_rate_bps": 100,
       "components": [
         {
           "name": "clock_lock_status",
-          "count": 1,
-          "bits_per_sample": 8,
-          "interval_seconds": 1
+          "count": null,
+          "bits_per_sample": null,
+          "interval_seconds": null,
+          "provenance": "UNKNOWN",
+          "source": "PDF §2.7.3 names it; no numbers given"
         },
         {
           "name": "clock_cell_temperatures",
-          "count": 4,
-          "bits_per_sample": 16,
-          "interval_seconds": 1
+          "count": null,
+          "bits_per_sample": null,
+          "interval_seconds": null,
+          "provenance": "UNKNOWN",
+          "source": "PDF §2.7.3 names it; no numbers given"
         },
         {
           "name": "sspa_rf_power",
-          "count": 1,
-          "bits_per_sample": 16,
-          "interval_seconds": 1
-        },
-        {
-          "name": "payload_health_status",
-          "count": 3,
-          "bits_per_sample": 4,
-          "interval_seconds": 1
+          "count": null,
+          "bits_per_sample": null,
+          "interval_seconds": null,
+          "provenance": "UNKNOWN",
+          "source": "PDF §2.7.3 names it; no numbers given"
         }
       ],
-      "notes": "Reverse-engineered to match 100 bps; payload_health_status is an unverified filler, NOT a PDF-listed channel. Replace with real clock/SSPA channel inventory and sampling."
+      "notes": "Itemised rate is 0 because no documented channel has count, bits and cadence together. The 100 bps aggregate is kept as a provisional TT&C sizing value; the unitemised remainder is shown separately. Nothing was invented to reach 100 bps.",
+      "itemisation_complete": false,
+      "owner_todo": "PAYLOAD OWNER: provide for clock lock status, clock cell temperatures and SSPA RF power the number of channels, bits per sample and sampling interval, and say whether 100 bps includes packet headers or other channels."
     },
     {
       "name": "structures_mechanisms",
-      "source_type": "REVERSE_ENGINEERED_PLACEHOLDER",
-      "source": "PDF §7.5.3 aggregate 32 bps; 8 microswitch bits, two 16-bit SADM encoders, two 16-bit HGA resolvers, six RTD channels at 0.2Hz. Encoder and resolver cadence/RTD bit depth assumed.",
+      "source_type": "DOC_AGGREGATE_PROVISIONAL",
+      "source": "PDF §7.5.3 (p.52): 32 bps. Documents 8 deployment switch bits, 2x16-bit SADM encoders, 2x16-bit HGA resolvers and 6 RTDs at 0.2 Hz. Cadences of switches/encoders/resolvers and RTD bit depth are not given.",
       "pdf_rate_bps": 32,
       "components": [
         {
           "name": "deployment_microswitch_bits",
           "count": 8,
           "bits_per_sample": 1,
-          "interval_seconds": 2
+          "interval_seconds": null,
+          "provenance": {
+            "count": "DOC",
+            "bits_per_sample": "DOC",
+            "interval_seconds": "UNKNOWN"
+          },
+          "source": "PDF §7.5.3: 8 switch bits; cadence missing"
         },
         {
           "name": "sadm_encoder",
           "count": 2,
           "bits_per_sample": 16,
-          "interval_seconds": 4
+          "interval_seconds": null,
+          "provenance": {
+            "count": "DOC",
+            "bits_per_sample": "DOC",
+            "interval_seconds": "UNKNOWN"
+          },
+          "source": "PDF §7.5.3: 2x16 bit; cadence missing"
         },
         {
           "name": "hga_resolver",
           "count": 2,
           "bits_per_sample": 16,
-          "interval_seconds": 4
+          "interval_seconds": null,
+          "provenance": {
+            "count": "DOC",
+            "bits_per_sample": "DOC",
+            "interval_seconds": "UNKNOWN"
+          },
+          "source": "PDF §7.5.3: 2x16 bit; cadence missing"
         },
         {
           "name": "structural_rtd",
           "count": 6,
-          "bits_per_sample": 10,
-          "interval_seconds": 5
+          "bits_per_sample": null,
+          "interval_seconds": 5,
+          "provenance": {
+            "count": "DOC",
+            "bits_per_sample": "UNKNOWN",
+            "interval_seconds": "DOC"
+          },
+          "source": "PDF §7.5.3: 6 RTDs at 0.2 Hz (=5 s); bit depth missing"
         }
       ],
-      "notes": "4+8+8+12=32 bps. PDF specifies RTD 0.2Hz and encoder/resolver 16 bits; other cadences and RTD 10-bit are placeholders. Confirm whether 32 bps includes packet headers."
+      "notes": "Documented numbers are kept; every missing number stays null. Itemised rate is 0 because no channel is complete. 32 bps stays a provisional sizing value with the full unitemised remainder.",
+      "itemisation_complete": false,
+      "owner_todo": "STRUCTURES/MECHANISMS OWNER: provide the sampling interval of the deployment switches, SADM encoders and HGA resolvers, the RTD bit depth, and whether 32 bps includes headers."
     },
     {
       "name": "aocs_nominal_hk",
@@ -78,9 +106,11 @@
           "name": "attitude_and_actuator_channels",
           "count": 31,
           "bits_per_sample": 32,
-          "interval_seconds": 0.625
+          "interval_seconds": 0.625,
+          "provenance": "ASSUMPTION"
         }
-      ]
+      ],
+      "owner_todo": "Subsystem owner: replace the assumed channel inventory with the real one (counts, bits, cadences)."
     },
     {
       "name": "propulsion_hk",
@@ -91,9 +121,11 @@
           "name": "tank_valve_and_thruster_status",
           "count": 12,
           "bits_per_sample": 16,
-          "interval_seconds": 5
+          "interval_seconds": 5,
+          "provenance": "ASSUMPTION"
         }
-      ]
+      ],
+      "owner_todo": "Subsystem owner: replace the assumed channel inventory with the real one (counts, bits, cadences)."
     },
     {
       "name": "eps_hk",
@@ -104,9 +136,11 @@
           "name": "electrical_telemetry",
           "count": 22,
           "bits_per_sample": 32,
-          "interval_seconds": 5
+          "interval_seconds": 5,
+          "provenance": "ASSUMPTION"
         }
-      ]
+      ],
+      "owner_todo": "Subsystem owner: replace the assumed channel inventory with the real one (counts, bits, cadences)."
     },
     {
       "name": "thermal_hk",
@@ -117,9 +151,11 @@
           "name": "temperature_sensors",
           "count": 30,
           "bits_per_sample": 16,
-          "interval_seconds": 5
+          "interval_seconds": 5,
+          "provenance": "ASSUMPTION"
         }
-      ]
+      ],
+      "owner_todo": "Subsystem owner: replace the assumed channel inventory with the real one (counts, bits, cadences)."
     },
     {
       "name": "obdh_hk_logs",
@@ -130,15 +166,18 @@
           "name": "processor_memory_and_fault_status",
           "count": 12,
           "bits_per_sample": 32,
-          "interval_seconds": 1.25
+          "interval_seconds": 1.25,
+          "provenance": "ASSUMPTION"
         },
         {
           "name": "diagnostic_event_average",
           "count": 1,
           "bits_per_sample": 1024,
-          "interval_seconds": 7200
+          "interval_seconds": 7200,
+          "provenance": "ASSUMPTION"
         }
-      ]
+      ],
+      "owner_todo": "Subsystem owner: replace the assumed channel inventory with the real one (counts, bits, cadences)."
     }
   ]
 }

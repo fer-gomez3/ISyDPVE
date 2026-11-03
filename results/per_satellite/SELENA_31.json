@@ -11,6 +11,78 @@
     "obdh_hk_logs": 307.34222222222223
   },
   "telemetry_total_bps": 2301.742222222222,
+  "telemetry_breakdown": [
+    {
+      "subsystem": "payload_housekeeping",
+      "rate_bps": 100.0,
+      "rate_basis": "PDF_AGGREGATE_PROVISIONAL",
+      "itemised_bps": 0,
+      "unitemised_remainder_bps": 100.0,
+      "pdf_reference_bps": 100.0,
+      "validation_status": "PDF_AGGREGATE_PROVISIONAL_ITEMISATION_PENDING"
+    },
+    {
+      "subsystem": "structures_mechanisms",
+      "rate_bps": 32.0,
+      "rate_basis": "PDF_AGGREGATE_PROVISIONAL",
+      "itemised_bps": 0,
+      "unitemised_remainder_bps": 32.0,
+      "pdf_reference_bps": 32.0,
+      "validation_status": "PDF_AGGREGATE_PROVISIONAL_ITEMISATION_PENDING"
+    },
+    {
+      "subsystem": "aocs_nominal_hk",
+      "rate_bps": 1587.2,
+      "rate_basis": "CHANNELS_ASSUMED",
+      "itemised_bps": 1587.2,
+      "unitemised_remainder_bps": null,
+      "pdf_reference_bps": null,
+      "validation_status": "ASSUMED_INVENTORY_NO_PDF_REFERENCE"
+    },
+    {
+      "subsystem": "propulsion_hk",
+      "rate_bps": 38.4,
+      "rate_basis": "CHANNELS_ASSUMED",
+      "itemised_bps": 38.4,
+      "unitemised_remainder_bps": null,
+      "pdf_reference_bps": null,
+      "validation_status": "ASSUMED_INVENTORY_NO_PDF_REFERENCE"
+    },
+    {
+      "subsystem": "eps_hk",
+      "rate_bps": 140.8,
+      "rate_basis": "CHANNELS_ASSUMED",
+      "itemised_bps": 140.8,
+      "unitemised_remainder_bps": null,
+      "pdf_reference_bps": null,
+      "validation_status": "ASSUMED_INVENTORY_NO_PDF_REFERENCE"
+    },
+    {
+      "subsystem": "thermal_hk",
+      "rate_bps": 96.0,
+      "rate_basis": "CHANNELS_ASSUMED",
+      "itemised_bps": 96.0,
+      "unitemised_remainder_bps": null,
+      "pdf_reference_bps": null,
+      "validation_status": "ASSUMED_INVENTORY_NO_PDF_REFERENCE"
+    },
+    {
+      "subsystem": "obdh_hk_logs",
+      "rate_bps": 307.34222222222223,
+      "rate_basis": "CHANNELS_ASSUMED",
+      "itemised_bps": 307.34222222222223,
+      "unitemised_remainder_bps": null,
+      "pdf_reference_bps": null,
+      "validation_status": "ASSUMED_INVENTORY_NO_PDF_REFERENCE"
+    }
+  ],
+  "telemetry_itemised_bps": 2169.742222222222,
+  "telemetry_unitemised_remainder_bps": 132.0,
+  "obdh_buffer": {
+    "minimum_buffer_mbit_from_peak_backlog": 368.83835064572446,
+    "software_memory_bytes": 350000,
+    "note": "Peak backlog under the shifted-2020 hypothetical contacts; software memory is a placeholder engineering input"
+  },
   "dsn_allocation": {
     "candidate_hours": 17.918766944444442,
     "assigned_hours": 2.933333333333333,

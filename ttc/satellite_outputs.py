@@ -14,6 +14,10 @@ def write(out_dir="outputs"):
     if wpath.exists():
         with wpath.open(encoding="utf-8", newline="") as f:
             windows = list(csv.DictReader(f))
+    eng = {}
+    ep = out / "subsystem_engineering.json"
+    if ep.exists():
+        eng = {r["subsystem"]: r.get("engineering", {}) for r in json.loads(ep.read_text(encoding="utf-8"))["subsystems"]}
     folder = out / "per_satellite"
     folder.mkdir(parents=True, exist_ok=True)
     summary = []
@@ -27,6 +31,14 @@ def write(out_dir="outputs"):
             "status": "HYPOTHETICAL_SCENARIO_NOT_VALIDATED_GEOMETRY",
             "telemetry_rates_bps": {r["subsystem"]: r["rate_bps"] for r in tel["subsystems"]},
             "telemetry_total_bps": tel["total_rate_bps_per_spacecraft"],
+            "telemetry_breakdown": [{k: r[k] for k in ("subsystem", "rate_bps", "rate_basis", "itemised_bps",
+                                                       "unitemised_remainder_bps", "pdf_reference_bps", "validation_status")}
+                                    for r in tel["subsystems"]],
+            "telemetry_itemised_bps": tel["total_itemised_bps_per_spacecraft"],
+            "telemetry_unitemised_remainder_bps": tel["total_unitemised_remainder_bps_per_spacecraft"],
+            "obdh_buffer": {"minimum_buffer_mbit_from_peak_backlog": result["peak_backlog_mbit"],
+                            "software_memory_bytes": eng.get("obdh_hk_logs", {}).get("software_memory_bytes"),
+                            "note": "Peak backlog under the shifted-2020 hypothetical contacts; software memory is a placeholder engineering input"},
             "dsn_allocation": a,
             "allocated_windows": mine,
             "downlink": {k: v for k, v in result.items() if k != "by_stream"},
@@ -37,6 +49,8 @@ def write(out_dir="outputs"):
         summary.append({
             "satellite": sat,
             "telemetry_total_bps": tel["total_rate_bps_per_spacecraft"],
+            "telemetry_itemised_bps": tel["total_itemised_bps_per_spacecraft"],
+            "telemetry_unitemised_remainder_bps": tel["total_unitemised_remainder_bps_per_spacecraft"],
             "candidate_hours": a.get("candidate_hours"),
             "assigned_hours": a.get("assigned_hours"),
             "useful_tx_hours": a.get("useful_hours"),

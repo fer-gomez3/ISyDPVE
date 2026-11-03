@@ -56,8 +56,8 @@ All results are for the **hypothetical shifted scenario** (2030-07-14 22:25 UTC 
 
 | Subsystem | Rate (bit/s) | Mbit/day | Status |
 |---|---|---|---|
-| Payload housekeeping (illustrative split of the documented 100 bit/s) | 100 | 8.64 | DOC aggregate; channel split ASSUMPTION, matches by construction |
-| Structures (illustrative split of the documented 32 bit/s) | 32 | 2.77 | DOC aggregate; channel split ASSUMPTION, matches by construction |
+| Payload housekeeping (PDF 2.7.3 aggregate; itemised 0, unitemised remainder 100) | 100 | 8.64 | DOC aggregate, PROVISIONAL; no documented channel is complete |
+| Structures (PDF 7.5.3 aggregate; itemised 0, unitemised remainder 32) | 32 | 2.77 | DOC aggregate, PROVISIONAL; cadences and RTD bit depth missing |
 | ADCS (31 ch x 32 bit / 0.625 s) | 1587.2 | 137.13 | ASSUMPTION |
 | Propulsion (12 x 16 bit / 5 s) | 38.4 | 3.32 | ASSUMPTION |
 | EPS (22 x 32 bit / 5 s) | 140.8 | 12.17 | ASSUMPTION |
@@ -65,7 +65,7 @@ All results are for the **hypothetical shifted scenario** (2030-07-14 22:25 UTC 
 | OBDH (12 x 32 bit / 1.25 s + 1024 bit / 7200 s) | 307.34 | 26.55 | ASSUMPTION |
 | **Total** | **2301.74** | **198.87** (24.86 MB/day; 198.87 MB/day for 8 satellites) | CALC |
 
-ADCS is 69 % of the volume and rests entirely on an assumed channel inventory. Payload and Structures were reverse-engineered to reproduce the documented aggregates (including one filler channel in Payload and assumed cadences and RTD bit depth in Structures): a match with 100 and 32 bit/s is **not independent verification**. The telemetry rates come only from the channel inventories; the engineering equations (EPS, AOCS, propulsion, thermal, structures, OBDH) size hardware and do not determine them.
+ADCS is 69 % of the volume and rests entirely on an assumed channel inventory. Payload and Structures use the documented aggregates (100 and 32 bit/s) as a provisional TT&C sizing value. The documented channels are listed but none has count, bits and cadence together, so the itemised rate is 0 and the **unitemised remainder** is 100 and 32 bit/s (132 bit/s in total, 5.7 % of 2301.74). Nothing was invented or adjusted to reach those values; when the owners supply the missing numbers the itemised part grows and the remainder shrinks, and a difference from the PDF is reported, not forced. See `docs/subsystem-data-provenance.md`. The telemetry rates come only from the channel inventories; the engineering equations (EPS, AOCS, propulsion, thermal, structures, OBDH) size hardware and do not determine them.
 
 The satellite-to-Earth calculations read `outputs/data_generation_interface.csv/json`: per subsystem the rate, bits/day, mode, priority, maximum data age, origin (DOC / ASSUMPTION / INPUT NEEDED), PDF reference, difference and validation status, plus totals per spacecraft and for the constellation.
 
@@ -168,8 +168,8 @@ Not applied; they change engineering assumptions and need your decision.
 
 | # | Observation | Proposal |
 |---|---|---|
-| 1 | Payload (3 x 4-bit "health status", marked unverified filler) and Structures (cadences 2 s and 4 s, RTD 10 bit) were chosen so the sums equal 100 and 32 bit/s | Either keep and flag (current), or use the documented aggregate as the rate and show the known channels as an itemised part plus an explicit "not itemised remainder" line |
-| 2 | EPS: the area is `required power / eol_specific_power_w_m2` (264.516, which equals 410 W / 1.55 m^2, so it looks back-solved), while the computed `p_eol_w` (423 W/m^2 if `cell_power_w` is W/m^2) is never used. Area 1.47 m^2 vs 0.92 m^2 by the lecture route. The input `cell_power_w` has a W/m^2 magnitude but a W label | Decide which route is authoritative and fix the unit label; confirm with the EPS owner |
+| 1 | Payload/Structures: decided (unitemised remainder), implemented | Owners supply channel counts, bits and cadences |
+| 2 | EPS: decided and implemented, single lecture route A = P_sa / P_EOL, area 0.917 m^2 (earlier fitted route 1.466 m^2). `cell_specific_power_w_m2` = 500 is unchanged and unjustified (about 37 % efficiency at 1361 W/m^2) | EPS owner to confirm; PDF 410 W array and 1800 Wh battery are shown as references with differences (-22.2 W, -2.1 Wh) |
 | 3 | EPS eclipse hours (6.5068) reproduce the documented 1.8 kWh battery, which also looks tuned | Replace with the eclipse duration from the orbit analysis |
-| 4 | AOCS gravity-gradient torque uses one orbit radius (6200 km); for an elliptical orbit the worst case is at periapsis. The wheel torque takes the maximum of slew and disturbance rather than their sum | Use the periapsis radius from the orbit data; confirm the combination rule with the ADCS owner |
+| 4 | AOCS: implemented r(nu) = a(1-e^2)/(1+e cos nu), torque at periapsis, apoapsis and orbit average; wheel requirement = (slew + gravity gradient) x margin, max-only shown for comparison. The repo has no periapsis/apoapsis, so the result uses 6200 km as a circular lower bound (`CIRCULAR_RADIUS_LOWER_BOUND_PERIAPSIS_INPUT_NEEDED`); torque scales with (r_apo/r_peri)^3 | Mission analysis to supply periapsis/apoapsis (the same orbit as the EPS eclipse hours); other disturbances still missing |
 | 5 | No equation links hardware sizing to the number of telemetry channels | Request real channel lists from each owner (section 7) |

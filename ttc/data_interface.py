@@ -12,7 +12,8 @@ from pathlib import Path
 ORIGIN = {"PDF": "DOC", "PRELIMINARY_ESTIMATE": "ASSUMPTION", "MISSING_INPUT": "INPUT NEEDED"}
 FIELDS = ["subsystem", "rate_bps", "bits_per_day", "mbit_per_day", "mb_per_day", "mode", "priority",
           "max_data_age_hours", "min_transfers_per_day", "origin", "pending_real_data",
-          "pdf_reference_bps", "difference_from_pdf_bps", "validation_status", "source"]
+          "rate_basis", "itemised_bps", "unitemised_remainder_bps", "itemisation_complete",
+          "pdf_reference_bps", "difference_from_pdf_bps", "validation_status", "source", "owner_todo"]
 
 
 def build(telemetry, streams, modes=None):
@@ -29,9 +30,11 @@ def build(telemetry, streams, modes=None):
             "mode": modes.get(r["subsystem"]), "priority": s.get("priority"),
             "max_data_age_hours": s.get("deadline_hours"),
             "min_transfers_per_day": None if not s.get("deadline_hours") else 24 / s["deadline_hours"],
-            "origin": ORIGIN[r["source_type"]], "pending_real_data": r["source_type"] != "PDF",
+            "origin": ORIGIN[r["source_type"]], "pending_real_data": r["requires_confirmation"],
+            "rate_basis": r["rate_basis"], "itemised_bps": r["itemised_bps"],
+            "unitemised_remainder_bps": r["unitemised_remainder_bps"], "itemisation_complete": r["itemisation_complete"],
             "pdf_reference_bps": r["pdf_reference_bps"], "difference_from_pdf_bps": r["difference_from_pdf_bps"],
-            "validation_status": r["validation_status"], "source": r["source"]})
+            "validation_status": r["validation_status"], "source": r["source"], "owner_todo": r["owner_todo"]})
     return rows
 
 
@@ -45,7 +48,9 @@ def write(telemetry, streams, out_dir="outputs", modes=None):
     summary = {"status": telemetry["status"], "scope": telemetry["scope"],
                "per_spacecraft": {"rate_bps": telemetry["total_rate_bps_per_spacecraft"],
                                   "mbit_per_day": telemetry["total_mbit_per_day_per_spacecraft"],
-                                  "mb_per_day": telemetry["total_mb_per_day_per_spacecraft"]},
+                                  "mb_per_day": telemetry["total_mb_per_day_per_spacecraft"],
+                                  "itemised_bps": telemetry["total_itemised_bps_per_spacecraft"],
+                                  "unitemised_remainder_bps": telemetry["total_unitemised_remainder_bps_per_spacecraft"]},
                "constellation": {"n_satellites": telemetry["n_satellites"],
                                  "rate_bps": telemetry["total_rate_bps_per_spacecraft"] * telemetry["n_satellites"],
                                  "mbit_per_day": telemetry["total_mbit_per_day_constellation"],

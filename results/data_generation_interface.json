@@ -4,7 +4,9 @@
   "per_spacecraft": {
     "rate_bps": 2301.742222222222,
     "mbit_per_day": 198.870528,
-    "mb_per_day": 24.858816
+    "mb_per_day": 24.858816,
+    "itemised_bps": 2169.742222222222,
+    "unitemised_remainder_bps": 132.0
   },
   "constellation": {
     "n_satellites": 8,
@@ -14,7 +16,7 @@
   },
   "telemetry_complete": true,
   "missing_subsystems": [],
-  "validation_warning": "A rate that matches a PDF aggregate by reverse engineering is NOT independent verification. Engineering equations (EPS, AOCS, propulsion, thermal, structures, OBDH) size hardware; they do not determine the telemetry rates, which come only from the channel inventories.",
+  "validation_warning": "Documented (PDF) aggregates are provisional sizing values: the part not itemised by documented channels is shown separately as the unitemised remainder. A rate that matches a PDF aggregate only by construction is NOT independent verification. Engineering equations (EPS, AOCS, propulsion, thermal, structures, OBDH) size hardware; they do not determine the telemetry rates, which come only from the channel inventories.",
   "subsystems": [
     {
       "subsystem": "payload_housekeeping",
@@ -26,12 +28,17 @@
       "priority": 3,
       "max_data_age_hours": 24.0,
       "min_transfers_per_day": 1.0,
-      "origin": "ASSUMPTION",
+      "origin": "DOC",
       "pending_real_data": true,
+      "rate_basis": "PDF_AGGREGATE_PROVISIONAL",
+      "itemised_bps": 0,
+      "unitemised_remainder_bps": 100.0,
+      "itemisation_complete": false,
       "pdf_reference_bps": 100.0,
       "difference_from_pdf_bps": 0.0,
-      "validation_status": "MATCHES_PDF_BY_CONSTRUCTION_NOT_INDEPENDENT_VERIFICATION",
-      "source": "PDF §2.7.3 aggregate 100 bps; illustrative clock lock, cell temperatures, SSPA RF power. Quantization and cadence NOT specified; calibration pending"
+      "validation_status": "PDF_AGGREGATE_PROVISIONAL_ITEMISATION_PENDING",
+      "source": "PDF §2.7.3 (p.14): 100 bps continuous housekeeping. Names clock lock status, clock cell temperatures and SSPA RF power; the PDF gives no channel count, bit depth or cadence.",
+      "owner_todo": "PAYLOAD OWNER: provide for clock lock status, clock cell temperatures and SSPA RF power the number of channels, bits per sample and sampling interval, and say whether 100 bps includes packet headers or other channels."
     },
     {
       "subsystem": "structures_mechanisms",
@@ -43,12 +50,17 @@
       "priority": 3,
       "max_data_age_hours": 24.0,
       "min_transfers_per_day": 1.0,
-      "origin": "ASSUMPTION",
+      "origin": "DOC",
       "pending_real_data": true,
+      "rate_basis": "PDF_AGGREGATE_PROVISIONAL",
+      "itemised_bps": 0,
+      "unitemised_remainder_bps": 32.0,
+      "itemisation_complete": false,
       "pdf_reference_bps": 32.0,
       "difference_from_pdf_bps": 0.0,
-      "validation_status": "MATCHES_PDF_BY_CONSTRUCTION_NOT_INDEPENDENT_VERIFICATION",
-      "source": "PDF §7.5.3 aggregate 32 bps; 8 microswitch bits, two 16-bit SADM encoders, two 16-bit HGA resolvers, six RTD channels at 0.2Hz. Encoder and resolver cadence/RTD bit depth assumed."
+      "validation_status": "PDF_AGGREGATE_PROVISIONAL_ITEMISATION_PENDING",
+      "source": "PDF §7.5.3 (p.52): 32 bps. Documents 8 deployment switch bits, 2x16-bit SADM encoders, 2x16-bit HGA resolvers and 6 RTDs at 0.2 Hz. Cadences of switches/encoders/resolvers and RTD bit depth are not given.",
+      "owner_todo": "STRUCTURES/MECHANISMS OWNER: provide the sampling interval of the deployment switches, SADM encoders and HGA resolvers, the RTD bit depth, and whether 32 bps includes headers."
     },
     {
       "subsystem": "aocs_nominal_hk",
@@ -62,10 +74,15 @@
       "min_transfers_per_day": 2.0,
       "origin": "ASSUMPTION",
       "pending_real_data": true,
+      "rate_basis": "CHANNELS_ASSUMED",
+      "itemised_bps": 1587.2,
+      "unitemised_remainder_bps": null,
+      "itemisation_complete": false,
       "pdf_reference_bps": null,
       "difference_from_pdf_bps": null,
       "validation_status": "ASSUMED_INVENTORY_NO_PDF_REFERENCE",
-      "source": "Assumed logged attitude/actuator channels; confirm with ADCS"
+      "source": "Assumed logged attitude/actuator channels; confirm with ADCS",
+      "owner_todo": "Subsystem owner: replace the assumed channel inventory with the real one (counts, bits, cadences)."
     },
     {
       "subsystem": "propulsion_hk",
@@ -79,10 +96,15 @@
       "min_transfers_per_day": 2.0,
       "origin": "ASSUMPTION",
       "pending_real_data": true,
+      "rate_basis": "CHANNELS_ASSUMED",
+      "itemised_bps": 38.4,
+      "unitemised_remainder_bps": null,
+      "itemisation_complete": false,
       "pdf_reference_bps": null,
       "difference_from_pdf_bps": null,
       "validation_status": "ASSUMED_INVENTORY_NO_PDF_REFERENCE",
-      "source": "Assumed nominal sensors; burns and event bursts not included"
+      "source": "Assumed nominal sensors; burns and event bursts not included",
+      "owner_todo": "Subsystem owner: replace the assumed channel inventory with the real one (counts, bits, cadences)."
     },
     {
       "subsystem": "eps_hk",
@@ -96,10 +118,15 @@
       "min_transfers_per_day": 2.0,
       "origin": "ASSUMPTION",
       "pending_real_data": true,
+      "rate_basis": "CHANNELS_ASSUMED",
+      "itemised_bps": 140.8,
+      "unitemised_remainder_bps": null,
+      "itemisation_complete": false,
       "pdf_reference_bps": null,
       "difference_from_pdf_bps": null,
       "validation_status": "ASSUMED_INVENTORY_NO_PDF_REFERENCE",
-      "source": "Assumed battery, array, bus and temperature channels"
+      "source": "Assumed battery, array, bus and temperature channels",
+      "owner_todo": "Subsystem owner: replace the assumed channel inventory with the real one (counts, bits, cadences)."
     },
     {
       "subsystem": "thermal_hk",
@@ -113,10 +140,15 @@
       "min_transfers_per_day": 1.0,
       "origin": "ASSUMPTION",
       "pending_real_data": true,
+      "rate_basis": "CHANNELS_ASSUMED",
+      "itemised_bps": 96.0,
+      "unitemised_remainder_bps": null,
+      "itemisation_complete": false,
       "pdf_reference_bps": null,
       "difference_from_pdf_bps": null,
       "validation_status": "ASSUMED_INVENTORY_NO_PDF_REFERENCE",
-      "source": "Assumed temperature sensor logging"
+      "source": "Assumed temperature sensor logging",
+      "owner_todo": "Subsystem owner: replace the assumed channel inventory with the real one (counts, bits, cadences)."
     },
     {
       "subsystem": "obdh_hk_logs",
@@ -130,10 +162,15 @@
       "min_transfers_per_day": 4.0,
       "origin": "ASSUMPTION",
       "pending_real_data": true,
+      "rate_basis": "CHANNELS_ASSUMED",
+      "itemised_bps": 307.34222222222223,
+      "unitemised_remainder_bps": null,
+      "itemisation_complete": false,
       "pdf_reference_bps": null,
       "difference_from_pdf_bps": null,
       "validation_status": "ASSUMED_INVENTORY_NO_PDF_REFERENCE",
-      "source": "Own OBDH housekeeping only; excludes other subsystem data"
+      "source": "Own OBDH housekeeping only; excludes other subsystem data",
+      "owner_todo": "Subsystem owner: replace the assumed channel inventory with the real one (counts, bits, cadences)."
     }
   ]
 }

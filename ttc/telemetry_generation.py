@@ -2,7 +2,7 @@
 
 Run: python -m ttc.telemetry_generation
 Rate = sum(count x bits per sample / sampling interval). A documented (PDF) aggregate is a
-reference, never an override; it is the fallback only when no channel inventory exists.
+comparison target; with incomplete itemisation, its aggregate is the provisional sizing fallback.
 A subsystem with neither is reported as MISSING_INPUT, never as zero.
 Inventories marked PLACEHOLDER must be replaced by the subsystem owners' real sensor lists.
 """
@@ -55,7 +55,7 @@ def apply_computed_rates(cfg, rows, set_status=False):
 
 
 def compute(input_path="data/telemetry_generation_inputs.json", output_dir="outputs"):
-    """Calculate subsystem engineering first, then feed computed rates to TT&C."""
+    """Use the existing subsystem interface and PDF fallback to feed TT&C.\n\n    Sensor rate: count * bits_per_sample / interval_seconds. Missing values stay\n    null; incomplete inventories retain provisional PDF aggregate rates.\n    When the owner confirms itemisation_complete, the sensor sum takes priority.\n    """
     from .subsystem_models import compute as compute_subsystems
     model = compute_subsystems(telemetry_path=input_path, output_dir=output_dir)
     rows = [_public(r) for r in model["subsystems"]]

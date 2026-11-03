@@ -11,7 +11,7 @@ from ttc.power_budget import evaluate
 from ttc.link_budget import from_file as evaluate_link
 from ttc.xband_trade_study import from_file as evaluate_xband_trade
 from ttc.contact_energy_optimizer import compute as rank_contacts
-from ttc.export_excel_openpyxl import export as export_excel
+from ttc.export_workbook import export as export_excel
 from ttc.shift_contact_epoch import shift_contacts
 from ttc.dsn_access_sensitivity import compute as dsn_sensitivity
 from ttc.downlink_simulation import compute as simulate_downlink
@@ -55,11 +55,19 @@ def main():
     requirements=load_requirements(str(generated_requirements_path))
     engineering=calculate()
     (out/"subsystem_interfaces.json").write_text(json.dumps(engineering,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
+    hga=evaluate_hga(link_path=args.link_input)
+    # Wire the HGA design into the link budget: gain, frequency and rate come from the HGA
+    # definition when link_budget_inputs.json leaves them unset (no new values are introduced).
+    antenna=json.loads(Path("data/hga_preliminary_design.json").read_text(encoding="utf-8"))
+    link={**link,
+          "tx_gain_dbi":link.get("tx_gain_dbi") if link.get("tx_gain_dbi") is not None else hga["calculated_idealized_gain_dbi"],
+          "frequency_hz":link.get("frequency_hz") if link.get("frequency_hz") is not None else antenna["frequency_hz"],
+          "data_rate_bps":link.get("data_rate_bps") if link.get("data_rate_bps") is not None else antenna["downlink_bps"]}
     power=evaluate(link)
     (out/"power_budget.json").write_text(json.dumps(power,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
-    rf_link=evaluate_link(args.link_input)
+    from ttc.link_budget import evaluate_link as evaluate_link_dict
+    rf_link=evaluate_link_dict(link)
     (out/"link_budget.json").write_text(json.dumps(rf_link,indent=2)+"\n",encoding="utf-8")
-    hga=evaluate_hga(link_path=args.link_input)
     (out/"hga_sizing.json").write_text(json.dumps(hga,indent=2)+"\n",encoding="utf-8")
     trade=evaluate_xband_trade()
     (out/"xband_trade_study.json").write_text(json.dumps(trade,indent=2)+"\n",encoding="utf-8")
@@ -80,7 +88,7 @@ def main():
     else:
         summary["planning"]="SKIPPED: contacts CSV not found"
     (out/"overview.json").write_text(json.dumps(summary,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
-    workbook=export_excel(output=str(out/"SELENA_TTC_Model.xlsx"))
+    workbook=export_excel(output=str(out/"SELENA_TTC_Model.xlsx"),link_input=args.link_input,out_dir=args.output_dir)
     summary["excel_workbook"]=str(workbook)
     (out/"overview.json").write_text(json.dumps(summary,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
     print(json.dumps(summary,indent=2,ensure_ascii=False))

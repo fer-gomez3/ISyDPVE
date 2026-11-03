@@ -24,6 +24,18 @@ def stream_rate(s):
         return None if size is None or period is None else float(size)*8/(float(period)*3600)
     raise ValueError("Unsupported mode: "+str(mode))
 
+def recurrence_display(hours):
+    """Human-readable recurrence; scheduling still uses the exact hourly deadline."""
+    if hours <= 24:
+        period, unit = 24.0, "day"
+    elif hours <= 168:
+        period, unit = 168.0, "week"
+    elif hours <= 720:
+        period, unit = 720.0, "30_day_month"
+    else:
+        period, unit = 8760.0, "365_day_year"
+    return period / hours, unit
+
 def stream_requirements(cfg):
     p=cfg["policy"]; out=[]
     for s in cfg["streams"]:
@@ -35,9 +47,10 @@ def stream_requirements(cfg):
         if age<=0:raise ValueError("max_age_hours must be positive")
         rate=stream_rate(s)
         if rate is not None and (rate<0 or not math.isfinite(rate)):raise ValueError("Invalid rate")
+        frequency, frequency_unit = recurrence_display(age)
         out.append(dict(name=s["name"],priority=priority,deadline_hours=age,
             mean_rate_bps=rate,generated_mbit_per_day=None if rate is None else rate*86400/1e6,
-            required_transfers_per_day=24/age,source=s.get("source")))
+            required_transfers_per_period=frequency,recurrence_period=frequency_unit,source=s.get("source")))
     return out
 
 def compute(cfg,contacts_path="data/contacts_master.csv",output_dir="outputs"):
@@ -75,7 +88,7 @@ def compute(cfg,contacts_path="data/contacts_master.csv",output_dir="outputs"):
                 last=max(last,w["end"])
             gap=max(gap,(end-last).total_seconds())
             rows.append(dict(satellite=sat,subsystem=stream["name"],priority=stream["priority"],
-                max_data_age_hours=stream["deadline_hours"],required_transfers_per_day=stream["required_transfers_per_day"],
+                max_data_age_hours=stream["deadline_hours"],required_transfers_per_period=stream["required_transfers_per_period"],recurrence_period=stream["recurrence_period"],
                 generation_bps=rate,generated_mbit_epoch=None if generated is None else generated/1e6,
                 ideal_required_tx_hours_epoch=None if tx_s is None else tx_s/3600,
                 candidate_usable_hours_epoch=usable_total/3600,

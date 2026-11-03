@@ -47,8 +47,8 @@ def main():
     access_sensitivity=dsn_sensitivity(contacts_path,output_dir=args.output_dir) if allocation else None
     energy_ranking=rank_contacts(windows_path=str(out/'dsn_allocated_windows.csv'),output_path=str(out/'contact_energy_ranking.json')) if allocation else None
     simulation=simulate_downlink(contacts_path=contacts_path,output_dir=args.output_dir) if allocation else None
-    summary={"dsn_access_sensitivity":str(out/"dsn_access_sensitivity.json") if access_sensitivity else "SKIPPED","dsn_allocation":"outputs/dsn_allocation_summary.json" if allocation else "SKIPPED",
-             "downlink_simulation":"outputs/downlink_simulation.json" if simulation else "SKIPPED",
+    summary={"dsn_access_sensitivity":str(out/"dsn_access_sensitivity.json") if access_sensitivity else "SKIPPED","dsn_allocation":str(out/"dsn_allocation_summary.json") if allocation else "SKIPPED",
+             "downlink_simulation":str(out/"downlink_simulation.json") if simulation else "SKIPPED",
              "contact_energy_ranking":str(out/"contact_energy_ranking.json") if energy_ranking else "SKIPPED","contact_energy_status":energy_ranking["status"] if energy_ranking else "SKIPPED","xband_trade_study":str(out/"xband_trade_study.json"),"xband_trade_status":trade["status"],"link_budget":"outputs/link_budget.json","link_status":rf_link["status"],"engineering":"outputs/subsystem_interfaces.json",
              "power":"outputs/power_budget.json",
              "power_status":power["status"],"power_missing_inputs":power["missing_inputs"]}

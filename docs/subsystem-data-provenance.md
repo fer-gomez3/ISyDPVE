@@ -45,3 +45,15 @@ Per-channel detail: `outputs/telemetry_traceability.csv`. Single code path: `ttc
 - **EPS owner:** cell specific power, eclipse hours, array area.
 - **AOCS owner:** other disturbance torques, wheel margin.
 - Link-budget and DSN inputs remain as listed in `docs/technical-report.md`.
+
+## TT&C / OBDH scope correction (2026-11-03)
+
+**Engineering clarification:** The relevant output from another subsystem is its generated housekeeping / event data, **not** its solar-panel power, battery energy, reaction-wheel torque, propellant mass, thermal equilibrium or structural safety factor. These hardware-sizing results must never determine telemetry bit rates. The telemetry pipeline now calls `ttc.telemetry_generation.calculate` directly; `main.py` creates the legacy hardware-sizing report separately, without feeding its results to downlink or OBDH.
+
+**Only telemetry formula:** `rate_bps = sum(sensor_count * bits_per_sample / sampling_interval_s)` for fully specified channels. Operational events, packet overhead, mode duty cycles and time-tagging require separate explicit inputs; they are **not** inferred from subsystem power or mechanical equations.
+
+**Shared PDF baseline:** Payload 100 bps and Structures 32 bps are *documented aggregate provisional rates*, used for Earth-link sizing until owners provide complete channel inventories. They are not independently calculated from sensors; the missing itemisation remains visible as 100 and 32 bps. For other subsystems, currently computed values are assumed inventories, not validated flight telemetry. Do not adjust sample sizes or cadences merely to reproduce a PDF total.
+
+**Owner actions:** Provide for each monitored variable the sensor/channel count, quantisation bits, sampling cadence, operating mode and expected event bursts; clarify packet headers, compression, and whether payload PNT navigation broadcasts are separate from Earth-directed telemetry. Keep a documented source for every value. Re-run `main.py --telemetry-input <inventory.json>` to propagate changes to OBDH, DSN, downlink and Excel.
+
+**Why the hardware report remains:** `outputs/subsystem_engineering.json` is retained for historical compatibility and cross-subsystem review only. Its EPS area and AOCS torque estimates are outside the TT&C data-generation scope and should not be presented as verified EPS/AOCS design outputs.

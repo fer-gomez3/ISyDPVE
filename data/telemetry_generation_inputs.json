@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "scope": "Per spacecraft; housekeeping telemetry destined for Earth, excludes lunar PNT broadcast",
+  "notes": "PDF aggregate rates are preserved. Sensor breakdowns for other subsystems are hypothetical, not hardware inventories. Rates describe data logged for downlink, not internal bus traffic.",
+  "subsystems": [
+    {
+      "name": "payload_housekeeping",
+      "source_type": "PDF_PRELIMINARY",
+      "source": "SUBSYSTEMS PDF sec 2.7.3",
+      "pdf_rate_bps": 100,
+      "components": []
+    },
+    {
+      "name": "structures_mechanisms",
+      "source_type": "PDF",
+      "source": "SUBSYSTEMS PDF sec 7.5.3",
+      "pdf_rate_bps": 32,
+      "components": []
+    },
+    {
+      "name": "aocs_nominal_hk",
+      "source_type": "PRELIMINARY_ESTIMATE",
+      "source": "Assumed logged attitude/actuator channels; confirm with ADCS",
+      "components": [
+        {
+          "name": "attitude_and_actuator_channels",
+          "count": 31,
+          "bits_per_sample": 32,
+          "interval_seconds": 0.625
+        }
+      ]
+    },
+    {
+      "name": "propulsion_hk",
+      "source_type": "PRELIMINARY_ESTIMATE",
+      "source": "Assumed nominal sensors; burns and event bursts not included",
+      "components": [
+        {
+          "name": "tank_valve_and_thruster_status",
+          "count": 12,
+          "bits_per_sample": 16,
+          "interval_seconds": 5
+        }
+      ]
+    },
+    {
+      "name": "eps_hk",
+      "source_type": "PRELIMINARY_ESTIMATE",
+      "source": "Assumed battery, array, bus and temperature channels",
+      "components": [
+        {
+          "name": "electrical_telemetry",
+          "count": 22,
+          "bits_per_sample": 32,
+          "interval_seconds": 5
+        }
+      ]
+    },
+    {
+      "name": "thermal_hk",
+      "source_type": "PRELIMINARY_ESTIMATE",
+      "source": "Assumed temperature sensor logging",
+      "components": [
+        {
+          "name": "temperature_sensors",
+          "count": 30,
+          "bits_per_sample": 16,
+          "interval_seconds": 5
+        }
+      ]
+    },
+    {
+      "name": "obdh_hk_logs",
+      "source_type": "PRELIMINARY_ESTIMATE",
+      "source": "Own OBDH housekeeping only; excludes other subsystem data",
+      "components": [
+        {
+          "name": "processor_memory_and_fault_status",
+          "count": 12,
+          "bits_per_sample": 32,
+          "interval_seconds": 1.25
+        },
+        {
+          "name": "diagnostic_event_average",
+          "count": 1,
+          "bits_per_sample": 1024,
+          "interval_seconds": 7200
+        }
+      ]
+    }
+  ]
+}

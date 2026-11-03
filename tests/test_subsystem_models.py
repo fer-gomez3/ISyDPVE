@@ -47,3 +47,18 @@ def test_pdf_reference_is_not_silently_used_if_channels_exist():
     assert r["rate_bps"] == 32
     assert r["pdf_reference_bps"] == 100
     assert r["difference_from_pdf_bps"] == -68
+
+def test_reverse_engineered_pdf_totals_are_computed_not_overridden():
+    t, e = configs()
+    result = {r["subsystem"]:r for r in calculate(t,e)["subsystems"]}
+    for name, expected in [("payload_housekeeping",100),("structures_mechanisms",32)]:
+        row = result[name]
+        assert row["rate_bps"] == pytest.approx(expected)
+        assert row["telemetry_origin"] == "CALCULATED_FROM_CHANNELS_PLACEHOLDER"
+        assert row["rate_bps"] == pytest.approx(sum(c["rate_bps"] for c in row["channels"]))
+        assert row["pdf_reference_bps"] == expected
+    p = next(s for s in t["subsystems"] if s["name"] == "payload_housekeeping")
+    p["components"][0]["interval_seconds"] = 2
+    changed = {r["subsystem"]:r for r in calculate(t,e)["subsystems"]}
+    assert changed["payload_housekeeping"]["rate_bps"] == pytest.approx(96)
+    assert changed["payload_housekeeping"]["difference_from_pdf_bps"] == pytest.approx(-4)

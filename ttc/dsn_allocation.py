@@ -2,6 +2,7 @@
 import argparse
 import csv
 import json
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from .contact_analysis import load_contacts, candidate_schedule
 
@@ -16,10 +17,19 @@ def allocate(contacts, policy):
     if any(not 0<=v<=1 for v in fractions): raise ValueError("Allocation fractions must be between 0 and 1")
     schedule=candidate_schedule(contacts)
     rows=[]
-    for w in schedule:
+    daily_cap=policy.get("daily_network_hours")
+    if daily_cap is not None and float(daily_cap)<0:raise ValueError("daily_network_hours must be nonnegative")
+    used_by_day={}
+    for w in sorted(schedule,key=lambda x:x["start"]):
         fraction=float(sat_overrides.get(w["satellite"],overrides.get(w["station"],default)))
         # Hypothetical allocation is a contiguous portion starting at the candidate interval start.
         allocated=w["seconds"]*fraction
+        day=w["start"].date().isoformat()
+        if daily_cap is not None:
+            remaining=max(0,float(daily_cap)*3600-used_by_day.get(day,0))
+            allocated=min(allocated,remaining)
+        if allocated>=min_contact:
+            used_by_day[day]=used_by_day.get(day,0)+allocated
         eligible=allocated>=min_contact
         useful=max(0,allocated-setup) if eligible else 0
         rows.append(dict(satellite=w["satellite"],station=w["station"],
@@ -47,9 +57,9 @@ def compute_allocation(contacts_path="data/contacts_master.csv",
             "assigned_seconds","useful_tx_seconds","eligible","scenario_only"])
         writer.writeheader();writer.writerows(rows)
     result={"status":"HYPOTHETICAL_NOT_BOOKED",
-        "geometry_note":"Input CSV is historical 2020 geometry, NOT SELENA 2030 operational contacts.",
+        "geometry_note":"Contact geometry is a hypothetical input; 2030 timestamps may be calendar-shifted, NOT physically repropagated.",
         "allocation_note":"Fractions apply to conflict-resolved candidate intervals, not full overlapping visibility windows. Assigned portion is modeled at interval start; acquisition/setup subtracted. No real DSN reservation or slew constraints.",
-        "policy":policy,"candidate_segments":len(rows),
+        "policy":policy,"daily_network_hours_limit":daily_cap,"candidate_segments":len(rows),
         "eligible_segments":sum(r["eligible"] for r in rows),
         "total_candidate_hours":sum(r["geometric_candidate_seconds"] for r in rows)/3600,
         "total_assigned_hours":sum(r["assigned_seconds"] for r in rows)/3600,

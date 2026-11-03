@@ -38,7 +38,25 @@ def calculate(cfg):
             "warning": cfg["notes"]}
 
 def compute(input_path="data/telemetry_generation_inputs.json", output_dir="outputs"):
-    result = calculate(json.loads(Path(input_path).read_text(encoding="utf-8")))
+    """Calculate subsystem engineering first, then feed computed rates to TT&C."""
+    from .subsystem_models import compute as compute_subsystems
+    model = compute_subsystems(telemetry_path=input_path, output_dir=output_dir)
+    rows = []
+    for r in model["subsystems"]:
+        origin = "PDF" if r["telemetry_origin"] == "PDF_AGGREGATE_FALLBACK" else "PRELIMINARY_ESTIMATE"
+        rows.append({
+            "subsystem": r["subsystem"], "rate_bps": r["rate_bps"],
+            "mbit_per_day": r["mbit_per_day"], "mb_per_day": r["mb_per_day"],
+            "source_type": origin, "source": r["telemetry_origin"],
+            "requires_confirmation": origin != "PDF",
+            "components": r["channels"], "engineering": r["engineering"]
+        })
+    total = sum(r["rate_bps"] for r in rows)
+    result = {"status": model["status"], "scope": model["scope"], "subsystems": rows,
+              "total_rate_bps_per_spacecraft": total,
+              "total_mbit_per_day_per_spacecraft": total * SECONDS_PER_DAY / 1e6,
+              "total_mb_per_day_per_spacecraft": total * SECONDS_PER_DAY / 8e6,
+              "warning": model["warning"]}
     out = Path(output_dir)
     out.mkdir(parents=True, exist_ok=True)
     (out / "telemetry_generation.json").write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
@@ -46,7 +64,7 @@ def compute(input_path="data/telemetry_generation_inputs.json", output_dir="outp
         fields = ["subsystem", "rate_bps", "mbit_per_day", "mb_per_day", "source_type", "requires_confirmation", "source"]
         writer = csv.DictWriter(f, fieldnames=fields)
         writer.writeheader()
-        writer.writerows({k: r[k] for k in fields} for r in result["subsystems"])
+        writer.writerows({k: r[k] for k in fields} for r in rows)
     return result
 
 if __name__ == "__main__":

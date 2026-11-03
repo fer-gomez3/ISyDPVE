@@ -110,7 +110,7 @@ def plan(config_path=None, output_dir=None):
                     link["sent_bits"]+=bits
                     budget-=bits
                     if budget <= 0: break
-                if link["sent_bits"] > 0: last_downlink[sat]=t+timedelta(seconds=dt)
+                if budget < effective * dt: last_downlink[sat]=t+timedelta(seconds=dt)
             if link["remaining"] <= 0:
                 schedule.append({"satellite":sat,"station":link["station"],
                                  "start_utc":iso(link["start"]),"end_utc":iso(t+timedelta(seconds=dt)),
@@ -148,7 +148,11 @@ def plan(config_path=None, output_dir=None):
             age_risk=max(backlog[sat][s["name"]]/max(1,s["mean_rate_bps"])/3600/
                          s["deadline_hours"] for s in streams)
             urgency=max(total/(capacity*(1-reserve)),since/(max_gap/3600),age_risk)
-            if urgency < float(cfg["proactive_trigger_fraction"]): continue
+            # Begin earlier when the next contact opportunity is scarce; also allow
+            # a proactive fill-level trigger so short windows are not wasted.
+            future = [c for c in contacts if c["satellite"]==sat and c["start"]>t]
+            next_wait = min(((c["start"]-t).total_seconds()/3600 for c in future), default=float("inf"))
+            if urgency < float(cfg["proactive_trigger_fraction"]) and since + next_wait < max_gap/3600: continue
             for c in contacts:
                 if c["satellite"]!=sat or c["station"] in busy_stations or allowed.get(c["station"],True) is False: continue
                 if not (c["start"]<=t<c["end"]): continue
@@ -156,9 +160,11 @@ def plan(config_path=None, output_dir=None):
                 day=t.date().isoformat()
                 remaining=cap_per_day-daily_used[day]
                 # Reserve full contact time, including setup, from shared daily cap.
-                available=min((c["end"]-t).total_seconds(),remaining,(end-t).total_seconds())
+                available=min((c["end"]-t).total_seconds(),remaining,(end-t).total_seconds(),
+                              (datetime.combine(t.date()+timedelta(days=1),datetime.min.time(),tzinfo=timezone.utc)-t).total_seconds())
                 if available < (setup_steps+min_steps)*STEP: continue
                 tx_need=max(min_steps,math.ceil(total/(effective*STEP)))
+                # Do not reserve more than needed for backlog plus near-term generation.
                 steps=min(math.floor(available/STEP),setup_steps+tx_need)
                 if steps<setup_steps+min_steps: continue
                 options.append((urgency,-hours_left,-since,sat,c["station"],steps))

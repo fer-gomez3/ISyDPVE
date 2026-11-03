@@ -80,8 +80,13 @@ def plan(config_path=None, output_dir=None):
     fifo = {sat: {stream["name"]: [] for stream in streams} for sat in sats}
     dropped = defaultdict(float)
     backlog = {sat: {s["name"]: capacity * initial / len(streams) for s in streams} for sat in sats}
+    if initial:
+        for sat in sats:
+            for stream in streams:
+                fifo[sat][stream["name"]].append([target,capacity*initial/len(streams)])
     last_downlink = {sat: target for sat in sats}
     produced = defaultdict(float); sent = defaultdict(float)
+    initial_bits = capacity*initial/len(streams)
     peak = defaultdict(float); violations = defaultdict(set)
     history = []; schedule = []; daily_used = defaultdict(float)
     active_links = {}  # sat -> (station, setup remaining steps, tx steps)
@@ -131,7 +136,22 @@ def plan(config_path=None, output_dir=None):
         for sat in sats:
             total=sum(backlog[sat].values())
             peak[sat]=max(peak[sat],total)
-            if total>capacity: violations[sat].add("MEMORY_OVERFLOW")
+            if total>capacity:
+                violations[sat].add("MEMORY_OVERFLOW")
+                # Real physical storage cannot exceed its limit. Drop oldest
+                # lower-priority data first and explicitly account for losses.
+                excess=total-capacity
+                for stream in sorted(streams,key=lambda x:(x["priority"],-x["deadline_hours"])):
+                    name=stream["name"]; queue=fifo[sat][name]
+                    while excess>1e-7 and queue:
+                        removed=min(excess,queue[0][1])
+                        queue[0][1]-=removed
+                        backlog[sat][name]-=removed
+                        dropped[(sat,name)]+=removed
+                        excess-=removed
+                        if queue[0][1]<=1e-7: queue.pop(0)
+                    if excess<=1e-7: break
+                total=sum(backlog[sat].values())
             if total>capacity*(1-reserve): violations[sat].add("MEMORY_RESERVE_EXCEEDED")
             for s in streams:
                 queue=fifo[sat][s["name"]]
@@ -213,18 +233,20 @@ def plan(config_path=None, output_dir=None):
            "downlinked_mbit":round(sum(sent[(sat,s["name"])] for s in streams)/1e6,4),
            "remaining_mbit":round(sum(backlog[sat].values())/1e6,4),
            "dropped_mbit":round(sum(dropped[(sat,x["name"])] for x in streams)/1e6,4),
+           "initial_memory_mbit":round(capacity*initial/1e6,4),
            "peak_memory_mbit":round(peak[sat]/1e6,4),
            "peak_occupancy_fraction":round(peak[sat]/capacity,5),
            "contacts":sum(x["satellite"]==sat for x in schedule),
            "warnings":sorted(violations[sat]),
            "by_subsystem":{s["name"]:{"generated_mbit":round(produced[(sat,s["name"])]/1e6,4),
                    "downlinked_mbit":round(sent[(sat,s["name"])]/1e6,4),
-                   "remaining_mbit":round(backlog[sat][s["name"]]/1e6,4)} for s in streams}}
+                   "remaining_mbit":round(backlog[sat][s["name"]]/1e6,4),
+                   "dropped_mbit":round(dropped[(sat,s["name"])]/1e6,4)} for s in streams}}
     # Post-run checks: never silently accept impossible storage or resource assignments.
     for sat in sats:
         for stream in streams:
             name=stream["name"]
-            residual=produced[(sat,name)]-sent[(sat,name)]-dropped[(sat,name)]-backlog[sat][name]
+            residual=produced[(sat,name)]+initial_bits-sent[(sat,name)]-dropped[(sat,name)]-backlog[sat][name]
             if abs(residual)>max(1e-3,produced[(sat,name)]*1e-9):
                 raise AssertionError("Telemetry conservation failure: "+sat+"/"+name)
     for i,a in enumerate(schedule):

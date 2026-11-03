@@ -61,6 +61,10 @@ def export(output="outputs/SELENA_TTC_Model.xlsx",root="."):
         cases=json.loads(sensitivity_path.read_text(encoding="utf-8")).get("cases",[])
         columns=["network_hours_per_day","setup_minutes","assigned_hours_in_input_epoch","useful_hours_in_input_epoch","nominal_data_capacity_mb_in_epoch","nominal_generated_mb_per_sat_day","ideal_tx_minutes_per_sat_day"]
         sheet("DSN Sensitivity",columns,[[case.get(k,"") for k in columns] for case in cases])
+    eps_path=root/"data/ttc_eps_preliminary_budget.json"
+    if eps_path.exists():
+        eps=json.loads(eps_path.read_text(encoding="utf-8"))
+        sheet("EPS TTC Allocation",["Parameter","Value"],[[k,str(v) if isinstance(v,(dict,list)) else v] for k,v in eps.items()])
     sheet("Assumptions",["Parameter","Value","Status"],[
         ["Allocation default",policy["default_fraction"],"PRE"],
         ["Setup minutes",policy["setup_minutes"],"PRE"],

@@ -104,6 +104,9 @@ def plan(config_path=None, output_dir=None):
                 backlog[sat][s["name"]] += bits
                 fifo[sat][s["name"]].append([t, bits])
                 produced[(sat,s["name"])] += bits
+        # Keep links completing during this tick reserved until the tick ends.
+        just_finished_stations=set()
+        just_finished_satellites=set()
         # Advance ongoing contacts. Station and satellite resources stay locked.
         for sat, link in list(active_links.items()):
             link["remaining"] -= 1
@@ -132,6 +135,8 @@ def plan(config_path=None, output_dir=None):
                                  "start_utc":iso(link["start"]),"end_utc":iso(t+timedelta(seconds=dt)),
                                  "downloaded_mbit":round(link["sent_bits"]/1e6,5),
                                  "reason":link["reason"]})
+                just_finished_stations.add(link["station"])
+                just_finished_satellites.add(sat)
                 del active_links[sat]
         for sat in sats:
             total=sum(backlog[sat].values())
@@ -168,10 +173,10 @@ def plan(config_path=None, output_dir=None):
             history.append(last_sample[sat])
         # Replan at every time step. Only begin contacts that fit entirely inside
         # a geometric window; enforce one link per station/satellite and daily DSN cap.
-        busy_stations={link["station"] for link in active_links.values()}
+        busy_stations={link["station"] for link in active_links.values()} | just_finished_stations
         options=[]
         for sat in sats:
-            if sat in active_links: continue
+            if sat in active_links or sat in just_finished_satellites: continue
             total=sum(backlog[sat].values())
             base_rate=sum(s["mean_rate_bps"] for s in streams)
             hours_left=max(0,(capacity*(1-reserve)-total)/max(1,base_rate)/3600)
@@ -201,7 +206,7 @@ def plan(config_path=None, output_dir=None):
                 options.append((urgency,-hours_left,-since,sat,c["station"],steps))
         # Greedy priority ordering: risk first; no global optimality guarantee.
         for urgency,neg_hours,neg_since,sat,station,steps in sorted(options,reverse=True):
-            if sat in active_links or station in busy_stations: continue
+            if sat in active_links or sat in just_finished_satellites or station in busy_stations: continue
             seconds=steps*STEP
             day=t.date().isoformat()
             if daily_used[day]+seconds>cap_per_day+1e-6: continue

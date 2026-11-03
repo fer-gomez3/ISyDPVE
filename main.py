@@ -43,6 +43,10 @@ def main():
     link=json.loads(Path(args.link_input).read_text(encoding="utf-8"))
     # Keep the original engineering reference and the editable planning model distinct.
     telemetry=compute_telemetry(input_path=args.telemetry_input,output_dir=args.output_dir)
+    # Optional hardware-sizing reference only: never feeds telemetry, OBDH or TT&C rates.
+    # Kept as a separate report for backward compatibility with engineering reviewers.
+    from ttc.subsystem_models import compute as compute_hardware_reference
+    compute_hardware_reference(telemetry_path=args.telemetry_input, output_dir=args.output_dir)
     generated_cfg=json.loads(Path("data/telemetry_detailed_scenario.json").read_text(encoding="utf-8"))
     generated_cfg["policy"]=apply_policy(generated_cfg["policy"])
     apply_computed_rates(generated_cfg,telemetry["subsystems"],set_status=True)

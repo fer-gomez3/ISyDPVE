@@ -8,13 +8,15 @@ import json
 from pathlib import Path
 from ttc.link_budget import evaluate_link
 
-def rank_windows(windows, geometry, link, urgency=None):
+def rank_windows(windows, geometry, link, urgency=None, scenario_defaults=None):
     urgency=urgency or {}
+    scenario_defaults=scenario_defaults or {}
     ranked=[]
     for w in windows:
         item=dict(w)
         key=(str(w["satellite"]),str(w["station"]),str(w["candidate_start_utc"]))
-        g=geometry.get(key)
+        measured=geometry.get(key)
+        g=measured or scenario_defaults
         if not g or g.get("distance_km") is None or g.get("elevation_deg") is None:
             item.update(rank_status="MISSING_2030_GEOMETRY",energy_j_per_payload_bit=None,score=None)
             ranked.append(item)
@@ -27,6 +29,7 @@ def rank_windows(windows, geometry, link, urgency=None):
             item.update(rank_status="MISSING_RF_INPUTS",energy_j_per_payload_bit=None,score=None)
             ranked.append(item)
             continue
+        item["geometry_source"]="SUPPLIED_GEOMETRY" if measured else "NOMINAL_2030_SCENARIO"
         rate=float(p["data_rate_bps"])
         dc=result["estimated_tx_dc_w"]
         if dc is None:raise ValueError("PA efficiency and electronics power required")
@@ -51,14 +54,21 @@ def load_geometry(path):
 def compute(windows_path="outputs/dsn_allocated_windows.csv",
             geometry_path="data/contact_geometry_2030.csv",
             link_path="data/link_budget_inputs.json",
+            scenario_path="data/contact_nominal_2030_scenario.json",
             output_path="outputs/contact_energy_ranking.json"):
     with open(windows_path,newline="",encoding="utf-8") as f:
         windows=list(csv.DictReader(f))
     link=json.loads(Path(link_path).read_text(encoding="utf-8"))
-    result=rank_windows(windows,load_geometry(geometry_path),link)
+    scenario=json.loads(Path(scenario_path).read_text(encoding="utf-8"))
+    if scenario.get("enabled"):
+        link={**scenario["link_assumptions"],**{k:v for k,v in link.items() if v is not None}}
+        defaults=scenario["geometry_assumptions"]
+    else:
+        defaults=None
+    result=rank_windows(windows,load_geometry(geometry_path),link,scenario_defaults=defaults)
     summary={"status":"RANKED_PRELIMINARY" if result and all(x["score"] is not None for x in result)
              else "GEOMETRY_OR_RF_INPUTS_MISSING",
-             "note":"Ranking is advisory. DSN booking, contact conflicts, data deadlines and actual 2030 ephemerides must be validated.",
+             "note":"Contact timestamps treated as 2030 scenario. Constant nominal range/elevation are placeholders, not propagated geometry; DSN availability and deadlines unverified.",
              "ranked_windows":result}
     out=Path(output_path);out.parent.mkdir(parents=True,exist_ok=True)
     out.write_text(json.dumps(summary,indent=2)+"\n",encoding="utf-8")

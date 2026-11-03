@@ -13,8 +13,9 @@ def test_unknowns_remain_unknown():
     assert x["tx_dc_w"] is None
 
 def test_rf_electrical_and_thermal_consistency():
-    x=evaluate(BASE,contact_hours=2)
-    assert x["minimum_rf_w"]>0
+    sized=evaluate(BASE,contact_hours=2)
+    assert sized["minimum_rf_w"]>0
+    x=evaluate({**BASE,"tx_rf_w":sized["minimum_rf_w"]},contact_hours=2)
     assert math.isclose(x["link_margin_db"],3,abs_tol=1e-9)
     assert math.isclose(x["tx_dc_w"],x["chosen_rf_w"]/0.4+5)
     assert math.isclose(x["tx_heat_w"],x["tx_dc_w"]-x["chosen_rf_w"])

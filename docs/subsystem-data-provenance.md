@@ -45,3 +45,54 @@ Per-channel detail: `outputs/telemetry_traceability.csv`. Single code path: `ttc
 - **EPS owner:** cell specific power, eclipse hours, array area.
 - **AOCS owner:** other disturbance torques, wheel margin.
 - Link-budget and DSN inputs remain as listed in `docs/technical-report.md`.
+
+
+## Telemetry calculation policy (2026-11-03)
+
+**Decision:** use documented PDF subsystem aggregate rates for nominal TT&C sizing **only while the sensor inventory is incomplete**. Keep the sensor-level equation and all missing variables explicit so the rate can be calculated when the subsystem owner provides the values. Do not invent missing channels, quantization or sampling frequencies to reproduce the aggregate. The alternative `data/telemetry_reverse_engineered_scenario.json` is a separate illustrative what-if scenario, **not** the accepted baseline.
+
+For each channel `i`:
+
+```python
+# Sensor-level telemetry equation (bits/second):
+# R_i = count_i * bits_per_sample_i / interval_seconds_i
+# R_subsystem = sum(R_i for i in all nominal housekeeping channels)
+# Required inputs for EVERY channel: count, bits_per_sample, interval_seconds.
+# The subsystem owner must also confirm that the channel inventory is complete.
+# If any required parameter is unknown, keep it null and retain PDF fallback.
+# Once itemisation_complete is owner-confirmed, calculate from channels;
+# show the difference against the PDF reference instead of forcing a match.
+```
+
+### Payload (PDF §2.7.3)
+
+```text
+R_payload = (N_lock * B_lock / T_lock)
+          + (N_temp * B_temp / T_temp)
+          + (N_sspa * B_sspa / T_sspa)
+          + R_other_confirmed_channels
+PDF fallback: 100 bps (provisional)
+```
+
+The PDF identifies clock-lock status, clock-cell temperatures and SSPA RF power but does not supply their channel counts, quantisation or sampling periods. `R_other_confirmed_channels` is **not** an invented 12 bps filler: it is a reminder to ask whether other channels, timestamps, packet headers or events are included in the PDF aggregate. No numerical value is assigned.
+
+### Structures/mechanisms (PDF §7.5.3)
+
+```text
+R_structures = 8 / T_switch
+             + 2*16 / T_SADM
+             + 2*16 / T_HGA
+             + 6*B_RTD / 5
+PDF fallback: 32 bps (provisional)
+```
+
+The PDF provides eight switch bits, two 16-bit SADM encoders, two 16-bit HGA resolvers, and six RTDs at 0.2 Hz (5-second sampling). The switch, SADM and HGA sampling periods and RTD resolution are **UNKNOWN**, not zero. All other channel inventories also use the same `count * bits / interval` equation and must be verified by their owners.
+
+### Selection and traceability
+
+- **PDF_FALLBACK**: existing output label `rate_basis=PDF_AGGREGATE_PROVISIONAL` when itemisation is incomplete and a PDF reference exists.
+- **CALCULATED**: existing `rate_basis=CHANNELS_ITEMISATION_COMPLETE` when `itemisation_complete=true`. The owner must verify the inventory, and assumed parameters remain flagged `ASSUMPTION`.
+- **ASSUMED**: existing `rate_basis=CHANNELS_ASSUMED` for provisional channel-derived rates without a PDF reference.
+- **MISSING_INPUT**: no valid channel rate and no reference; never silently assume 0 bps.
+
+These labels describe the selection policy; the actual machine-readable names are the existing `rate_basis` values above. The exported `itemised_bps`, `unitemised_remainder_bps`, `pdf_reference_bps`, `difference_from_pdf_bps`, `incomplete_channels` and per-variable provenance must remain visible. The PDF fallback is a **sizing input**, not an independently calculated sensor rate. Hardware sizing equations (EPS solar array, AOCS torque, etc.) are separate from sensor data generation.

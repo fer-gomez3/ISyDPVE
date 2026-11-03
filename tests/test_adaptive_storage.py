@@ -36,8 +36,25 @@ class AdaptiveStorageTests(unittest.TestCase):
                 import csv
                 contacts=list(csv.DictReader(f))
             self.assertEqual(len(contacts),r["contacts"])
+            for i,a in enumerate(contacts):
+                a0=datetime.fromisoformat(a["start_utc"].replace("Z","+00:00"))
+                a1=datetime.fromisoformat(a["end_utc"].replace("Z","+00:00"))
+                self.assertGreater(a1,a0)
+                for b in contacts[i+1:]:
+                    if a["station"]!=b["station"] and a["satellite"]!=b["satellite"]: continue
+                    b0=datetime.fromisoformat(b["start_utc"].replace("Z","+00:00"))
+                    b1=datetime.fromisoformat(b["end_utc"].replace("Z","+00:00"))
+                    self.assertFalse(a0<b1 and b0<a1,"Station/satellite double booking")
             for c in contacts:
                 self.assertGreaterEqual(float(c["downloaded_mbit"]),0)
+
+    def test_sizing_sweep(self):
+        from ttc.memory_sizing import trade_study
+        with tempfile.TemporaryDirectory() as tmp:
+            result=trade_study(output_dir=tmp)
+            self.assertEqual(len(result["per_satellite"]),8*7)
+            self.assertTrue(Path(tmp,"memory_sizing.csv").exists())
+            self.assertTrue(Path(tmp,"memory_sizing.json").exists())
 
 if __name__=="__main__":
     unittest.main()

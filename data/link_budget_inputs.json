@@ -1,0 +1,15 @@
+{
+  "description": "Earth TT&C link design inputs. null = not yet approved. Do not confuse with S-band PNT broadcast.",
+  "distance_km": null,
+  "frequency_hz": null,
+  "tx_gain_dbi": null,
+  "rx_gt_db_per_k": null,
+  "data_rate_bps": null,
+  "required_ebn0_db": null,
+  "losses_db": null,
+  "margin_db": null,
+  "tx_rf_w": null,
+  "pa_efficiency": null,
+  "electronics_w": null,
+  "standby_w": null
+}

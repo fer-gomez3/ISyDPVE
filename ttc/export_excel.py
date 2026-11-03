@@ -56,9 +56,15 @@ def export(output="outputs/SELENA_TTC_Model.xlsx",root="."):
             if tab=="RF Sensitivity":
                 entries=[{**e,**e.get("inputs",{})} for e in entries]
             sheet(tab,columns,[[e.get(k,"") for k in columns] for e in entries])
+    sensitivity_path=root/"outputs/dsn_access_sensitivity.json"
+    if sensitivity_path.exists():
+        cases=json.loads(sensitivity_path.read_text(encoding="utf-8")).get("cases",[])
+        columns=["network_hours_per_day","setup_minutes","assigned_hours_in_input_epoch","useful_hours_in_input_epoch","nominal_data_capacity_mb_in_epoch","nominal_generated_mb_per_sat_day","ideal_tx_minutes_per_sat_day"]
+        sheet("DSN Sensitivity",columns,[[case.get(k,"") for k in columns] for case in cases])
     sheet("Assumptions",["Parameter","Value","Status"],[
         ["Allocation default",policy["default_fraction"],"PRE"],
         ["Setup minutes",policy["setup_minutes"],"PRE"],
+        ["DSN network h/day",policy.get("daily_network_hours"),"HYPOTHESIS NOT BOOKED"],
         ["Protocol overhead",cfg["policy"]["protocol_overhead_fraction"],"PRE"],
         ["X-band gross bps",cfg["policy"]["net_downlink_bps"],"PRE"],
         ["Geometry","Contact windows assumed 2030; range/elevation nominal placeholders","SCENARIO"],

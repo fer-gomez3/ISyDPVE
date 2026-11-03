@@ -140,7 +140,7 @@ def export(output="outputs/SELENA_TTC_Model.xlsx", root=".", link_input="data/li
     for s in tel_cfg.get("subsystems", []):
         origin = "DOC" if s["source_type"] == "PDF" else "ASSUMPTION"
         comps = s.get("components") or []
-        if s.get("pdf_rate_bps") is not None:
+        if s.get("pdf_rate_bps") is not None and not comps:
             tl.append([s["name"], "aggregate rate from documentation", None, None, None, s["pdf_rate_bps"], origin, s["source"]])
             r = tl.max_row
             tl.cell(r, 6).font = Font(color="0000FF")

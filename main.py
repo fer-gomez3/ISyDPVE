@@ -10,6 +10,7 @@ from ttc.transfer_planning import compute, load_requirements
 from ttc.power_budget import evaluate
 from ttc.link_budget import from_file as evaluate_link
 from ttc.xband_trade_study import from_file as evaluate_xband_trade
+from ttc.contact_energy_optimizer import compute as rank_contacts
 from ttc.downlink_simulation import compute as simulate_downlink
 from ttc.dsn_allocation import compute_allocation
 
@@ -33,10 +34,11 @@ def main():
     trade=evaluate_xband_trade()
     (out/"xband_trade_study.json").write_text(json.dumps(trade,indent=2)+"\n",encoding="utf-8")
     allocation=compute_allocation(args.contacts,output_dir=args.output_dir) if Path(args.contacts).exists() else None
+    energy_ranking=rank_contacts(windows_path=str(out/'dsn_allocated_windows.csv'),output_path=str(out/'contact_energy_ranking.json')) if allocation else None
     simulation=simulate_downlink(contacts_path=args.contacts,output_dir=args.output_dir) if allocation else None
     summary={"dsn_allocation":"outputs/dsn_allocation_summary.json" if allocation else "SKIPPED",
              "downlink_simulation":"outputs/downlink_simulation.json" if simulation else "SKIPPED",
-             "xband_trade_study":str(out/"xband_trade_study.json"),"xband_trade_status":trade["status"],"link_budget":"outputs/link_budget.json","link_status":rf_link["status"],"engineering":"outputs/subsystem_interfaces.json",
+             "contact_energy_ranking":str(out/"contact_energy_ranking.json") if energy_ranking else "SKIPPED","contact_energy_status":energy_ranking["status"] if energy_ranking else "SKIPPED","xband_trade_study":str(out/"xband_trade_study.json"),"xband_trade_status":trade["status"],"link_budget":"outputs/link_budget.json","link_status":rf_link["status"],"engineering":"outputs/subsystem_interfaces.json",
              "power":"outputs/power_budget.json",
              "power_status":power["status"],"power_missing_inputs":power["missing_inputs"]}
     if Path(args.contacts).exists():

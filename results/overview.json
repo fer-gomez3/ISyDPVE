@@ -1,0 +1,31 @@
+{
+  "geometry_source": "SHIFTED_2020_HISTORICAL_SCENARIO_NOT_PROPAGATION",
+  "telemetry_generation": "results/telemetry_generation.json",
+  "telemetry_total_bps": 2301.742222222222,
+  "hga_sizing": "results/hga_sizing.json",
+  "hga_status": "PRELIMINARY_HYPOTHETICAL",
+  "dsn_access_sensitivity": "results/dsn_access_sensitivity.json",
+  "dsn_allocation": "results/dsn_allocation_summary.json",
+  "downlink_simulation": "results/downlink_simulation.json",
+  "per_satellite": "results/per_satellite",
+  "contact_energy_ranking": "results/contact_energy_ranking.json",
+  "contact_energy_status": "RANKED_PRELIMINARY",
+  "xband_trade_study": "results/xband_trade_study.json",
+  "xband_trade_status": "ASSUMPTIONS_NOT_VERIFIED",
+  "link_budget": "outputs/link_budget.json",
+  "link_status": "MISSING_INPUTS",
+  "engineering": "outputs/subsystem_interfaces.json",
+  "power": "outputs/power_budget.json",
+  "power_status": "INCOMPLETE",
+  "power_missing_inputs": [
+    "distance_km",
+    "rx_gt_db_per_k",
+    "required_ebn0_db",
+    "losses_db",
+    "margin_db"
+  ],
+  "planning": "outputs/transfer_planning.json",
+  "missing_telemetry": [],
+  "geometry_status": "SCENARIO_NOT_VALIDATED",
+  "excel_workbook": "results/SELENA_TTC_Model.xlsx"
+}

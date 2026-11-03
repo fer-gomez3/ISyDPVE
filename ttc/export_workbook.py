@@ -18,6 +18,7 @@ from pathlib import Path
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.workbook.defined_name import DefinedName
+from .parameters import load as load_parameters
 
 FILL = {"DOC": "C6EFCE", "ASSUMPTION": "FFEB9C", "INPUT NEEDED": "F8CBAD", "CALC": "DDEBF7"}
 HEADER = PatternFill("solid", fgColor="17365D")
@@ -72,8 +73,10 @@ def export(output="outputs/SELENA_TTC_Model.xlsx", root=".", link_input="data/li
     hga = _load(root / "data/hga_preliminary_design.json")
     link = _load(root / link_input)
     detailed = _load(root / "data/telemetry_detailed_scenario.json")
-    dsn = _load(root / "data/dsn_allocation_scenario.json")
-    pol = detailed.get("policy", {})
+    params = load_parameters(root / "data/ttc_parameters.json")
+    org = params["origins"]
+    from .parameters import apply_policy
+    pol = apply_policy(detailed.get("policy", {}), params)
 
     wb = Workbook()
     readme = wb.active
@@ -101,15 +104,16 @@ def export(output="outputs/SELENA_TTC_Model.xlsx", root=".", link_input="data/li
         inp.cell(r, 3).font = Font(color="0000FF")
         inp.cell(r, 5).fill = PatternFill("solid", fgColor=FILL[inp.cell(r, 5).value])
 
-    add("n_sats", "Satellites in constellation", 8, "-", "DOC", "Project description")
+    add("n_sats", "Satellites in constellation", params["n_satellites"], "-", org["n_satellites"]["origin"], "ttc_parameters.json: " + org["n_satellites"]["source"])
     add("hga_d_m", "HGA diameter", hga.get("diameter_m"), "m", "ASSUMPTION", "hga_preliminary_design.json (380 mm, not selected hardware)")
     add("hga_eta", "HGA aperture efficiency", hga.get("aperture_efficiency"), "-", "ASSUMPTION", "hga_preliminary_design.json")
     add("freq_hz", "Downlink frequency (X-band)", hga.get("frequency_hz") or link.get("frequency_hz"), "Hz", "ASSUMPTION", "hga_preliminary_design.json")
-    add("rate_bps", "Gross downlink rate", pol.get("net_downlink_bps") or link.get("data_rate_bps") or hga.get("downlink_bps"), "bit/s", "ASSUMPTION", "telemetry_detailed_scenario.json (256 kbps hypothesis)")
-    add("overhead", "Protocol overhead fraction", pol.get("protocol_overhead_fraction"), "-", "ASSUMPTION", "telemetry_detailed_scenario.json")
-    add("setup_min", "Acquisition / setup time per contact", dsn.get("setup_minutes"), "min", "ASSUMPTION", "dsn_allocation_scenario.json (NB: transfer_requirements.json has 5 min)")
-    add("min_contact_min", "Minimum contact duration", dsn.get("min_contact_minutes"), "min", "ASSUMPTION", "dsn_allocation_scenario.json")
-    add("net_hours_day", "DSN network hours per day (all satellites)", dsn.get("daily_network_hours"), "h/day", "ASSUMPTION", "dsn_allocation_scenario.json (not a NASA allocation)")
+    add("rate_bps", "Gross downlink rate", params["downlink_gross_bps"], "bit/s", org["downlink_gross_bps"]["origin"], "ttc_parameters.json: " + org["downlink_gross_bps"]["source"])
+    add("overhead", "Protocol overhead fraction", params["protocol_overhead_fraction"], "-", org["protocol_overhead_fraction"]["origin"], "ttc_parameters.json: " + org["protocol_overhead_fraction"]["source"])
+    add("setup_min", "Acquisition / setup time per contact", params["dsn_setup_minutes"], "min", org["dsn_setup_minutes"]["origin"], "ttc_parameters.json: " + org["dsn_setup_minutes"]["source"])
+    add("min_useful_tx_min", "Minimum useful transmit time per contact", params["min_useful_tx_minutes"], "min", org["min_useful_tx_minutes"]["origin"], "ttc_parameters.json: " + org["min_useful_tx_minutes"]["source"])
+    add("min_contact_min", "Minimum contact duration (setup + minimum useful transmit)", "=setup_min+min_useful_tx_min", "min", "CALC", "formula; always exceeds the setup time")
+    add("net_hours_day", "DSN network hours per day (all satellites)", params["dsn_daily_network_hours"], "h/day", org["dsn_daily_network_hours"]["origin"], "ttc_parameters.json: " + org["dsn_daily_network_hours"]["source"])
     prio = {str(k): v for k, v in pol.get("priority_max_age_hours", {}).items()}
     dl = min([s.get("max_age_hours") or prio.get(str(s.get("priority"))) for s in detailed.get("streams", [])] or [None])
     add("min_deadline_h", "Tightest data-age deadline across streams", dl, "h", "ASSUMPTION", "priority policy (design policy, not a PDF requirement)")
@@ -281,14 +285,20 @@ def export(output="outputs/SELENA_TTC_Model.xlsx", root=".", link_input="data/li
     out = Path(out_dir) if out_dir else root / "outputs"
     sim = _load(out / "downlink_simulation.json")
     if sim.get("satellites"):
-        ss = wb.create_sheet("Satellites")
-        ss.append(["Satellite", "Generated Mbit", "Downloaded Mbit", "Remaining Mbit", "Peak backlog Mbit", "Streams at deadline risk", "Contacts used", "Capacity Mbit"])
-        for sat, v in sim["satellites"].items():
-            mine = [c for c in sim["contacts"] if c["satellite"] == sat]
-            ss.append([sat, v["generated_mbit"], v["downloaded_mbit"], v["remaining_mbit"], v["peak_backlog_mbit"],
-                       len(v["deadline_risk_streams"]), len(mine), sum(c["capacity_mbit"] for c in mine)])
-        _header(ss)
-        _widths(ss, [14, 16, 16, 16, 18, 22, 14, 16])
+        _csv_sheet(wb, "Satellites", out / "per_satellite_summary.csv")
+        if "Satellites" in wb.sheetnames:
+            ss = wb["Satellites"]
+            head = [c.value for c in ss[1]]
+            bal = len(head) + 1
+            ss.cell(1, bal, "balance_mbit (generated - downloaded - remaining; must be 0)")
+            g, d, r = (head.index(k) + 1 for k in ("generated_mbit", "downloaded_mbit", "remaining_mbit"))
+            for row in range(2, ss.max_row + 1):
+                L = ss.cell(row, 1).column_letter
+                ss.cell(row, bal).value = f"={ss.cell(row, g).column_letter}{row}-{ss.cell(row, d).column_letter}{row}-{ss.cell(row, r).column_letter}{row}"
+                ss.cell(row, bal).fill = PatternFill("solid", fgColor=FILL["CALC"])
+            _header(ss)
+            sat_rows = ss.max_row
+            bal_letter = ss.cell(1, bal).column_letter
         st = wb.create_sheet("Stations")
         st.append(["Station", "Contacts", "Useful hours", "Capacity Mbit", "Downloaded Mbit"])
         for station in sorted({c["station"] for c in sim["contacts"]}):
@@ -313,6 +323,40 @@ def export(output="outputs/SELENA_TTC_Model.xlsx", root=".", link_input="data/li
         tr.freeze_panes = "A3"
         tr.auto_filter.ref = f"A2:H{tr.max_row}"
         _widths(tr, [14, 16, 14, 16, 12, 14, 14, 14])
+
+    alloc = _load(out / "dsn_allocation_summary.json")
+    if alloc:
+        da = wb.create_sheet("DSN Allocation")
+        da.append(["Quantity", "Value", "Unit / note"])
+        for k, u in [("status", ""), ("daily_network_hours_limit", "h/day, shared by all satellites (assumption)"),
+                     ("candidate_segments", "-"), ("eligible_segments", "-"), ("total_candidate_hours", "h"),
+                     ("total_assigned_hours", "h (includes setup)"), ("total_useful_hours", "h (transmit time)")]:
+            da.append([k, alloc.get(k), u])
+        da.append(["setup_minutes", alloc["policy"].get("setup_minutes"), "min, ASSUMPTION (not a verified DSN requirement)"])
+        da.append(["min_contact_minutes", alloc["policy"].get("min_contact_minutes"), "min = setup + minimum useful transmit"])
+        da.append(["allocation_note", alloc.get("allocation_note"), ""])
+        da.append(["geometry_note", alloc.get("geometry_note"), ""])
+        _header(da)
+        _widths(da, [32, 60, 50])
+    checks = wb.create_sheet("Checks")
+    checks.append(["Check", "Workbook (formula)", "Python engine", "Relative tolerance", "Result"])
+    tel_json = _load(out / "telemetry_generation.json")
+    hga_json = _load(out / "hga_sizing.json")
+    link_json = _load(out / "link_budget.json")
+    linked = link_json.get("status") == "PRELIMINARY"
+    rows_c = [("Telemetry total per satellite (bit/s)", "=tel_total_bps", tel_json.get("total_rate_bps_per_spacecraft"), 1e-9),
+              ("HGA idealized gain (dBi)", "=hga_gain_dbi", hga_json.get("calculated_idealized_gain_dbi"), 1e-9),
+              ("Free-space path loss (dB)", "=Link!B2", link_json.get("free_space_path_loss_db") if linked else None, 1e-9),
+              ("Minimum RF power (W)", "=Link!B5", link_json.get("minimum_tx_rf_w_with_design_margin") if linked else None, 1e-3)]
+    for i, (label, f, py, tol) in enumerate(rows_c, start=2):
+        checks.append([label, f, py if py is not None else "n/a (inputs missing)", tol,
+                       f'=IF(AND(ISNUMBER(B{i}),ISNUMBER(C{i})),IF(ABS(B{i}/C{i}-1)<=D{i},"OK","DIFF"),"n/a (inputs missing)")'])
+    if sim.get("satellites") and "Satellites" in wb.sheetnames:
+        n = checks.max_row + 1
+        checks.append(["Data conservation over all satellites (Mbit)", f"=SUMPRODUCT(ABS(Satellites!{bal_letter}2:{bal_letter}{sat_rows}))", 0, 1e-6,
+                       f'=IF(B{n}<=D{n},"OK","DIFF")'])
+    _header(checks)
+    _widths(checks, [48, 22, 24, 18, 24])
 
     lim = wb.create_sheet("Limitations")
     for row in [["Issue", "Status"],

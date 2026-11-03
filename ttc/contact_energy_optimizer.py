@@ -7,6 +7,7 @@ import csv
 import json
 from pathlib import Path
 from ttc.link_budget import evaluate_link
+from ttc.parameters import hga_link_defaults
 
 def rank_windows(windows, geometry, link, urgency=None, scenario_defaults=None):
     urgency=urgency or {}
@@ -61,7 +62,7 @@ def compute(windows_path="outputs/dsn_allocated_windows.csv",
     link=json.loads(Path(link_path).read_text(encoding="utf-8"))
     scenario=json.loads(Path(scenario_path).read_text(encoding="utf-8"))
     if scenario.get("enabled"):
-        link={**scenario["link_assumptions"],**{k:v for k,v in link.items() if v is not None}}
+        link={**scenario["link_assumptions"],**hga_link_defaults(),**{k:v for k,v in link.items() if v is not None}}
         defaults=scenario["geometry_assumptions"]
     else:
         defaults=None

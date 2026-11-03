@@ -3,10 +3,13 @@ import json
 from pathlib import Path
 from .contact_analysis import load_contacts
 from .dsn_allocation import allocate
+from .parameters import apply_policy, load as load_parameters
 
 def compute(contacts_path,policy_path="data/dsn_allocation_scenario.json",telemetry_path="data/telemetry_detailed_scenario.json",output_dir="outputs"):
-    policy=json.loads(Path(policy_path).read_text(encoding="utf-8"))
+    params=load_parameters()
+    policy=apply_policy(json.loads(Path(policy_path).read_text(encoding="utf-8")),params)
     cfg=json.loads(Path(telemetry_path).read_text(encoding="utf-8"))
+    cfg["policy"]=apply_policy(cfg.get("policy",{}),params)
     contacts=load_contacts(contacts_path)
     sats=sorted({c["satellite"] for c in contacts})
     rate=sum(float(s["rate_bps"]) for s in cfg["streams"])
@@ -16,7 +19,7 @@ def compute(contacts_path,policy_path="data/dsn_allocation_scenario.json",teleme
     rows=[]
     for hours in policy.get("daily_network_hours_sensitivity",[1,3,6]):
         for setup in policy.get("setup_minutes_sensitivity",[5,15,30]):
-            p={**policy,"daily_network_hours":hours,"setup_minutes":setup}
+            p={**policy,"daily_network_hours":hours,"setup_minutes":setup,"min_contact_minutes":setup+float(params["min_useful_tx_minutes"])}
             windows=allocate(contacts,p)
             assigned=sum(w["assigned_seconds"] for w in windows)/3600
             useful=sum(w["useful_tx_seconds"] for w in windows)/3600
@@ -26,7 +29,7 @@ def compute(contacts_path,policy_path="data/dsn_allocation_scenario.json",teleme
                 nominal_generated_mb_per_sat_day=generated_mb_per_sat_day,
                 ideal_tx_minutes_per_sat_day=ideal_tx_min_per_sat,
                 satellites=len(sats),scenario_only=True))
-    result={"status":"HYPOTHETICAL_NOT_BOOKED","note":"Capacity is an upper bound. Access cap is applied per UTC day; windows crossing midnight are not split. No packet-level scheduling, actual DSN allocations, or validated 2030 geometry.","cases":rows}
+    result={"status":"HYPOTHETICAL_NOT_BOOKED","note":"Capacity is an upper bound. Access cap is shared fairly among satellites per UTC day; windows crossing midnight are not split; minimum contact = setup + minimum useful transmit time. No packet-level scheduling, actual DSN allocations, or validated 2030 geometry.","cases":rows}
     dest=Path(output_dir)/"dsn_access_sensitivity.json"
     dest.parent.mkdir(parents=True,exist_ok=True)
     dest.write_text(json.dumps(result,indent=2)+"\n",encoding="utf-8")

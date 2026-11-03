@@ -3,6 +3,7 @@ import json
 import math
 from pathlib import Path
 from .link_budget import evaluate_link, C
+from .parameters import load as load_parameters
 
 def calculate(antenna, link):
     d=float(antenna["diameter_m"])
@@ -11,7 +12,8 @@ def calculate(antenna, link):
     if d<=0 or f<=0 or not 0<eta<=1: raise ValueError("Invalid HGA diameter, frequency or efficiency")
     gain_linear=eta*(math.pi*d*f/C)**2
     gain=10*math.log10(gain_linear)
-    p={**link,"frequency_hz":f,"tx_gain_dbi":gain,"data_rate_bps":antenna["downlink_bps"]}
+    rate=antenna.get("downlink_bps") or load_parameters()["downlink_gross_bps"]
+    p={**link,"frequency_hz":f,"tx_gain_dbi":gain,"data_rate_bps":rate}
     result=evaluate_link(p)
     required_gain=None
     if result["status"]=="PRELIMINARY":

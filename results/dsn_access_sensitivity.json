@@ -1,0 +1,105 @@
+{
+  "status": "HYPOTHETICAL_NOT_BOOKED",
+  "note": "Capacity is an upper bound. Access cap is shared fairly among satellites per UTC day; windows crossing midnight are not split; minimum contact = setup + minimum useful transmit time. No packet-level scheduling, actual DSN allocations, or validated 2030 geometry.",
+  "cases": [
+    {
+      "network_hours_per_day": 1,
+      "setup_minutes": 5,
+      "assigned_hours_in_input_epoch": 6.0,
+      "useful_hours_in_input_epoch": 3.5833333333333335,
+      "nominal_data_capacity_mb_in_epoch": 330.24,
+      "nominal_generated_mb_per_sat_day": 24.858816,
+      "ideal_tx_minutes_per_sat_day": 16.184125,
+      "satellites": 8,
+      "scenario_only": true
+    },
+    {
+      "network_hours_per_day": 1,
+      "setup_minutes": 15,
+      "assigned_hours_in_input_epoch": 6.0,
+      "useful_hours_in_input_epoch": 1.5,
+      "nominal_data_capacity_mb_in_epoch": 138.24,
+      "nominal_generated_mb_per_sat_day": 24.858816,
+      "ideal_tx_minutes_per_sat_day": 16.184125,
+      "satellites": 8,
+      "scenario_only": true
+    },
+    {
+      "network_hours_per_day": 1,
+      "setup_minutes": 30,
+      "assigned_hours_in_input_epoch": 6.0,
+      "useful_hours_in_input_epoch": 3.0,
+      "nominal_data_capacity_mb_in_epoch": 276.48,
+      "nominal_generated_mb_per_sat_day": 24.858816,
+      "ideal_tx_minutes_per_sat_day": 16.184125,
+      "satellites": 8,
+      "scenario_only": true
+    },
+    {
+      "network_hours_per_day": 3,
+      "setup_minutes": 5,
+      "assigned_hours_in_input_epoch": 18.0,
+      "useful_hours_in_input_epoch": 15.416666666666666,
+      "nominal_data_capacity_mb_in_epoch": 1420.8,
+      "nominal_generated_mb_per_sat_day": 24.858816,
+      "ideal_tx_minutes_per_sat_day": 16.184125,
+      "satellites": 8,
+      "scenario_only": true
+    },
+    {
+      "network_hours_per_day": 3,
+      "setup_minutes": 15,
+      "assigned_hours_in_input_epoch": 18.0,
+      "useful_hours_in_input_epoch": 10.25,
+      "nominal_data_capacity_mb_in_epoch": 944.64,
+      "nominal_generated_mb_per_sat_day": 24.858816,
+      "ideal_tx_minutes_per_sat_day": 16.184125,
+      "satellites": 8,
+      "scenario_only": true
+    },
+    {
+      "network_hours_per_day": 3,
+      "setup_minutes": 30,
+      "assigned_hours_in_input_epoch": 18.0,
+      "useful_hours_in_input_epoch": 5.0,
+      "nominal_data_capacity_mb_in_epoch": 460.8,
+      "nominal_generated_mb_per_sat_day": 24.858816,
+      "ideal_tx_minutes_per_sat_day": 16.184125,
+      "satellites": 8,
+      "scenario_only": true
+    },
+    {
+      "network_hours_per_day": 6,
+      "setup_minutes": 5,
+      "assigned_hours_in_input_epoch": 36.0,
+      "useful_hours_in_input_epoch": 33.416666666666664,
+      "nominal_data_capacity_mb_in_epoch": 3079.6799999999994,
+      "nominal_generated_mb_per_sat_day": 24.858816,
+      "ideal_tx_minutes_per_sat_day": 16.184125,
+      "satellites": 8,
+      "scenario_only": true
+    },
+    {
+      "network_hours_per_day": 6,
+      "setup_minutes": 15,
+      "assigned_hours_in_input_epoch": 36.0,
+      "useful_hours_in_input_epoch": 28.25,
+      "nominal_data_capacity_mb_in_epoch": 2603.52,
+      "nominal_generated_mb_per_sat_day": 24.858816,
+      "ideal_tx_minutes_per_sat_day": 16.184125,
+      "satellites": 8,
+      "scenario_only": true
+    },
+    {
+      "network_hours_per_day": 6,
+      "setup_minutes": 30,
+      "assigned_hours_in_input_epoch": 36.0,
+      "useful_hours_in_input_epoch": 20.5,
+      "nominal_data_capacity_mb_in_epoch": 1889.28,
+      "nominal_generated_mb_per_sat_day": 24.858816,
+      "ideal_tx_minutes_per_sat_day": 16.184125,
+      "satellites": 8,
+      "scenario_only": true
+    }
+  ]
+}

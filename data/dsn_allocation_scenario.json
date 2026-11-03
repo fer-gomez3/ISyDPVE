@@ -3,21 +3,9 @@
   "default_fraction": 1,
   "station_fraction": {},
   "satellite_fraction": {},
-  "setup_minutes": 15,
-  "min_contact_minutes": 15,
-  "daily_network_hours": 3,
-  "daily_network_hours_sensitivity": [
-    1,
-    3,
-    6
-  ],
-  "setup_minutes_sensitivity": [
-    5,
-    15,
-    30
-  ],
   "sources": [
     "https://deepspace.jpl.nasa.gov/files/875-0001-H1.pdf",
     "https://www.nasa.gov/wp-content/uploads/2023/09/dsn-services-catalog.pdf"
-  ]
+  ],
+  "_shared_parameters": "Shared values (downlink rate, overhead, setup, minimum contact, DSN hours) live only in data/ttc_parameters.json."
 }

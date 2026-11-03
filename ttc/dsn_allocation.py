@@ -5,38 +5,75 @@ import json
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from .contact_analysis import load_contacts, candidate_schedule
+from .parameters import apply_policy
 
 def allocate(contacts, policy):
+    """Fair, capacity-limited allocation of hypothetical DSN time to the satellites.
+
+    Candidate segments come from contact_analysis.candidate_schedule (one link per satellite,
+    one antenna per station). Allocation is contiguous from each segment start. If the policy
+    has a daily network cap (hours, shared by ALL satellites), each UTC day is filled with
+    max-min fairness: the satellite with the least assigned time so far is served next, in
+    one-minute increments, and a satellite with no usable segment simply gets nothing. No
+    contact is created and no service is guaranteed. Setup time counts against the cap.
+    """
     default=float(policy["default_fraction"])
     overrides=policy.get("station_fraction",{})
     sat_overrides=policy.get("satellite_fraction",{})
     setup=float(policy.get("setup_minutes",5))*60
     min_contact=float(policy.get("min_contact_minutes",15))*60
     if setup<0 or min_contact<0: raise ValueError("Times must be nonnegative")
+    if min_contact<=setup: raise ValueError("min_contact_minutes must exceed setup_minutes, otherwise a contact carries no data")
     fractions=[default,*map(float,overrides.values()),*map(float,sat_overrides.values())]
     if any(not 0<=v<=1 for v in fractions): raise ValueError("Allocation fractions must be between 0 and 1")
-    schedule=candidate_schedule(contacts)
-    rows=[]
     daily_cap=policy.get("daily_network_hours")
     if daily_cap is not None and float(daily_cap)<0:raise ValueError("daily_network_hours must be nonnegative")
-    used_by_day={}
-    for w in sorted(schedule,key=lambda x:x["start"]):
+    schedule=sorted(candidate_schedule(contacts),key=lambda x:(x["start"],x["station"],x["satellite"]))
+    segments=[]
+    for w in schedule:
         fraction=float(sat_overrides.get(w["satellite"],overrides.get(w["station"],default)))
-        # Hypothetical allocation is a contiguous portion starting at the candidate interval start.
-        allocated=w["seconds"]*fraction
-        day=w["start"].date().isoformat()
-        if daily_cap is not None:
-            remaining=max(0,float(daily_cap)*3600-used_by_day.get(day,0))
-            allocated=min(allocated,remaining)
-        if allocated>=min_contact:
-            used_by_day[day]=used_by_day.get(day,0)+allocated
+        segments.append(dict(w=w,fraction=fraction,offered=w["seconds"]*fraction,allocated=0.0))
+    by_day={}
+    for seg in segments:
+        by_day.setdefault(seg["w"]["start"].date().isoformat(),[]).append(seg)
+    step=60.0
+    for day,segs in by_day.items():
+        if daily_cap is None:
+            for seg in segs:
+                if seg["offered"]>=min_contact: seg["allocated"]=seg["offered"]
+            continue
+        cap_left=float(daily_cap)*3600
+        assigned={}
+        sats=sorted({seg["w"]["satellite"] for seg in segs})
+        while cap_left>1e-9:
+            best=None
+            for sat in sats:
+                mine=[x for x in segs if x["w"]["satellite"]==sat]
+                started=[x for x in mine if x["allocated"]>0 and x["offered"]-x["allocated"]>1e-9]
+                fresh=[x for x in mine if x["allocated"]==0 and x["offered"]>=min_contact and cap_left>=min_contact]
+                if not started and not fresh: continue
+                key=(assigned.get(sat,0.0),sat)
+                if best is None or key<best[0]:
+                    best=(key,sat,started,fresh)
+            if best is None: break
+            _,sat,started,fresh=best
+            if started:
+                seg=max(started,key=lambda x:x["offered"]-x["allocated"])
+                add=min(step,seg["offered"]-seg["allocated"],cap_left)
+            else:
+                seg=max(fresh,key=lambda x:x["offered"])
+                add=min(min_contact,seg["offered"],cap_left)
+            seg["allocated"]+=add;assigned[sat]=assigned.get(sat,0.0)+add;cap_left-=add
+    rows=[]
+    for seg in segments:
+        w=seg["w"];allocated=seg["allocated"]
         eligible=allocated>=min_contact
         useful=max(0,allocated-setup) if eligible else 0
         rows.append(dict(satellite=w["satellite"],station=w["station"],
             candidate_start_utc=w["start"].isoformat(),
             candidate_end_utc=w["end"].isoformat(),
             geometric_candidate_seconds=round(w["seconds"],3),
-            allocation_fraction=fraction,
+            allocation_fraction=seg["fraction"],
             assigned_seconds=round(allocated,3) if eligible else 0,
             useful_tx_seconds=round(useful,3),
             eligible=eligible,
@@ -46,7 +83,7 @@ def allocate(contacts, policy):
 def compute_allocation(contacts_path="data/contacts_master.csv",
                        policy_path="data/dsn_allocation_scenario.json",
                        output_dir="outputs"):
-    policy=json.loads(Path(policy_path).read_text(encoding="utf-8"))
+    policy=apply_policy(json.loads(Path(policy_path).read_text(encoding="utf-8")))
     contacts=load_contacts(contacts_path)
     rows=allocate(contacts,policy)
     out=Path(output_dir);out.mkdir(parents=True,exist_ok=True)
@@ -58,7 +95,7 @@ def compute_allocation(contacts_path="data/contacts_master.csv",
         writer.writeheader();writer.writerows(rows)
     result={"status":"HYPOTHETICAL_NOT_BOOKED",
         "geometry_note":"Contact geometry is a hypothetical input; 2030 timestamps may be calendar-shifted, NOT physically repropagated.",
-        "allocation_note":"Fractions apply to conflict-resolved candidate intervals, not full overlapping visibility windows. Assigned portion is modeled at interval start; acquisition/setup subtracted. No real DSN reservation or slew constraints.",
+        "allocation_note":"Fair (max-min) daily sharing of the assumed network hours among all satellites with available contacts. Fractions apply to conflict-resolved candidate intervals, not full overlapping visibility windows. Assigned portion is modeled at interval start; acquisition/setup subtracted. No real DSN reservation or slew constraints; no service is guaranteed.",
         "policy":policy,"daily_network_hours_limit":policy.get("daily_network_hours"),"candidate_segments":len(rows),
         "eligible_segments":sum(r["eligible"] for r in rows),
         "total_candidate_hours":sum(r["geometric_candidate_seconds"] for r in rows)/3600,

@@ -10,6 +10,6 @@
   "gimbal_power_w": 2,
   "gimbal_mass_budget_owner": "Structures (do not add to TT&C)",
   "ttc_obdh_mass_allocation_kg": 11.4,
-  "downlink_bps": 256000,
-  "notes": "380 mm and 1.5-2.2 kg are preliminary estimates from subsystem team; gain is calculated, not a manufacturer guarantee. Antenna receive uplink and pointing losses require separate validation."
+  "notes": "380 mm and 1.5-2.2 kg are preliminary estimates from subsystem team; gain is calculated, not a manufacturer guarantee. Antenna receive uplink and pointing losses require separate validation.",
+  "_shared_parameters": "Downlink rate lives only in data/ttc_parameters.json."
 }

@@ -9,9 +9,11 @@ import math
 from datetime import timedelta
 from pathlib import Path
 from .contact_analysis import load_contacts, candidate_schedule, dt
+from .parameters import apply_policy
 
 def load_requirements(path="data/transfer_requirements.json"):
     with open(path,encoding="utf-8") as f: cfg=json.load(f)
+    cfg["policy"]=apply_policy(cfg["policy"])
     return cfg
 
 def stream_rate(s):

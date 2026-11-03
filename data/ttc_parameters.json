@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "description": "Single source of truth for parameters shared by several TT&C modules. Do not repeat these values in other data files; modules overlay them via ttc/parameters.py.",
+  "n_satellites": 8,
+  "downlink_gross_bps": 256000,
+  "protocol_overhead_fraction": 0.2,
+  "dsn_setup_minutes": 15,
+  "min_useful_tx_minutes": 5,
+  "dsn_daily_network_hours": 3,
+  "dsn_daily_network_hours_sensitivity": [1, 3, 6],
+  "dsn_setup_minutes_sensitivity": [5, 15, 30],
+  "origins": {
+    "n_satellites": {"origin": "DOC", "source": "SELENA project description: 8-satellite constellation"},
+    "downlink_gross_bps": {"origin": "ASSUMPTION", "source": "Preliminary 256 kbps X-band downlink, pending validation"},
+    "protocol_overhead_fraction": {"origin": "ASSUMPTION", "source": "Preliminary framing/protocol overhead; not a verified CCSDS figure"},
+    "dsn_setup_minutes": {"origin": "ASSUMPTION", "source": "Preliminary 15 min acquisition/setup per contact; NOT a verified DSN requirement"},
+    "min_useful_tx_minutes": {"origin": "ASSUMPTION", "source": "Smallest transmit time worth scheduling; minimum contact = setup + this value"},
+    "dsn_daily_network_hours": {"origin": "ASSUMPTION", "source": "Hypothetical DSN time for all 8 spacecraft; NOT a NASA allocation"}
+  }
+}

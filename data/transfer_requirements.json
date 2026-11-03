@@ -10,13 +10,10 @@
       "5": 6
     },
     "priority_scale": "1=low, 5=critical; max age is a design policy, not a PDF requirement",
-    "min_contact_minutes": 15,
-    "setup_minutes": 5,
-    "protocol_overhead_fraction": 0.2,
-    "net_downlink_bps": null,
     "transmitter_dc_w": null,
     "transmitter_rf_w": null,
-    "transmitter_standby_w": null
+    "transmitter_standby_w": null,
+    "_shared_parameters": "Shared values (downlink rate, overhead, setup, minimum contact, DSN hours) live only in data/ttc_parameters.json."
   },
   "streams": [
     {

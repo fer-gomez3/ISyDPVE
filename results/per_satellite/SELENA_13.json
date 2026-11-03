@@ -1,0 +1,181 @@
+{
+  "satellite": "SELENA_13",
+  "status": "HYPOTHETICAL_SCENARIO_NOT_VALIDATED_GEOMETRY",
+  "telemetry_rates_bps": {
+    "payload_housekeeping": 100.0,
+    "structures_mechanisms": 32.0,
+    "aocs_nominal_hk": 1587.2,
+    "propulsion_hk": 38.4,
+    "eps_hk": 140.8,
+    "thermal_hk": 96.0,
+    "obdh_hk_logs": 307.34222222222223
+  },
+  "telemetry_total_bps": 2301.742222222222,
+  "dsn_allocation": {
+    "candidate_hours": 21.117187777777776,
+    "assigned_hours": 2.933333333333333,
+    "useful_hours": 1.9333333333333333
+  },
+  "allocated_windows": [
+    {
+      "satellite": "SELENA_13",
+      "station": "Canberra",
+      "candidate_start_utc": "2030-07-14T23:44:38.525000+00:00",
+      "candidate_end_utc": "2030-07-15T03:52:12.158000+00:00",
+      "geometric_candidate_seconds": "14853.633",
+      "allocation_fraction": "1.0",
+      "assigned_seconds": "3600.0",
+      "useful_tx_seconds": "2700.0",
+      "eligible": "True",
+      "scenario_only": "True"
+    },
+    {
+      "satellite": "SELENA_13",
+      "station": "Goldstone",
+      "candidate_start_utc": "2030-07-16T18:50:20.244000+00:00",
+      "candidate_end_utc": "2030-07-16T21:22:58.682000+00:00",
+      "geometric_candidate_seconds": "9158.438",
+      "allocation_fraction": "1.0",
+      "assigned_seconds": "1800.0",
+      "useful_tx_seconds": "900.0",
+      "eligible": "True",
+      "scenario_only": "True"
+    },
+    {
+      "satellite": "SELENA_13",
+      "station": "Madrid",
+      "candidate_start_utc": "2030-07-17T11:48:59.268000+00:00",
+      "candidate_end_utc": "2030-07-17T19:25:05.654000+00:00",
+      "geometric_candidate_seconds": "27366.386",
+      "allocation_fraction": "1.0",
+      "assigned_seconds": "1560.0",
+      "useful_tx_seconds": "660.0",
+      "eligible": "True",
+      "scenario_only": "True"
+    },
+    {
+      "satellite": "SELENA_13",
+      "station": "Canberra",
+      "candidate_start_utc": "2030-07-19T06:42:15.381000+00:00",
+      "candidate_end_utc": "2030-07-19T12:56:48.896000+00:00",
+      "geometric_candidate_seconds": "22473.515",
+      "allocation_fraction": "1.0",
+      "assigned_seconds": "3600.0",
+      "useful_tx_seconds": "2700.0",
+      "eligible": "True",
+      "scenario_only": "True"
+    }
+  ],
+  "downlink": {
+    "generated_mbit": 918.8371064924975,
+    "downloaded_mbit": 874.4884240286219,
+    "remaining_mbit": 44.34868246387555,
+    "peak_backlog_mbit": 527.4538314113422,
+    "deadline_risk_streams": [
+      "aocs_nominal_hk",
+      "eps_hk",
+      "obdh_hk_logs",
+      "payload_housekeeping",
+      "propulsion_hk",
+      "structures_mechanisms",
+      "thermal_hk"
+    ]
+  },
+  "by_stream": {
+    "payload_housekeeping": {
+      "generated_mbit": 39.9192011,
+      "downloaded_mbit": 37.992456999999995,
+      "remaining_mbit": 1.9267440999999992,
+      "max_data_age_hours": 102.81023777777776,
+      "deadline_hours": 24.0
+    },
+    "structures_mechanisms": {
+      "generated_mbit": 12.774144352,
+      "downloaded_mbit": 12.157586240000002,
+      "remaining_mbit": 0.6165581119999998,
+      "max_data_age_hours": 102.86023777777778,
+      "deadline_hours": 24.0
+    },
+    "aocs_nominal_hk": {
+      "generated_mbit": 633.5975598591999,
+      "downloaded_mbit": 603.0162775039997,
+      "remaining_mbit": 30.58128235519999,
+      "max_data_age_hours": 57.868835587987846,
+      "deadline_hours": 12.0
+    },
+    "propulsion_hk": {
+      "generated_mbit": 15.328973222400002,
+      "downloaded_mbit": 14.589103487999997,
+      "remaining_mbit": 0.7398697343999996,
+      "max_data_age_hours": 102.7935711111111,
+      "deadline_hours": 12.0
+    },
+    "eps_hk": {
+      "generated_mbit": 56.2062351488,
+      "downloaded_mbit": 53.493379456,
+      "remaining_mbit": 2.712855692799999,
+      "max_data_age_hours": 102.72690444444444,
+      "deadline_hours": 12.0
+    },
+    "thermal_hk": {
+      "generated_mbit": 38.322433055999994,
+      "downloaded_mbit": 36.472758719999995,
+      "remaining_mbit": 1.8496743359999992,
+      "max_data_age_hours": 102.87690444444443,
+      "deadline_hours": 24.0
+    },
+    "obdh_hk_logs": {
+      "generated_mbit": 122.68855975409762,
+      "downloaded_mbit": 116.7668616206221,
+      "remaining_mbit": 5.921698133475553,
+      "max_data_age_hours": 42.70447583333333,
+      "deadline_hours": 6.0
+    }
+  },
+  "contacts": [
+    {
+      "satellite": "SELENA_13",
+      "station": "Canberra",
+      "start_utc": "2030-07-14T23:59:38.525000+00:00",
+      "end_utc": "2030-07-15T00:44:38.525000+00:00",
+      "useful_seconds": 2700.0,
+      "capacity_mbit": 552.96,
+      "downloaded_mbit": 21.331888617280054,
+      "backlog_before_mbit": 15.11718461728,
+      "backlog_after_mbit": 0.0
+    },
+    {
+      "satellite": "SELENA_13",
+      "station": "Goldstone",
+      "start_utc": "2030-07-16T19:05:20.244000+00:00",
+      "end_utc": "2030-07-16T19:20:20.244000+00:00",
+      "useful_seconds": 900.0,
+      "capacity_mbit": 184.32,
+      "downloaded_mbit": 184.32,
+      "backlog_before_mbit": 350.8815410504355,
+      "backlog_after_mbit": 168.63310905043548
+    },
+    {
+      "satellite": "SELENA_13",
+      "station": "Madrid",
+      "start_utc": "2030-07-17T12:03:59.268000+00:00",
+      "end_utc": "2030-07-17T12:14:59.268000+00:00",
+      "useful_seconds": 660.0,
+      "capacity_mbit": 135.168,
+      "downloaded_mbit": 135.168,
+      "backlog_before_mbit": 307.24177917224887,
+      "backlog_after_mbit": 173.5929290389155
+    },
+    {
+      "satellite": "SELENA_13",
+      "station": "Canberra",
+      "start_utc": "2030-07-19T06:57:15.381000+00:00",
+      "end_utc": "2030-07-19T07:42:15.381000+00:00",
+      "useful_seconds": 2700.0,
+      "capacity_mbit": 552.96,
+      "downloaded_mbit": 533.6685354113424,
+      "backlog_before_mbit": 527.4538314113422,
+      "backlog_after_mbit": 0.0
+    }
+  ]
+}

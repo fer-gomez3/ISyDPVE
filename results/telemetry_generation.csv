@@ -1,0 +1,8 @@
+subsystem,rate_bps,mbit_per_day,mb_per_day,source_type,requires_confirmation,source
+payload_housekeeping,100.0,8.64,1.08,PDF_PRELIMINARY,True,SUBSYSTEMS PDF sec 2.7.3
+structures_mechanisms,32.0,2.7648,0.3456,PDF,False,SUBSYSTEMS PDF sec 7.5.3
+aocs_nominal_hk,1587.2,137.13408,17.14176,PRELIMINARY_ESTIMATE,True,Assumed logged attitude/actuator channels; confirm with ADCS
+propulsion_hk,38.4,3.31776,0.41472,PRELIMINARY_ESTIMATE,True,Assumed nominal sensors; burns and event bursts not included
+eps_hk,140.8,12.165120000000002,1.5206400000000002,PRELIMINARY_ESTIMATE,True,"Assumed battery, array, bus and temperature channels"
+thermal_hk,96.0,8.2944,1.0368,PRELIMINARY_ESTIMATE,True,Assumed temperature sensor logging
+obdh_hk_logs,307.34222222222223,26.554368,3.319296,PRELIMINARY_ESTIMATE,True,Own OBDH housekeeping only; excludes other subsystem data

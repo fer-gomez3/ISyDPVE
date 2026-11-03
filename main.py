@@ -8,6 +8,7 @@ from pathlib import Path
 from ttc.engineering_calculations import calculate
 from ttc.transfer_planning import compute, load_requirements
 from ttc.power_budget import evaluate
+from ttc.link_budget import from_file as evaluate_link
 
 def main():
     parser=argparse.ArgumentParser(description="SELENA TT&C / OBDH engineering overview")
@@ -24,7 +25,9 @@ def main():
     (out/"subsystem_interfaces.json").write_text(json.dumps(engineering,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
     power=evaluate(link)
     (out/"power_budget.json").write_text(json.dumps(power,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
-    summary={"engineering":"outputs/subsystem_interfaces.json",
+    rf_link=evaluate_link(args.link_input)
+    (out/"link_budget.json").write_text(json.dumps(rf_link,indent=2)+"\n",encoding="utf-8")
+    summary={"link_budget":"outputs/link_budget.json","link_status":rf_link["status"],"engineering":"outputs/subsystem_interfaces.json",
              "power":"outputs/power_budget.json",
              "power_status":power["status"],"power_missing_inputs":power["missing_inputs"]}
     if Path(args.contacts).exists():

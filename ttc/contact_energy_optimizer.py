@@ -6,8 +6,49 @@ produces an explicitly unranked result, not a fabricated optimum.
 import csv
 import json
 from pathlib import Path
+from datetime import datetime, timezone
 from ttc.link_budget import evaluate_link
 from ttc.parameters import hga_link_defaults
+
+
+def _utc(value):
+    parsed=datetime.fromisoformat(str(value).replace("Z","+00:00"))
+    if parsed.tzinfo is None:
+        raise ValueError("Geometry timestamps must include UTC offset")
+    return parsed.astimezone(timezone.utc)
+
+def worst_case_geometry(window, geometry):
+    """Worst measured range and elevation over a full scheduled interval.
+
+    Accepts time-series rows keyed by (satellite, station, timestamp UTC).
+    An interval is valid only if measured samples include both endpoints.
+    Never silently extrapolate missing geometry.
+    """
+    start=_utc(window["candidate_start_utc"])
+    end_key=window.get("candidate_end_utc") or window.get("end_utc")
+    if not end_key:
+        return None
+    end=_utc(end_key)
+    if end<=start:
+        raise ValueError("Window end must follow start")
+    sat,station=str(window["satellite"]),str(window["station"])
+    samples=[]
+    for (s,g,t),value in geometry.items():
+        if str(s)!=sat or str(g)!=station:
+            continue
+        instant=_utc(t)
+        if start<=instant<=end:
+            samples.append((instant,value))
+    samples.sort(key=lambda row:row[0])
+    if not samples or samples[0][0]!=start or samples[-1][0]!=end:
+        return None
+    ranges=[float(v["distance_km"]) for _,v in samples]
+    elevations=[float(v["elevation_deg"]) for _,v in samples]
+    if any(d<=0 for d in ranges) or any(not 0<=e<=90 for e in elevations):
+        raise ValueError("Invalid geometry sample")
+    return {"distance_km":max(ranges),"elevation_deg":min(elevations),
+            "geometry_sample_count":len(samples),
+            "geometry_source":"SUPPLIED_INTERVAL_SAMPLES"}
 
 def rank_windows(windows, geometry, link, urgency=None, scenario_defaults=None):
     urgency=urgency or {}
@@ -16,10 +57,10 @@ def rank_windows(windows, geometry, link, urgency=None, scenario_defaults=None):
     for w in windows:
         item=dict(w)
         key=(str(w["satellite"]),str(w["station"]),str(w["candidate_start_utc"]))
-        measured=geometry.get(key)
+        measured=worst_case_geometry(w,geometry)
         g=measured or scenario_defaults
         if not g or g.get("distance_km") is None or g.get("elevation_deg") is None:
-            item.update(rank_status="MISSING_2030_GEOMETRY",energy_j_per_payload_bit=None,score=None)
+            item.update(rank_status="MISSING_INTERVAL_GEOMETRY",energy_j_per_payload_bit=None,score=None)
             ranked.append(item)
             continue
         if not 0<=float(g["elevation_deg"])<=90:raise ValueError("Elevation outside 0..90 degrees")
@@ -30,7 +71,7 @@ def rank_windows(windows, geometry, link, urgency=None, scenario_defaults=None):
             item.update(rank_status="MISSING_RF_INPUTS",energy_j_per_payload_bit=None,score=None)
             ranked.append(item)
             continue
-        item["geometry_source"]="SUPPLIED_GEOMETRY" if measured else "NOMINAL_2030_SCENARIO"
+        item["geometry_source"]="SUPPLIED_INTERVAL_SAMPLES" if measured else "NOMINAL_2030_SCENARIO"
         rate=float(p["data_rate_bps"])
         dc=result["estimated_tx_dc_w"]
         if dc is None:raise ValueError("PA efficiency and electronics power required")

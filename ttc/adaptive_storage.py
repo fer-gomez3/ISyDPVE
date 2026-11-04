@@ -54,7 +54,15 @@ def plan(config_path=None, output_dir=None):
     reserve = float(cfg["memory_reserve_fraction"])
     if not 0 <= reserve < 1: raise ValueError("Invalid reserve")
     effective = float(shared["downlink_gross_bps"]) * (1 - float(shared["protocol_overhead_fraction"]))
-    setup_steps = math.ceil(float(shared["dsn_setup_minutes"]) * 60 / STEP)
+    policy = json.loads((ROOT / "data" / "dsn_operational_policy.json").read_text(encoding="utf-8"))
+    pass_type = cfg.get("dsn_pass_type", policy["default_pass_type"])
+    if pass_type not in ("downlink_only", "uplink_downlink"):
+        raise ValueError("Unsupported DSN pass type")
+    setup_minutes = policy["downlink_setup_minutes"] if pass_type == "downlink_only" else policy["uplink_downlink_setup_minutes"]
+    setup_steps = math.ceil(float(setup_minutes) * 60 / STEP)
+    acquisition_steps = math.ceil(float(policy["acquisition_minutes"]) * 60 / STEP)
+    teardown_steps = math.ceil(float(policy["teardown_minutes"]) * 60 / STEP)
+    overhead_steps = setup_steps + acquisition_steps + teardown_steps
     min_steps = math.ceil(float(shared["min_useful_tx_minutes"]) * 60 / STEP)
     if setup_steps < 0 or min_steps < 1: raise ValueError("Invalid contact policy")
     cap_per_day = float(shared["dsn_daily_network_hours"]) * 3600
@@ -112,6 +120,8 @@ def plan(config_path=None, output_dir=None):
             link["remaining"] -= 1
             if link["setup"] > 0:
                 link["setup"] -= 1
+            elif link["remaining"] <= teardown_steps:
+                pass  # teardown: no telemetry transfer
             else:
                 budget = effective * dt
                 for s in sorted(streams, key=lambda s:(-s["priority"],s["deadline_hours"])):
@@ -134,7 +144,9 @@ def plan(config_path=None, output_dir=None):
                 schedule.append({"satellite":sat,"station":link["station"],
                                  "start_utc":iso(link["start"]),"end_utc":iso(t+timedelta(seconds=dt)),
                                  "downloaded_mbit":round(link["sent_bits"]/1e6,5),
-                                 "reason":link["reason"]})
+                                 "reason":link["reason"],"pass_type":pass_type,
+                                 "setup_minutes":setup_minutes,"acquisition_minutes":policy["acquisition_minutes"],
+                                 "teardown_minutes":policy["teardown_minutes"]})
                 just_finished_stations.add(link["station"])
                 just_finished_satellites.add(sat)
                 del active_links[sat]
@@ -198,11 +210,11 @@ def plan(config_path=None, output_dir=None):
                 # Reserve full contact time, including setup, from shared daily cap.
                 available=min((c["end"]-t).total_seconds(),remaining,(end-t).total_seconds(),
                               (datetime.combine(t.date()+timedelta(days=1),datetime.min.time(),tzinfo=timezone.utc)-t).total_seconds())
-                if available < (setup_steps+min_steps)*STEP: continue
+                if available < (overhead_steps+min_steps)*STEP: continue
                 tx_need=max(min_steps,math.ceil(total/(effective*STEP)))
                 # Do not reserve more than needed for backlog plus near-term generation.
-                steps=min(math.floor(available/STEP),setup_steps+tx_need)
-                if steps<setup_steps+min_steps: continue
+                steps=min(math.floor(available/STEP),overhead_steps+tx_need)
+                if steps<overhead_steps+min_steps: continue
                 options.append((urgency,-hours_left,-since,sat,c["station"],steps))
         # Greedy priority ordering: risk first; no global optimality guarantee.
         for urgency,neg_hours,neg_since,sat,station,steps in sorted(options,reverse=True):
@@ -215,10 +227,10 @@ def plan(config_path=None, output_dir=None):
                 steps=min(steps,math.floor((datetime.combine(t.date()+timedelta(days=1),
                         datetime.min.time(),tzinfo=timezone.utc)-t).total_seconds()/STEP))
                 seconds=steps*STEP
-                if steps<setup_steps+min_steps: continue
+                if steps<overhead_steps+min_steps: continue
             # All windows must be usable for the full contact; station outages checked throughout.
             if any(a<t+timedelta(seconds=seconds) and b>t for a,b in unavailable.get(station,[])): continue
-            active_links[sat]={"station":station,"start":t,"setup":setup_steps,
+            active_links[sat]={"station":station,"start":t,"setup":setup_steps+acquisition_steps,
                                "remaining":steps,"sent_bits":0.,
                                "reason":"adaptive_memory_deadline"}
             daily_used[day]+=seconds
@@ -227,11 +239,20 @@ def plan(config_path=None, output_dir=None):
     for sat,link in active_links.items():
         schedule.append({"satellite":sat,"station":link["station"],"start_utc":iso(link["start"]),
                          "end_utc":iso(end),"downloaded_mbit":round(link["sent_bits"]/1e6,5),
-                         "reason":"truncated_at_horizon"})
+                         "reason":"truncated_at_horizon","pass_type":pass_type,
+                         "setup_minutes":setup_minutes,"acquisition_minutes":policy["acquisition_minutes"],
+                         "teardown_minutes":policy["teardown_minutes"]})
     summary={"status":"PRELIMINARY_HYPOTHETICAL_NOT_BOOKED",
       "note":"2020 windows shifted by calendar to 2030, NOT repropagated. DSN cap is hypothetical; memory and environment events are assumptions. Greedy rolling heuristic, not a proven global optimum. FIFO age uses timestamps at 5-minute resolution.",
       "scenario_start_utc":iso(target),"scenario_end_utc":iso(end),
-      "effective_downlink_bps":effective,"memory_capacity_mbit_per_satellite":capacity/1e6,
+      "effective_downlink_bps":effective,"dsn_policy_status":policy["status"],
+      "dsn_pass_type":pass_type,"dsn_setup_minutes":setup_minutes,
+      "dsn_acquisition_minutes":policy["acquisition_minutes"],"dsn_teardown_minutes":policy["teardown_minutes"],
+      "dsn_handover_overlap_minutes":policy["handover_overlap_minutes"],
+      "dsn_handover_status":policy["handover_policy"],
+      "emergency_antenna_response_minutes":policy["emergency_antenna_response_minutes"],
+      "emergency_initial_continuous_hours":policy["emergency_initial_continuous_hours"],
+      "emergency_policy_status":policy["emergency_policy"],"memory_capacity_mbit_per_satellite":capacity/1e6,
       "satellites":{},"contacts":len(schedule),"dsn_assigned_hours":round(sum(daily_used.values())/3600,3)}
     for sat in sats:
         summary["satellites"][sat]={"generated_mbit":round(sum(produced[(sat,s["name"])] for s in streams)/1e6,4),

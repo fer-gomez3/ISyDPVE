@@ -13,6 +13,7 @@ from pathlib import Path
 from .contact_analysis import load_contacts
 from .telemetry_generation import calculate, apply_computed_rates
 from .transfer_planning import stream_requirements
+from .priority_memory_policy import ordered_streams, choose_due_tier, volume_shares
 
 ROOT = Path(__file__).resolve().parents[1]
 STEP = 300  # seconds; planning discretization
@@ -100,7 +101,8 @@ def plan(config_path=None, output_dir=None):
     initial_bits = capacity*initial/len(streams)
     peak = defaultdict(float); violations = defaultdict(set)
     history = []; schedule = []; daily_used = defaultdict(float)
-    active_links = {}  # sat -> (station, setup remaining steps, tx steps)
+    active_links = {}  # sat -> contact state
+    last_served_tier = {sat: {p: target for p in range(1,6)} for sat in sats}
     last_sample = {}
     t = target
     while t < end:
@@ -127,7 +129,7 @@ def plan(config_path=None, output_dir=None):
                 pass  # teardown: no telemetry transfer
             else:
                 budget = effective * dt
-                for s in sorted(streams, key=lambda s:(-s["priority"],s["deadline_hours"])):
+                for s in ordered_streams(streams,link["priority_tier"]):
                     name=s["name"]
                     bits=min(budget, backlog[sat][name])
                     backlog[sat][name]-=bits
@@ -138,6 +140,7 @@ def plan(config_path=None, output_dir=None):
                         queue[0][1]-=consumed
                         remaining_to_remove-=consumed
                         if queue[0][1]<=1e-7: queue.pop(0)
+                    if bits>0: last_served_tier[sat][s["priority"]]=t+timedelta(seconds=dt)
                     sent[(sat,name)]+=bits
                     link["sent_bits"]+=bits
                     budget-=bits
@@ -147,7 +150,7 @@ def plan(config_path=None, output_dir=None):
                 schedule.append({"satellite":sat,"station":link["station"],
                                  "start_utc":iso(link["start"]),"end_utc":iso(t+timedelta(seconds=dt)),
                                  "downloaded_mbit":round(link["sent_bits"]/1e6,5),
-                                 "reason":link["reason"],"pass_type":pass_type,
+                                 "reason":link["reason"],"priority_tier":link["priority_tier"],"pass_type":pass_type,
                                  "setup_minutes":setup_minutes,"acquisition_minutes":policy["acquisition_minutes"],
                                  "teardown_minutes":policy["teardown_minutes"]})
                 just_finished_stations.add(link["station"])
@@ -234,6 +237,7 @@ def plan(config_path=None, output_dir=None):
             # All windows must be usable for the full contact; station outages checked throughout.
             if any(a<t+timedelta(seconds=seconds) and b>t for a,b in unavailable.get(station,[])): continue
             active_links[sat]={"station":station,"start":t,"setup":setup_steps+acquisition_steps,
+                               "priority_tier":choose_due_tier(streams,last_served_tier[sat],t),
                                "remaining":steps,"sent_bits":0.,
                                "reason":"adaptive_memory_deadline"}
             daily_used[day]+=seconds
@@ -242,7 +246,7 @@ def plan(config_path=None, output_dir=None):
     for sat,link in active_links.items():
         schedule.append({"satellite":sat,"station":link["station"],"start_utc":iso(link["start"]),
                          "end_utc":iso(end),"downloaded_mbit":round(link["sent_bits"]/1e6,5),
-                         "reason":"truncated_at_horizon","pass_type":pass_type,
+                         "reason":"truncated_at_horizon","priority_tier":link["priority_tier"],"pass_type":pass_type,
                          "setup_minutes":setup_minutes,"acquisition_minutes":policy["acquisition_minutes"],
                          "teardown_minutes":policy["teardown_minutes"]})
     summary={"status":"PRELIMINARY_HYPOTHETICAL_NOT_BOOKED",
@@ -256,7 +260,11 @@ def plan(config_path=None, output_dir=None):
       "emergency_antenna_response_minutes":policy["emergency_antenna_response_minutes"],
       "emergency_initial_continuous_hours":policy["emergency_initial_continuous_hours"],
       "emergency_policy_status":policy["emergency_policy"],"memory_capacity_mbit_per_satellite":capacity/1e6,
-      "satellites":{},"contacts":len(schedule),"dsn_assigned_hours":round(sum(daily_used.values())/3600,3)}
+      "memory_allocation_policy":"volume_proportional_shared_pool_not_hard_partition",
+      "memory_reserve_fraction":reserve,"satellites":{},"contacts":len(schedule),"dsn_assigned_hours":round(sum(daily_used.values())/3600,3)}
+    volume_basis={x["name"]:x["mean_rate_bps"]*(end-target).total_seconds()/1e6 for x in streams}
+    summary["memory_quotas_by_subsystem"]=volume_shares(volume_basis,capacity/1e6,reserve)
+    summary["external_flows_status"]="Lunar relay and Earth uplink excluded until traffic volumes and contact geometry are specified"
     for sat in sats:
         summary["satellites"][sat]={"generated_mbit":round(sum(produced[(sat,s["name"])] for s in streams)/1e6,4),
            "downlinked_mbit":round(sum(sent[(sat,s["name"])] for s in streams)/1e6,4),

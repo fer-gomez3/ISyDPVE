@@ -88,7 +88,10 @@ def rank_windows(windows, geometry, link, urgency=None, scenario_defaults=None):
         item.update(rank_status="PRELIMINARY_RANKED",distance_km=float(g["distance_km"]),
                     elevation_deg=float(g["elevation_deg"]),
                     minimum_tx_rf_w=result["minimum_tx_rf_w_with_design_margin"],
-                    estimated_tx_dc_w=dc,energy_j_per_payload_bit=energy,
+                    estimated_tx_dc_w=dc,
+                    estimated_dissipated_heat_w=result["estimated_dissipated_heat_w"],
+                    thermal_status="PRELIMINARY_TX_HEAT_ONLY",
+                    energy_j_per_payload_bit=energy,
                     score=energy/(1+priority))
         ranked.append(item)
     return sorted(ranked,key=lambda x:(x["score"] is None,
@@ -115,7 +118,12 @@ def compute(windows_path="outputs/dsn_allocated_windows.csv",
     else:
         defaults=None
     result=rank_windows(windows,load_geometry(geometry_path),link,scenario_defaults=defaults)
-    summary={"status":"RANKED_PRELIMINARY" if result and all(x["score"] is not None for x in result)
+    thermal_values=[x["estimated_dissipated_heat_w"] for x in result
+                    if x.get("estimated_dissipated_heat_w") is not None]
+    summary={"thermal_budget":{"status":"PRELIMINARY_TX_HEAT_ONLY" if thermal_values else "MISSING_RF_INPUTS",
+                               "peak_tx_dissipated_heat_w":max(thermal_values) if thermal_values else None,
+                               "note":"Transmitter/TT&C electronics heat only. Excludes other subsystem dissipation, radiator sizing, transient thermal analysis and external fluxes."},
+             "status":"RANKED_PRELIMINARY" if result and all(x["score"] is not None for x in result)
              else "GEOMETRY_OR_RF_INPUTS_MISSING",
              "note":"Contact timestamps treated as 2030 scenario. Constant nominal range/elevation are placeholders, not propagated geometry; DSN availability and deadlines unverified.",
              "ranked_windows":result}

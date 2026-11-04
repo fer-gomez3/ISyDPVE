@@ -56,9 +56,12 @@ def plan(config_path=None, output_dir=None):
     effective = float(shared["downlink_gross_bps"]) * (1 - float(shared["protocol_overhead_fraction"]))
     policy = json.loads((ROOT / "data" / "dsn_operational_policy.json").read_text(encoding="utf-8"))
     pass_type = cfg.get("dsn_pass_type", policy["default_pass_type"])
-    if pass_type not in ("downlink_only", "uplink_downlink"):
+    if pass_type not in ("standard_ttc", "ranging", "downlink_only", "uplink_downlink"):
         raise ValueError("Unsupported DSN pass type")
-    setup_minutes = policy["downlink_setup_minutes"] if pass_type == "downlink_only" else policy["uplink_downlink_setup_minutes"]
+    setup_minutes = (policy["standard_ttc_setup_minutes"] if pass_type == "standard_ttc" else
+                     policy["ranging_setup_minutes"] if pass_type == "ranging" else
+                     policy["downlink_setup_minutes"] if pass_type == "downlink_only" else
+                     policy["uplink_downlink_setup_minutes"])
     setup_steps = math.ceil(float(setup_minutes) * 60 / STEP)
     acquisition_steps = math.ceil(float(policy["acquisition_minutes"]) * 60 / STEP)
     teardown_steps = math.ceil(float(policy["teardown_minutes"]) * 60 / STEP)

@@ -34,9 +34,9 @@
       "name": "aocs_nominal_hk",
       "mode": "continuous",
       "rate_bps": null,
-      "priority": 4,
-      "max_age_hours": 12,
-      "status": "PRE"
+      "priority": 5,
+      "max_age_hours": 6,
+      "status": "USER_DEFINED_RECURRENCE"
     },
     {
       "name": "propulsion_hk",

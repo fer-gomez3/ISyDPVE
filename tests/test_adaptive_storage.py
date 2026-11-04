@@ -7,6 +7,15 @@ from pathlib import Path
 from ttc.adaptive_storage import plan, shift_contacts, events_at
 
 class AdaptiveStorageTests(unittest.TestCase):
+    def test_priority_rotation_and_volume_shares(self):
+        from ttc.priority_memory_policy import tier_order, volume_shares
+        self.assertEqual(tier_order(5),[5,4,3,2,1])
+        self.assertEqual(tier_order(4),[4,3,2,1,5])
+        self.assertEqual(tier_order(2),[2,1,5,4,3])
+        q=volume_shares({"a":75,"b":25},100,0.15)
+        self.assertAlmostEqual(q["a"]["quota_mbit"],63.75)
+        self.assertAlmostEqual(q["b"]["quota_mbit"],21.25)
+
     def test_shift_preserves_duration(self):
         a=datetime(2020,1,1,tzinfo=timezone.utc)
         b=datetime(2020,1,1,1,tzinfo=timezone.utc)
@@ -27,6 +36,7 @@ class AdaptiveStorageTests(unittest.TestCase):
             r=plan(output_dir=tmp)
             self.assertEqual(len(r["satellites"]),8)
             self.assertEqual(r["dsn_setup_minutes"],45)
+            self.assertEqual(sum(x["quota_mbit"] for x in r["memory_quotas_by_subsystem"].values()), 1024*0.85)
             self.assertEqual(r["dsn_acquisition_minutes"],10)
             self.assertEqual(r["dsn_teardown_minutes"],15)
             self.assertEqual(r["emergency_antenna_response_minutes"],120)

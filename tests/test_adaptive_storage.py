@@ -26,7 +26,7 @@ class AdaptiveStorageTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             r=plan(output_dir=tmp)
             self.assertEqual(len(r["satellites"]),8)
-            self.assertEqual(r["dsn_setup_minutes"],30)
+            self.assertEqual(r["dsn_setup_minutes"],45)
             self.assertEqual(r["dsn_acquisition_minutes"],10)
             self.assertEqual(r["dsn_teardown_minutes"],15)
             self.assertEqual(r["emergency_antenna_response_minutes"],120)
@@ -45,8 +45,8 @@ class AdaptiveStorageTests(unittest.TestCase):
                 a0=datetime.fromisoformat(a["start_utc"].replace("Z","+00:00"))
                 a1=datetime.fromisoformat(a["end_utc"].replace("Z","+00:00"))
                 self.assertGreater(a1,a0)
-                self.assertGreaterEqual((a1-a0).total_seconds()/60,60)
-                self.assertEqual(a["pass_type"],"downlink_only")
+                self.assertGreaterEqual((a1-a0).total_seconds()/60,75)
+                self.assertEqual(a["pass_type"],"standard_ttc")
                 for b in contacts[i+1:]:
                     if a["station"]!=b["station"] and a["satellite"]!=b["satellite"]: continue
                     b0=datetime.fromisoformat(b["start_utc"].replace("Z","+00:00"))

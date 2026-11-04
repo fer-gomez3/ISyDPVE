@@ -11,6 +11,7 @@ from pathlib import Path
 from .adaptive_storage import ROOT, plan
 from .memory_sizing import trade_study
 from .hardware_trade import compare
+from .antenna_link_budget import evaluate
 
 def _csv(path):
     with open(path,newline="",encoding="utf-8") as f:
@@ -41,6 +42,7 @@ def run(output_dir=None):
     baseline=plan(output_dir=out)
     sizing=trade_study(output_dir=out)
     hardware=compare(output_dir=out)
+    antenna=evaluate(output_dir=out)
     history=_csv(out/"adaptive_storage_history.csv")
     _plot_history(history,out/"adaptive_memory_history.svg")
     rows=[]
@@ -70,6 +72,9 @@ def run(output_dir=None):
         "## Preliminary hardware trade",
         "See obdh_hardware_trade.csv and obdh_hardware_trade.json for documented candidate mass, power and dimensions.",
         "Candidates are not selected or qualified for lunar flight.",
+        "",
+        "## Antenna link budget",
+        "See antenna_link_budget.csv and antenna_link_budget.json. Inputs pending.",
         "",
         "## Limitations",
         "FIFO timestamps are discretized to five minutes. No actual DSN antenna reservations,",

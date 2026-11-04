@@ -2,6 +2,13 @@
 
 Never infer 2030 range/elevation from shifted 2020 timestamps. Missing geometry
 produces an explicitly unranked result, not a fabricated optimum.
+PRELIMINARY DELIVERY NOTE:
+The current worst-case window range and minimum elevation are suitable for
+preliminary sizing/trade studies only. Outstanding work: elevation-dependent
+atmospheric losses, time-resolved minimum link margin across each contact,
+and real 2030 propagated satellite/ground-station geometry. Until those are
+implemented, results are not a validated final HGA or transmitter design.
+
 """
 import csv
 import json

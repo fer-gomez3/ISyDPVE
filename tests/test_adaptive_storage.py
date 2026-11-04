@@ -36,7 +36,7 @@ class AdaptiveStorageTests(unittest.TestCase):
             r=plan(output_dir=tmp)
             self.assertEqual(len(r["satellites"]),8)
             self.assertEqual(r["dsn_setup_minutes"],45)
-            self.assertEqual(sum(x["quota_mbit"] for x in r["memory_quotas_by_subsystem"].values()), 1024*0.85)
+            self.assertAlmostEqual(sum(x["quota_mbit"] for x in r["memory_quotas_by_subsystem"].values()), 1024*0.85)
             self.assertEqual(r["dsn_acquisition_minutes"],10)
             self.assertEqual(r["dsn_teardown_minutes"],15)
             self.assertEqual(r["emergency_antenna_response_minutes"],120)

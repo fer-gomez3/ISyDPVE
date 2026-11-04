@@ -10,6 +10,7 @@ from collections import defaultdict
 from pathlib import Path
 from .adaptive_storage import ROOT, plan
 from .memory_sizing import trade_study
+from .hardware_trade import compare
 
 def _csv(path):
     with open(path,newline="",encoding="utf-8") as f:
@@ -39,6 +40,7 @@ def run(output_dir=None):
     out.mkdir(parents=True,exist_ok=True)
     baseline=plan(output_dir=out)
     sizing=trade_study(output_dir=out)
+    hardware=compare(output_dir=out)
     history=_csv(out/"adaptive_storage_history.csv")
     _plot_history(history,out/"adaptive_memory_history.svg")
     rows=[]
@@ -64,6 +66,10 @@ def run(output_dir=None):
         "A null result means no tested option passed. This is not a continuous optimum or a flight memory selection.",
         "",
         "![Memory occupancy](adaptive_memory_history.svg)",
+        "",
+        "## Preliminary hardware trade",
+        "See obdh_hardware_trade.csv and obdh_hardware_trade.json for documented candidate mass, power and dimensions.",
+        "Candidates are not selected or qualified for lunar flight.",
         "",
         "## Limitations",
         "FIFO timestamps are discretized to five minutes. No actual DSN antenna reservations,",

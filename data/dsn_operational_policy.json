@@ -1,5 +1,5 @@
 {
-  "status": "USER_SUPPLIED_NOT_VERIFIED_AGAINST_DSN_MSIPP_875-0001_REV_H",
+  "status": "USER_SUPPLIED_OPERATIONAL_PLANNING_ASSUMPTIONS_NOT_INDEPENDENTLY_VERIFIED",
   "source_claim": "DSN MSIPP 875-0001 Rev. H (user-provided operational assumptions; source text not independently checked)",
   "downlink_setup_minutes": 30,
   "uplink_downlink_setup_minutes": 45,
@@ -8,7 +8,9 @@
   "handover_overlap_minutes": 10,
   "emergency_antenna_response_minutes": 120,
   "emergency_initial_continuous_hours": 72,
-  "default_pass_type": "downlink_only",
+  "default_pass_type": "standard_ttc",
   "handover_policy": "NOT_IMPLEMENTED_NO_AUTOMATIC_HANDOVERS",
-  "emergency_policy": "PLANNING_PARAMETERS_ONLY_NO_GUARANTEED_DSN_ALLOCATION"
+  "emergency_policy": "PLANNING_PARAMETERS_ONLY_NO_GUARANTEED_DSN_ALLOCATION",
+  "standard_ttc_setup_minutes": 45,
+  "ranging_setup_minutes": 60
 }

@@ -62,3 +62,49 @@ def size_contacts(schedule_path=None,summary_path=None,telemetry_path=None,
     apply_computed_rates(tel,calculate(inputs)["subsystems"])
     streams=stream_requirements(tel)
     from .priority_memory_policy import ordered_streams
+    policy=json.loads((ROOT/"data"/"dsn_operational_policy.json").read_text())
+    overhead_minutes=summary["dsn_setup_minutes"]+summary["dsn_acquisition_minutes"]+summary["dsn_teardown_minutes"]
+    from datetime import timedelta
+    cases={x["direction"]:x for x in rf["cases"]}
+    rows=[]
+    for c in contacts:
+        start=datetime.fromisoformat(c["start_utc"].replace("Z","+00:00"))
+        end=datetime.fromisoformat(c["end_utc"].replace("Z","+00:00"))
+        usable=max(0,(end-start).total_seconds()-overhead_minutes*60)
+        tier=int(c["priority_tier"])
+        ordered=ordered_streams(streams,tier)
+        # Data that accrues during the recurrence interval is mandatory at its due contact.
+        # The volume is an engineering demand estimate; not a measured backlog snapshot.
+        mandatory=[x for x in ordered if int(x["priority"])==tier]
+        volume=sum(x["mean_rate_bps"]*x["deadline_hours"]*3600 for x in mandatory)/1e6
+        required_bps=volume*1e6/usable if usable>0 else None
+        row={"satellite":c["satellite"],"station":c["station"],"start_utc":c["start_utc"],
+             "end_utc":c["end_utc"],"priority_tier":tier,
+             "mandatory_subsystems":";".join(x["name"] for x in mandatory),
+             "mandatory_volume_estimate_mbit":round(volume,6),
+             "actual_downlinked_mbit":c["downloaded_mbit"],
+             "usable_seconds":usable,"required_bps":round(required_bps,3) if required_bps is not None else None,
+             "assumption":"Nominal full recurrence volume; does not yet track exact backlog at due time"}
+        trade=rf_trade(required_bps,cases["satellite_to_earth"]) if required_bps is not None else {"status":"NO_USABLE_TIME"}
+        row["rf_status"]=trade["status"]
+        if trade["status"]=="FEASIBLE_PRELIMINARY":
+            row["minimum_diameter_m"]=trade["minimum_diameter"]["diameter_m"]
+            row["power_at_minimum_diameter_w"]=trade["minimum_diameter"]["rf_power_w"]
+            row["minimum_rf_power_w"]=trade["minimum_power"]["rf_power_w"]
+            row["diameter_at_minimum_power_m"]=trade["minimum_power"]["diameter_m"]
+            row["rf_energy_at_minimum_diameter_Wh"]=round(trade["minimum_diameter"]["rf_power_w"]*usable/3600,6)
+        else:
+            row["missing_rf_inputs"]=";".join(trade.get("missing",[]))
+        rows.append(row)
+    result={"status":"PRELIMINARY_DEMAND_ESTIMATES_NOT_DEADLINE_PROOF",
+            "note":"Nominal recurrence-volume estimate; does not establish that all mandatory data were cleared. Geometry and DSN slots are hypothetical. Power is RF output, not DC draw.",
+            "contacts":rows}
+    (out/"mandatory_link_sizing.json").write_text(json.dumps(result,indent=2)+"\n")
+    with (out/"mandatory_link_sizing.csv").open("w",newline="",encoding="utf-8") as f:
+        fields=list(dict.fromkeys(k for row in rows for k in row))
+        if fields:
+            writer=csv.DictWriter(f,fieldnames=fields);writer.writeheader();writer.writerows(rows)
+    return result
+
+if __name__=="__main__":
+    print(json.dumps(size_contacts(),indent=2))

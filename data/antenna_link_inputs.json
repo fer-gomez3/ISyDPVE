@@ -1,0 +1,49 @@
+{
+  "description": "User-provided antenna equations; fill physical parameters per link. Null means not yet determined.",
+  "cases": [
+    {
+      "name": "SELENA_to_DSN",
+      "direction": "satellite_to_earth",
+      "frequency_hz": null,
+      "tx_diameter_m": null,
+      "tx_efficiency": null,
+      "tx_pointing_error_deg": null,
+      "rx_diameter_m": null,
+      "rx_efficiency": null,
+      "rx_pointing_error_deg": null,
+      "distance_m": null,
+      "tx_power_w": null,
+      "tx_line_efficiency": null,
+      "data_mbit": null,
+      "usable_seconds": null
+    },
+    {
+      "name": "Earth_to_SELENA",
+      "direction": "earth_to_satellite",
+      "frequency_hz": null,
+      "tx_diameter_m": null,
+      "tx_efficiency": null,
+      "rx_diameter_m": null,
+      "rx_efficiency": null,
+      "distance_m": null,
+      "tx_power_w": null,
+      "tx_line_efficiency": null,
+      "data_mbit": null,
+      "usable_seconds": null
+    },
+    {
+      "name": "Lunar_surface_to_SELENA",
+      "direction": "lunar_surface_to_satellite",
+      "frequency_hz": null,
+      "tx_diameter_m": null,
+      "tx_efficiency": null,
+      "rx_diameter_m": null,
+      "rx_efficiency": null,
+      "distance_m": null,
+      "tx_power_w": null,
+      "tx_line_efficiency": null,
+      "data_mbit": null,
+      "usable_seconds": null
+    }
+  ]
+}

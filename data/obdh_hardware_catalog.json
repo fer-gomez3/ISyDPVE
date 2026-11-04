@@ -1,0 +1,70 @@
+{
+  "units": "Mbit; mm; kg; W",
+  "notes": "OBC integrated storage, NOT stand-alone memory module. Physical values apply to entire OBC, not incremental memory. Lunar 10-year qualification not established.",
+  "products": [
+    {
+      "id": "spacemanic_deep_thought",
+      "manufacturer": "Spacemanic",
+      "model": "Deep Thought",
+      "capacity_mbit": 1024,
+      "mass_kg": 0.025,
+      "dimensions_mm": [
+        65,
+        40,
+        null
+      ],
+      "power_w": 0.1,
+      "source": "https://satcatalog.s3.amazonaws.com/components/1485/SatCatalog_-_Spacemanic_-_Deep_Thought_On-board_Computer_-_Datasheet.pdf?lastmod=20240513064035",
+      "qualification": "CubeSat heritage; lunar 10-year not demonstrated",
+      "capacity_type": "flash storage"
+    },
+    {
+      "id": "isispace_iobc",
+      "manufacturer": "ISISPACE",
+      "model": "iOBC",
+      "capacity_mbit": 32768,
+      "mass_kg": 0.1,
+      "dimensions_mm": [
+        96,
+        90,
+        12.4
+      ],
+      "power_w": 0.4,
+      "source": "https://space-for-space.com/wp-content/uploads/2018/10/ISIS-Onboard-Computer-Brochure-v1.pdf",
+      "qualification": "CubeSat heritage; lunar 10-year not demonstrated",
+      "capacity_type": "2x2GB SD nominal; physical redundancy may reduce usable capacity"
+    },
+    {
+      "id": "cavu_obc1",
+      "manufacturer": "CAVU Aerospace",
+      "model": "OBC1",
+      "capacity_mbit": 96000,
+      "mass_kg": 0.075,
+      "dimensions_mm": [
+        160,
+        100,
+        null
+      ],
+      "power_w": 2,
+      "source": "https://satcatalog.s3.amazonaws.com/components/1432/SatCatalog_-_CAVU_AEROSPACE_-_OBC1_Satellite_On-Board_Computer_-_Datasheet.pdf?lastmod=20240110113443",
+      "qualification": "Expected lifetime 3–5 years LEO; does not meet SELENA 10-year evidence",
+      "capacity_type": "triple 32 Gbit SLC NAND; redundancy may reduce usable capacity"
+    },
+    {
+      "id": "airbus_amethyst",
+      "manufacturer": "Airbus",
+      "model": "Amethyst",
+      "capacity_mbit": 32768,
+      "mass_kg": 3.5,
+      "dimensions_mm": [
+        110,
+        240,
+        170
+      ],
+      "power_w": 50,
+      "source": "https://www.satnow.com/products/on-board-computers/airbus/116-1213-amethyst",
+      "qualification": "10 years typical LEO stated; lunar qualification unverified",
+      "capacity_type": "4 GB flash"
+    }
+  ]
+}

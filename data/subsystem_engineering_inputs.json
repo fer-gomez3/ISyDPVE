@@ -1,0 +1,82 @@
+{
+  "notes": "All engineering values are placeholders unless validated by subsystem owners. Equations from user's ISyDPVE lecture summary; PDF used for reference only.",
+  "subsystems": {
+    "eps_hk": {
+      "origin": "PLACEHOLDER + PDF reference: 28V bus, 1.8kWh battery, 410W EOL solar array; lecture EPS 6.1-6.2",
+      "assembly_factor": 0.95,
+      "incidence_deg": 10,
+      "annual_degradation": 0.01,
+      "lifetime_years": 10,
+      "eclipse_load_w": 105,
+      "eclipse_hours": 6.5068,
+      "sunlit_load_w": 311,
+      "sunlit_hours": 11.26,
+      "eclipse_efficiency": 0.95,
+      "day_efficiency": 0.96,
+      "max_dod": 0.4,
+      "battery_branches": 1,
+      "discharge_efficiency": 0.95,
+      "cell_specific_power_w_m2": 500,
+      "pdf_reference": {
+        "array_eol_w": 410,
+        "battery_wh": 1800,
+        "bus_voltage_v": 28,
+        "nominal_load_w": 311,
+        "peak_load_w": 336
+      },
+      "owner_todo": "EPS OWNER: confirm cell_specific_power_w_m2 (500 W/m2 implies about 37% efficiency at 1361 W/m2, above typical flight cells; unchanged, not justified), eclipse_hours (6.5068 reproduces 1.8 kWh; orbit not defined), array area and the real orbit."
+    },
+    "aocs_nominal_hk": {
+      "origin": "PLACEHOLDER; lecture AOCS 4.1-4.2; lunar gravitational parameter",
+      "slew_angle_deg": 10,
+      "inertia_kg_m2": 100,
+      "slew_seconds": 120,
+      "mu_m3_s2": 4904869500000,
+      "inertia_z": 96.7,
+      "inertia_y": 89,
+      "gravity_angle_deg": 10,
+      "orbit_radius_m": 6200000,
+      "torque_margin_factor": 1.5,
+      "periapsis_radius_m": null,
+      "apoapsis_radius_m": null,
+      "owner_todo": "MISSION ANALYSIS / AOCS OWNER: provide periapsis and apoapsis radius (same orbit as EPS eclipse_hours); orbit_radius_m 6.2e6 is the radius used so far, treated as a circular lower bound. Provide other disturbance torques and the wheel margin."
+    },
+    "propulsion_hk": {
+      "origin": "PLACEHOLDER; lecture Propulsion 5.1; SELENA earlier 350kg wet, 1350m/s, 316s",
+      "initial_mass_kg": 350,
+      "delta_v_m_s": 1350,
+      "isp_s": 316
+    },
+    "thermal_hk": {
+      "origin": "PLACEHOLDER; lecture TCS 7.1; simplified solar and internal heat only",
+      "absorptivity": 0.3,
+      "solar_flux_w_m2": 1361,
+      "projected_area_m2": 1.2,
+      "internal_heat_w": 100,
+      "emissivity": 0.85,
+      "radiator_area_m2": 2.5
+    },
+    "structures_mechanisms": {
+      "origin": "PLACEHOLDER; lecture Structures 9",
+      "limit_load_n": 1000,
+      "factor_of_safety": 1.25,
+      "allowable_load_n": 2000
+    },
+    "payload_housekeeping": {
+      "origin": "PDF section 2.7.3 reference 100bps; lecture optical/SAR formulas not applicable to lunar PNT"
+    },
+    "obdh_hk_logs": {
+      "origin": "PLACEHOLDER; lecture OBDH 1.2-1.3; CPU load does not equal downlink",
+      "sloc": 50000,
+      "bytes_per_sloc": 7,
+      "cpu_task_kips": [
+        1,
+        1,
+        8,
+        4,
+        2
+      ]
+    }
+  },
+  "_shared_parameters": "Number of satellites lives only in data/ttc_parameters.json."
+}

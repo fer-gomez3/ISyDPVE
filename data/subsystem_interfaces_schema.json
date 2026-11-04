@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "description": "Proposed shared interface, not verified outputs from teammates",
+  "structures": {
+    "gimbal_mass_kg": 1.5,
+    "gimbal_power_w": 2,
+    "gimbal_budget_owner": "Structures",
+    "structures_nominal_kg": 38.9
+  },
+  "payload": {
+    "navant_mass_kg": 3.4,
+    "rf_front_end_mass_kg": 4.5,
+    "rf_front_end_owner": "Payload; not TT&C X-band amplifier"
+  },
+  "ttc": {
+    "ttc_obdh_nominal_mass_limit_kg": 11.4,
+    "hga_design_file": "data/hga_preliminary_design.json"
+  },
+  "propagation": {
+    "geometry_csv": "data/contact_geometry_2030.csv",
+    "required_columns": [
+      "satellite",
+      "station",
+      "candidate_start_utc",
+      "distance_km",
+      "elevation_deg"
+    ],
+    "status": "NOT_CONNECTED_REAL_2030"
+  }
+}

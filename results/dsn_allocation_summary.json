@@ -1,0 +1,79 @@
+{
+  "status": "HYPOTHETICAL_NOT_BOOKED",
+  "geometry_note": "Contact geometry is a hypothetical input; 2030 timestamps may be calendar-shifted, NOT physically repropagated.",
+  "allocation_note": "Fair (max-min) daily sharing of the assumed network hours among all satellites with available contacts. Fractions apply to conflict-resolved candidate intervals, not full overlapping visibility windows. Assigned portion is modeled at interval start; acquisition/setup subtracted. The daily cap applies per UTC calendar day: the first and last days are partial, so total assigned hours are not proportional to the simulated duration. No real DSN reservation or slew constraints; no service is guaranteed.",
+  "policy": {
+    "description": "Hypothetical total DSN network access for all eight SELENA spacecraft; 3 h/day nominal, 1/6 h sensitivity. NOT a NASA allocation or guarantee. Setup is spacecraft-side approximation, not DSN station precal.",
+    "default_fraction": 1,
+    "station_fraction": {},
+    "satellite_fraction": {},
+    "sources": [
+      "https://deepspace.jpl.nasa.gov/files/875-0001-H1.pdf",
+      "https://www.nasa.gov/wp-content/uploads/2023/09/dsn-services-catalog.pdf"
+    ],
+    "_shared_parameters": "Shared values (downlink rate, overhead, setup, minimum contact, DSN hours) live only in data/ttc_parameters.json.",
+    "net_downlink_bps": 256000.0,
+    "protocol_overhead_fraction": 0.2,
+    "setup_minutes": 15.0,
+    "min_contact_minutes": 20.0,
+    "daily_network_hours": 3.0,
+    "daily_network_hours_sensitivity": [
+      1,
+      3,
+      6
+    ],
+    "setup_minutes_sensitivity": [
+      5,
+      15,
+      30
+    ]
+  },
+  "daily_network_hours_limit": 3.0,
+  "candidate_segments": 140,
+  "eligible_segments": 31,
+  "total_candidate_hours": 141.86224,
+  "total_assigned_hours": 18.0,
+  "total_useful_hours": 10.25,
+  "by_satellite": {
+    "SELENA_11": {
+      "candidate_hours": 17.031738333333333,
+      "assigned_hours": 1.4666666666666666,
+      "useful_hours": 0.7166666666666667
+    },
+    "SELENA_12": {
+      "candidate_hours": 19.52283472222222,
+      "assigned_hours": 1.9666666666666666,
+      "useful_hours": 0.9666666666666667
+    },
+    "SELENA_13": {
+      "candidate_hours": 21.117187777777776,
+      "assigned_hours": 2.933333333333333,
+      "useful_hours": 1.9333333333333333
+    },
+    "SELENA_21": {
+      "candidate_hours": 16.14972333333333,
+      "assigned_hours": 2.3666666666666667,
+      "useful_hours": 1.3666666666666667
+    },
+    "SELENA_22": {
+      "candidate_hours": 14.9975425,
+      "assigned_hours": 1.5333333333333334,
+      "useful_hours": 0.7833333333333333
+    },
+    "SELENA_23": {
+      "candidate_hours": 17.667984722222222,
+      "assigned_hours": 2.466666666666667,
+      "useful_hours": 1.4666666666666666
+    },
+    "SELENA_31": {
+      "candidate_hours": 17.918766944444442,
+      "assigned_hours": 2.933333333333333,
+      "useful_hours": 1.6833333333333333
+    },
+    "SELENA_32": {
+      "candidate_hours": 17.456461666666666,
+      "assigned_hours": 2.3333333333333335,
+      "useful_hours": 1.3333333333333333
+    }
+  }
+}

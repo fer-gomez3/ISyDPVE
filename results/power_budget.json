@@ -1,0 +1,35 @@
+{
+  "status": "INCOMPLETE",
+  "missing_inputs": [
+    "distance_km",
+    "rx_gt_db_per_k",
+    "required_ebn0_db",
+    "losses_db",
+    "margin_db"
+  ],
+  "assumptions": {
+    "description": "Earth TT&C link design inputs. null = not yet approved. Do not confuse with S-band PNT broadcast.",
+    "distance_km": null,
+    "frequency_hz": 8400000000.0,
+    "tx_gain_dbi": 28.269353552734398,
+    "rx_gt_db_per_k": null,
+    "data_rate_bps": 256000.0,
+    "required_ebn0_db": null,
+    "losses_db": null,
+    "margin_db": null,
+    "tx_rf_w": null,
+    "pa_efficiency": null,
+    "electronics_w": null,
+    "standby_w": null
+  },
+  "fspl_db": null,
+  "minimum_rf_w": null,
+  "chosen_rf_w": null,
+  "achieved_ebn0_db": null,
+  "link_margin_db": null,
+  "tx_dc_w": null,
+  "tx_standby_w": null,
+  "tx_energy_wh": null,
+  "tx_heat_w": null,
+  "contact_hours": null
+}

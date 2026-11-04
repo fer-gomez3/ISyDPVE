@@ -1,0 +1,11 @@
+{
+  "status": "MISSING_INPUTS",
+  "missing_inputs": [
+    "distance_km",
+    "rx_gt_db_per_k",
+    "required_ebn0_db",
+    "losses_db",
+    "margin_db"
+  ],
+  "note": "No RF power or feasibility claim until inputs are supplied."
+}

@@ -1,0 +1,30 @@
+{
+  "status": "PRELIMINARY_TBD_NOT_IN_BASELINE_MEMORY_SIMULATION",
+  "per_satellite": true,
+  "flows": [
+    {
+      "name": "lunar_surface_relay",
+      "direction": "lunar_surface_to_satellite_to_earth",
+      "type": "optional_store_and_forward",
+      "priority": 3,
+      "max_age_hours": 24,
+      "rate_bps": null,
+      "allocated_memory_mbit": null,
+      "availability": "lunar user-to-satellite geometry and link budget TBD",
+      "note": "Not implied by PNT broadcast; relay service must be approved as mission requirement."
+    },
+    {
+      "name": "earth_uplink_commands",
+      "direction": "earth_to_satellite",
+      "type": "commands_configuration_software_uploads",
+      "priority": 5,
+      "max_age_hours": null,
+      "rate_bps": null,
+      "allocated_memory_mbit": null,
+      "availability": "DSN uplink station and satellite geometry TBD",
+      "note": "Separate uplink buffer, command validation and acknowledgment; no continuous generation assumed."
+    }
+  ],
+  "allocation_rule": "Reserve protected command memory and configurable lunar relay buffer; do not take capacity from housekeeping until rates, burst sizes and coverage are defined.",
+  "sizing_formula": "required_mbit = peak_incoming_bps * maximum_buffering_seconds / 1e6 + event_burst_mbit; include margins, protocol overhead and redundancy as separate parameters"
+}

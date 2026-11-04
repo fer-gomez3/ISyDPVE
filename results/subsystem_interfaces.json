@@ -1,0 +1,124 @@
+{
+  "scope": "per spacecraft per 24h",
+  "telemetry": [
+    {
+      "subsystem": "payload_housekeeping",
+      "rate_bps": 100.0,
+      "daily_mbit": 8.64,
+      "source": "PDF p.20, sec. 2.7.3",
+      "note": "8.64 Mbit/day; conflicts with broader XD3 range on p.16"
+    },
+    {
+      "subsystem": "structures_mechanisms",
+      "rate_bps": 32.0,
+      "daily_mbit": 2.7648,
+      "source": "PDF p.58, sec. 7.5.3",
+      "note": ""
+    },
+    {
+      "subsystem": "aocs",
+      "rate_bps": null,
+      "daily_mbit": null,
+      "source": "Not specified as net housekeeping rate in extracted inputs",
+      "note": ""
+    },
+    {
+      "subsystem": "eps",
+      "rate_bps": null,
+      "daily_mbit": null,
+      "source": "Not specified as net housekeeping rate in extracted inputs",
+      "note": ""
+    },
+    {
+      "subsystem": "thermal",
+      "rate_bps": null,
+      "daily_mbit": null,
+      "source": "Not specified as net housekeeping rate in extracted inputs",
+      "note": ""
+    },
+    {
+      "subsystem": "propulsion",
+      "rate_bps": null,
+      "daily_mbit": null,
+      "source": "Not specified as net housekeeping rate in extracted inputs",
+      "note": ""
+    },
+    {
+      "subsystem": "obdh",
+      "rate_bps": null,
+      "daily_mbit": null,
+      "source": "Not specified as net housekeeping rate in extracted inputs",
+      "note": ""
+    }
+  ],
+  "known_daily_mbit": 11.404800000000002,
+  "total_daily_mbit": null,
+  "missing_rates": [
+    "aocs",
+    "eps",
+    "thermal",
+    "propulsion",
+    "obdh"
+  ],
+  "contact_seconds_usable": null,
+  "overhead_fraction": 0.0,
+  "minimum_downlink_bps_for_known_data": null,
+  "minimum_downlink_bps_for_all_data": null,
+  "obdh": {
+    "minimum_buffer_mbit_for_one_day_known_only": 11.404800000000002,
+    "minimum_buffer_mbit_for_one_day_all": null,
+    "required_memory_mbit": null,
+    "note": "Final buffer depends on gaps between usable DSN contacts, burst production, margin and schedule."
+  },
+  "ttc": {
+    "required_net_downlink_bps_known_only": null,
+    "required_net_downlink_bps_all": null,
+    "uplink": {
+      "daily_min_mbit": 0.1,
+      "daily_max_mbit": 1.0,
+      "illustrative_net_bps": 2000.0,
+      "source": "PDF pp.17,20, sec. 2.7.3"
+    },
+    "link_design": {
+      "downlink_net_bps": null,
+      "tx_rf_power_w": null,
+      "tx_dc_power_w": null,
+      "tx_antenna_gain_dbi": null,
+      "ground_station_g_over_t_db_per_k": null,
+      "frequency_hz": null,
+      "coding_margin_db": null
+    },
+    "note": "RF TX power cannot be derived from data volume alone: requires frequency, geometry, antennas, G/T, losses and Eb/N0."
+  },
+  "eps": {
+    "platform_reference": {
+      "bus_voltage_v": 28.0,
+      "nominal_total_w": 311.0,
+      "peak_total_w": 336.0,
+      "battery_wh": 1800.0,
+      "dsn_obdh_mass_allocation_kg": 11.4,
+      "structures_mechanisms_nominal_w": 5.2,
+      "source": "PDF pp.32-36,58-59"
+    },
+    "incremental_ttc_tx_dc_w": null,
+    "incremental_ttc_contact_energy_wh": null,
+    "note": "311 W platform total already includes payload; do not double count."
+  },
+  "thermal": {
+    "incremental_ttc_heat_w": null,
+    "note": "Needs RF PA efficiency and TT&C electronics electrical consumption."
+  },
+  "aocs": {
+    "required_hga_pointing_windows": null,
+    "note": "Derived from scheduled contacts, not raw geometric visibility."
+  },
+  "payload": {
+    "afs_i_net_bps": 250.0,
+    "afs_i_daily_mbit": 21.6,
+    "afs_q_information_bps": 0.0,
+    "rf_output_w": 25.0,
+    "payload_nominal_dc_w": 154.0,
+    "source": "PDF pp.16-19, secs. 2.5-2.6"
+  },
+  "data_completeness": "partial"
+}

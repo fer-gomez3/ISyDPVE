@@ -12,6 +12,7 @@ from .adaptive_storage import ROOT, plan
 from .memory_sizing import trade_study
 from .hardware_trade import compare
 from .antenna_link_budget import evaluate
+from .mandatory_link_sizing import size_contacts
 
 def _csv(path):
     with open(path,newline="",encoding="utf-8") as f:
@@ -43,6 +44,7 @@ def run(output_dir=None):
     sizing=trade_study(output_dir=out)
     hardware=compare(output_dir=out)
     antenna=evaluate(output_dir=out)
+    mandatory=size_contacts(output_dir=out)
     history=_csv(out/"adaptive_storage_history.csv")
     _plot_history(history,out/"adaptive_memory_history.svg")
     rows=[]
@@ -75,6 +77,10 @@ def run(output_dir=None):
         "",
         "## Antenna link budget",
         "See antenna_link_budget.csv and antenna_link_budget.json. Inputs pending.",
+        "",
+        "## Mandatory contact RF sizing",
+        "See mandatory_link_sizing.csv and mandatory_link_sizing.json for required rates and RF input gaps.",
+        "These are recurrence-volume estimates, not certified deadline-clearing results.",
         "",
         "## Limitations",
         "FIFO timestamps are discretized to five minutes. No actual DSN antenna reservations,",

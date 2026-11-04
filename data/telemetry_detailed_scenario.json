@@ -1,5 +1,5 @@
 {
-  "description": "Detailed telemetry scenario, per spacecraft. PDF totals override preliminary component sums. Not validated. Stream rates are NOT stored here: they are always computed from data/telemetry_generation_inputs.json (null = filled at run time).",
+  "description": "Detailed telemetry scenario, per spacecraft. PDF totals override preliminary component sums. Not validated. Stream rates are NOT stored here: they are always computed from data/telemetry_generation_inputs.json (null = filled at run time). Includes preliminary lunar surface-to-satellite relay and Earth-to-satellite command traffic; rates require mission definition.",
   "policy": {
     "priority_max_age_hours": {
       "1": 168,
@@ -69,6 +69,26 @@
       "priority": 5,
       "max_age_hours": 6,
       "status": "PRE"
+    },
+    {
+      "name": "lunar_surface_relay",
+      "mode": "event_driven",
+      "rate_bps": null,
+      "priority": 3,
+      "max_age_hours": 24,
+      "status": "ASSUMPTION_TBD",
+      "direction": "lunar_surface_to_satellite_to_earth",
+      "note": "Surface user/rover data relay is optional and distinct from one-way PNT navigation broadcast; no confirmed relay service or rate."
+    },
+    {
+      "name": "earth_uplink_commands",
+      "mode": "contact_driven",
+      "rate_bps": null,
+      "priority": 5,
+      "max_age_hours": null,
+      "status": "ASSUMPTION_TBD",
+      "direction": "earth_to_satellite",
+      "note": "Commands, configuration and software uploads; incoming storage and acknowledgment needed, not continuously generated onboard telemetry."
     }
   ]
 }

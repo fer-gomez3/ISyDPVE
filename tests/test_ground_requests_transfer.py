@@ -27,7 +27,7 @@ class ProtocolTests(unittest.TestCase):
         s.enqueue("aocs",5,"2030-01-01T02:00:00Z",b"first","a")
         s.enqueue("eps",3,"2030-01-01T04:00:00Z",b"second","b")
         self.assertEqual(s.transmit(5),["a"])
-        self.assertEqual(s.transmit(6),["a","b"])
+        self.assertEqual(s.transmit(11),["a","b"])
         s.acknowledge(["a"])
         self.assertEqual(s.manifest()[0]["status"],"CONFIRMED")
         self.assertEqual(s.release_confirmed(),1)

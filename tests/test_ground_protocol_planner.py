@@ -16,7 +16,7 @@ class GroundProtocolPlannerTests(unittest.TestCase):
         self.assertAlmostEqual(r["maximum_design_gross_bps"],c["required_gross_bps"]*1.2)
 
     def test_grant_outside_visibility_rejected(self):
-        bad=[dict(self.grants[0],end_utc="2030-01-01T11:00:00Z")]
+        bad=[dict(self.grants[0],end_utc="2030-01-01T13:00:00Z")]
         with self.assertRaises(ValueError):
             plan(self.streams,self.windows,bad)
 

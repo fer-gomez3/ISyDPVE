@@ -59,3 +59,24 @@ Run tests:
 ```bash
 python -m pytest -q tests/test_ground_protocol_planner.py tests/test_ground_delivery.py
 ```
+
+## Ground requests and application-level ACK prototype
+
+`python -m ttc.ground_requests --gross-bps 256000` writes
+`outputs/ground_contact_requests.json`. Each periodic request contains a
+latest-finish deadline, requested grant duration, candidate station windows and
+a `NO_SINGLE_WINDOW_LONG_ENOUGH` flag when necessary. These are **requests**,
+not granted DSN time. Current request generation is a simple nominal single-window
+baseline and does not optimize shared DSN resources.
+
+`ttc.transfer_protocol.TransferSession` provides a Python-level block manifest
+with satellite, subsystem, priority, deadline, length, SHA-256 checksum,
+transmission status and selective acknowledgments. Unconfirmed blocks are
+retained for retry; confirmed blocks can be released explicitly. This is **not**
+a wire protocol, CCSDS CFDP implementation, or a verified end-to-end radio link.
+The SHA-256 digest is a manifest integrity reference, not a replacement for
+frame-level CRC/FEC or cryptographic authentication.
+
+```bash
+python -m pytest -q tests/test_ground_requests_transfer.py
+```

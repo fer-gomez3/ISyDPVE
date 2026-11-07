@@ -4,7 +4,7 @@ from ttc.ground_protocol_planner import plan
 class GroundProtocolPlannerTests(unittest.TestCase):
     def setUp(self):
         self.streams=[{"name":"aocs","rate_bps":100,"priority":5,"deadline_hours":6}]
-        self.windows=[{"satellite":"S1","station":"Madrid","start_utc":"2030-01-01T00:00:00Z","end_utc":"2030-01-01T10:00:00Z"}]
+        self.windows=[{"satellite":"S1","station":"Madrid","start_utc":"2030-01-01T00:00:00Z","end_utc":"2030-01-01T12:00:00Z"}]
         self.grants=[{"satellite":"S1","station":"Madrid","start_utc":"2030-01-01T02:00:00Z","end_utc":"2030-01-01T04:00:00Z"}]
 
     def test_granted_time_and_rate(self):

@@ -115,6 +115,10 @@ def run(streams_path,visibility_path,grants_path,output_path,
     result=plan(streams,load_csv(visibility_path),load_csv(grants_path),
                 utilization=utilization,overhead=overhead,setup_minutes=setup_minutes,design_margin=design_margin)
     p=Path(output_path);p.parent.mkdir(parents=True,exist_ok=True)
+    from .ground_delivery import size_rate
+    result["deadline_rate_sizing"]=size_rate(streams,load_csv(visibility_path),load_csv(grants_path),
+        utilization=utilization,overhead=overhead,setup_minutes=setup_minutes,
+        max_bps=10000000,step_seconds=60)
     p.write_text(json.dumps(result,indent=2)+"\n",encoding="utf-8")
     return result
 

@@ -40,3 +40,22 @@ Produces `outputs/ground_protocol_plan.json` with nominal required gross rate pe
 - Account for uplink, setup/acquisition/teardown, per-station resource conflicts, slew and station time caps consistently.
 - Iterate rate, RF antenna gain/diameter, RF power, DC power, contact energy and memory capacity; reject physically infeasible designs.
 - Add packet format and overhead model consistent with applicable CCSDS standards and project constraints.
+
+## Implemented follow-up: deadline-aware fluid simulation
+
+`ttc.ground_delivery.simulate` models per-stream backlog, priority tie-breaking,
+oldest-bit deadlines and gross-rate capacity over the granted usable intervals.
+`ttc.ground_delivery.size_rate` binary-searches a gross rate satisfying modeled
+deadlines or returns `INFEASIBLE_WITH_GIVEN_GRANTS` if contact timing cannot
+satisfy deadlines even at the configured upper rate. The CLI planner writes
+`deadline_rate_sizing` alongside nominal contact demands.
+
+This is **not** a packet/ACK implementation or a certified deadline guarantee:
+generation is constant, reception perfect, and delivery is approximated in
+discrete steps. The rate search uses a configurable finite upper bound.
+The example grants are 2020-dated and cannot be treated as 2030 DSN allocations.
+
+Run tests:
+```bash
+python -m pytest -q tests/test_ground_protocol_planner.py tests/test_ground_delivery.py
+```

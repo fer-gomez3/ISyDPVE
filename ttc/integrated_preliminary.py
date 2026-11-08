@@ -96,6 +96,17 @@ def run(output_dir=None, *, gross_bps=None, rf_scenario_path=None,
               "peak_memory_mbit":round(v["peak_backlog_bits"]/1e6,3),
               "deadline_violations":",".join(v["deadline_violations"])}
              for sat,v in sorted(delivery["satellites"].items())]
+    station_totals={}
+    for g in effective_grants:
+        key=g["station"]
+        duration=(datetime.fromisoformat(g["end_utc"].replace("Z","+00:00"))-
+                  datetime.fromisoformat(g["start_utc"].replace("Z","+00:00"))).total_seconds()
+        station_totals.setdefault(key,{"station":key,"contacts":0,"granted_hours":0.0})
+        station_totals[key]["contacts"]+=1
+        station_totals[key]["granted_hours"]+=duration/3600
+    station_summary=[{"station":x["station"],"contacts":x["contacts"],
+        "granted_hours":round(x["granted_hours"],3)} for x in sorted(station_totals.values(),key=lambda v:v["station"])]
+    _write_csv(out/"integrated_station_summary.csv",station_summary)
     _write_csv(out/"integrated_satellite_summary.csv",per_sat)
     _write_csv(out/"integrated_contact_requests.csv",[
         {k:v for k,v in req.items() if k!="candidate_windows"}|
@@ -110,7 +121,7 @@ def run(output_dir=None, *, gross_bps=None, rf_scenario_path=None,
                            "setup":"already included by adaptive_storage"},
             "baseline":baseline,"requests":requests,"grants":grant_results,
             "delivery":delivery,"required_rate":sizing,"rf_budget":rf,"rf_trade":rf_trade,
-            "satellite_summary":per_sat}
+            "satellite_summary":per_sat,"station_summary":station_summary}
     (out/"integrated_preliminary.json").write_text(json.dumps(result,indent=2,default=str)+"\n",encoding="utf-8")
     report=["# SELENA — integrated preliminary TT&C / OBDH",
         "","**PRELIMINARY ONLY.** Geometry and DSN grants require independent physical and operational verification.",
@@ -128,6 +139,14 @@ def run(output_dir=None, *, gross_bps=None, rf_scenario_path=None,
         "","| Satellite | Produced (Mbit) | Delivered (Mbit) | Remaining (Mbit) | Peak backlog (Mbit) | Deadline violations |",
         "|---|---:|---:|---:|---:|---|"]
     report += [f"| {x['satellite']} | {x['produced_mbit']} | {x['delivered_mbit']} | {x['remaining_mbit']} | {x['peak_memory_mbit']} | {x['deadline_violations'] or 'None'} |" for x in per_sat]
+    report += ["","## Station allocations (hypothetical)",
+        "| Station | Contacts | Granted hours |","|---|---:|---:|"]
+    report += [f"| {x['station']} | {x['contacts']} | {x['granted_hours']} |" for x in station_summary]
+    report += ["","## RF antenna / EPS / thermal sensitivity (illustrative)",
+        "| Diameter (m) | Gain (dBi) | RF power (W) | DC power (W) | Heat (W) | Contact energy (Wh) |",
+        "|---|---:|---:|---:|---:|---:|"]
+    report += [f"| {x['diameter_m']:.2f} | {x['gain_dbi']:.1f} | {x['required_rf_w']:.2f} | {x['tx_dc_w']:.2f} | {x['tx_heat_w']:.2f} | {x['contact_energy_wh']:.2f} |"
+               for x in rf_trade["cases"]]
     report += ["","## Design limitations",
         "- Neither ground availability nor geometric visibility is operationally validated.",
         "- Fluid-bit delivery is not packet-level CFDP/ACK, nor does it model bit errors.",

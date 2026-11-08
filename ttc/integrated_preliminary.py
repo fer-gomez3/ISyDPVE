@@ -27,7 +27,7 @@ def _write_csv(path,rows):
         w.writeheader();w.writerows(rows)
 
 def run(output_dir=None, *, gross_bps=None, rf_scenario_path=None,
-        run_baseline=True,step_seconds=300):
+        run_baseline=True,step_seconds=300,visibility_path=None,grants_path=None):
     out=Path(output_dir or ROOT/"outputs")
     out.mkdir(parents=True,exist_ok=True)
     baseline=storage_plan(output_dir=out) if run_baseline else json.loads((out/"adaptive_storage_summary.json").read_text(encoding="utf-8"))
@@ -40,9 +40,14 @@ def run(output_dir=None, *, gross_bps=None, rf_scenario_path=None,
         "start_utc":max(w["start"],epoch).isoformat(),
         "end_utc":min(w["end"],horizon_end).isoformat()}
         for w in visible if w["end"]>epoch and w["start"]<horizon_end]
-    grants=[{"satellite":g["satellite"],"station":g["station"],
+    if visibility_path is not None:
+        visibility=_rows(visibility_path)
+        for w in visibility:
+            if not (epoch<=datetime.fromisoformat(w["start_utc"].replace("Z","+00:00"))<horizon_end):
+                raise ValueError("External visibility must match configured mission epoch/horizon")
+        grants=[{"satellite":g["satellite"],"station":g["station"],
              "start_utc":g["start_utc"],"end_utc":g["end_utc"]}
-            for g in _rows(out/"adaptive_contact_schedule.csv")]
+            for g in _rows(grants_path or out/"adaptive_contact_schedule.csv")]
     # Use same stream requirements as adaptive_storage, rather than a second
     # contradictory hand-maintained telemetry file.
     from .telemetry_generation import calculate, apply_computed_rates
@@ -98,8 +103,8 @@ def run(output_dir=None, *, gross_bps=None, rf_scenario_path=None,
         for req in requests["requests"]])
     result={"status":"PRELIMINARY_SYNTHETIC_GEOMETRY_NOT_FLIGHT_VALIDATED",
             "epoch_utc":epoch.isoformat(),"scenario_end_utc":horizon_end.isoformat(),
-            "assumptions":{"contact_source":"2020 calendar-shifted visibility",
-                           "ground_allocations":"hypothetical adaptive scheduler",
+            "assumptions":{"contact_source":"external supplied visibility (provenance unverified)" if visibility_path else "2020 calendar-shifted visibility",
+                           "ground_allocations":"external supplied grants (not confirmed bookings)" if grants_path else "hypothetical adaptive scheduler",
                            "delivery":"perfect-reception fluid-bit simulation",
                            "gross_bps":rate,"overhead_fraction":overhead,
                            "setup":"already included by adaptive_storage"},
@@ -108,7 +113,7 @@ def run(output_dir=None, *, gross_bps=None, rf_scenario_path=None,
             "satellite_summary":per_sat}
     (out/"integrated_preliminary.json").write_text(json.dumps(result,indent=2,default=str)+"\n",encoding="utf-8")
     report=["# SELENA — integrated preliminary TT&C / OBDH",
-        "","**PRELIMINARY ONLY.** 2020 contacts calendar-shifted to 2030; no physical 2030 orbit propagation or confirmed DSN allocations.",
+        "","**PRELIMINARY ONLY.** Geometry and DSN grants require independent physical and operational verification.",
         "","## Assumptions",
         f"- Epoch: {epoch.isoformat()}; horizon end: {horizon_end.isoformat()}",
         f"- Gross downlink: {rate:,.0f} bps; protocol overhead: {overhead:.0%}.",

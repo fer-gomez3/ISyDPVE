@@ -73,3 +73,13 @@ across candidate antenna diameters. All numbers in
 `data/rf_trade_assumptions.json` are **illustrative placeholders**,
 not approved DSN G/T or selected hardware. The required Eb/N0 is a
 placeholder until modulation, coding and BER/FER are agreed.
+
+## Packetized transfer demonstrator
+
+`ttc.packet_transfer.PacketTransfer` splits application payloads into bounded
+fragments, schedules by deadline/priority, retransmits only unacknowledged
+fragments, accepts selective acknowledgments, releases a file only after all
+fragments are acknowledged, and checkpoints/restores state with SHA-256
+integrity checks. This is **not** CCSDS CFDP, flight software or a ground
+radio protocol. Its traffic is not yet coupled to the integrated fluid-bit
+deadline simulation, which must remain labeled as a separate idealized model.

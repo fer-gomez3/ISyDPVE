@@ -52,3 +52,24 @@ mass/power/pointing limits. Do not replace missing evidence with invented data.
 ```bash
 python -m unittest discover -s tests -v
 ```
+
+## Replacing illustrative visibility/grants
+
+`ttc.integrated_preliminary.run(visibility_path="path/to/2030_visibility.csv", grants_path="path/to/ground_grants.csv")`
+accepts explicit station/satellite UTC intervals with columns
+`satellite,station,start_utc,end_utc`. The pipeline validates interval
+coverage and station conflicts through the delivery planner. A supplied file
+is not proof of propagation or booking: retain source/provenance records.
+Both external inputs should be supplied together; otherwise synthetic
+baseline allocations can conflict with real geometry. The existing
+adaptive-storage baseline remains a separate illustrative scenario and must
+not be conflated with external-grant results.
+
+## RF/EPS/TCS sensitivity
+
+`python -m ttc.rf_trade_study` computes gain, beamwidth, pointing loss,
+required RF power, electrical DC load, dissipated heat and contact energy
+across candidate antenna diameters. All numbers in
+`data/rf_trade_assumptions.json` are **illustrative placeholders**,
+not approved DSN G/T or selected hardware. The required Eb/N0 is a
+placeholder until modulation, coding and BER/FER are agreed.

@@ -45,7 +45,7 @@ def run(output_dir=None, *, gross_bps=None, rf_scenario_path=None,
         for w in visibility:
             if not (epoch<=datetime.fromisoformat(w["start_utc"].replace("Z","+00:00"))<horizon_end):
                 raise ValueError("External visibility must match configured mission epoch/horizon")
-        grants=[{"satellite":g["satellite"],"station":g["station"],
+    grants=[{"satellite":g["satellite"],"station":g["station"],
              "start_utc":g["start_utc"],"end_utc":g["end_utc"]}
             for g in _rows(grants_path or out/"adaptive_contact_schedule.csv")]
     # Use same stream requirements as adaptive_storage, rather than a second

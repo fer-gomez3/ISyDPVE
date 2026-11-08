@@ -14,6 +14,7 @@ from .ground_delivery import simulate, size_rate
 from .ground_requests import propose
 from .ground_protocol_planner import plan as grant_plan
 from .link_budget import evaluate_link
+from .rf_trade_study import run as run_rf_trade
 
 def _rows(path):
     with Path(path).open(newline="",encoding="utf-8") as f:
@@ -79,6 +80,11 @@ def run(output_dir=None, *, gross_bps=None, rf_scenario_path=None,
     rf_inputs=json.loads(rf_path.read_text(encoding="utf-8"))
     rf_inputs["data_rate_bps"]=sizing["required_gross_bps"] if sizing["required_gross_bps"] is not None else rate
     rf=evaluate_link(rf_inputs)
+    # Explicitly illustrative RF/EPS/TCS sensitivities, not selected hardware.
+    rf_trade=run_rf_trade(config_path=ROOT/"data"/"rf_trade_assumptions.json",
+        rate_bps=sizing["required_gross_bps"] or rate,
+        contact_hours=sum((__import__("datetime").datetime.fromisoformat(g["end_utc"].replace("Z","+00:00"))-__import__("datetime").datetime.fromisoformat(g["start_utc"].replace("Z","+00:00"))).total_seconds() for g in effective_grants)/3600/max(1,len(effective_grants)),
+        output_dir=out)
     per_sat=[{"satellite":sat,"produced_mbit":round(v["produced_bits"]/1e6,3),
               "delivered_mbit":round(v["delivered_bits_assuming_perfect_link"]/1e6,3),
               "remaining_mbit":round(v["remaining_bits"]/1e6,3),
@@ -98,7 +104,7 @@ def run(output_dir=None, *, gross_bps=None, rf_scenario_path=None,
                            "gross_bps":rate,"overhead_fraction":overhead,
                            "setup":"already included by adaptive_storage"},
             "baseline":baseline,"requests":requests,"grants":grant_results,
-            "delivery":delivery,"required_rate":sizing,"rf_budget":rf,
+            "delivery":delivery,"required_rate":sizing,"rf_budget":rf,"rf_trade":rf_trade,
             "satellite_summary":per_sat}
     (out/"integrated_preliminary.json").write_text(json.dumps(result,indent=2,default=str)+"\n",encoding="utf-8")
     report=["# SELENA — integrated preliminary TT&C / OBDH",
@@ -113,6 +119,7 @@ def run(output_dir=None, *, gross_bps=None, rf_scenario_path=None,
         f"- All modeled deadlines met at baseline rate: **{delivery['all_deadlines_met']}**.",
         f"- Minimum modeled gross rate: **{sizing['required_gross_bps']} bps** ({sizing['status']}).",
         f"- RF link status: **{rf['status']}**. Missing inputs: {', '.join(rf.get('missing_inputs',[])) or 'none'}.",
+        "- RF antenna diameter/power/energy sensitivities: rf_trade_study.csv (illustrative inputs, not hardware selection).",
         "","| Satellite | Produced (Mbit) | Delivered (Mbit) | Remaining (Mbit) | Peak backlog (Mbit) | Deadline violations |",
         "|---|---:|---:|---:|---:|---|"]
     report += [f"| {x['satellite']} | {x['produced_mbit']} | {x['delivered_mbit']} | {x['remaining_mbit']} | {x['peak_memory_mbit']} | {x['deadline_violations'] or 'None'} |" for x in per_sat]

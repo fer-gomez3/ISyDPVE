@@ -112,7 +112,7 @@ def run(output_dir=None, *, gross_bps=None, rf_scenario_path=None,
         {k:v for k,v in req.items() if k!="candidate_windows"}|
         {"candidate_count":len(req["candidate_windows"])}
         for req in requests["requests"]])
-    result={"status":"PRELIMINARY_SYNTHETIC_GEOMETRY_NOT_FLIGHT_VALIDATED",
+    result={"status":"PRELIMINARY_EXTERNAL_GEOMETRY_UNVERIFIED" if visibility_path else "PRELIMINARY_SYNTHETIC_GEOMETRY_NOT_FLIGHT_VALIDATED",
             "epoch_utc":epoch.isoformat(),"scenario_end_utc":horizon_end.isoformat(),
             "assumptions":{"contact_source":"external supplied visibility (provenance unverified)" if visibility_path else "2020 calendar-shifted visibility",
                            "ground_allocations":"external supplied grants (not confirmed bookings)" if grants_path else "hypothetical adaptive scheduler",
@@ -128,7 +128,7 @@ def run(output_dir=None, *, gross_bps=None, rf_scenario_path=None,
         "","## Assumptions",
         f"- Epoch: {epoch.isoformat()}; horizon end: {horizon_end.isoformat()}",
         f"- Gross downlink: {rate:,.0f} bps; protocol overhead: {overhead:.0%}.",
-        "- Ground-grant inputs are hypothetical adaptive-storage allocations; setup already charged upstream.",
+        "- Ground-grant inputs are external unverified grants or hypothetical adaptive allocations; setup assumed already charged upstream.",
         "- Deadline check assumes perfect reception and constant mean telemetry generation.",
         "","## Results",
         f"- Ground contact requests: {len(requests['requests'])}; proposed slots: {len(effective_grants)}.",

@@ -56,7 +56,7 @@ def run(output_dir=None, *, gross_bps=None, rf_scenario_path=None,
         streams.append({"name":s.get("name",s.get("subsystem","unknown")),
             "rate_bps":float(s["mean_rate_bps"]),
             "priority":int(s.get("priority",3)),
-            "deadline_hours":float(s.get("max_age_hours",s.get("deadline_hours",24)))})
+            "deadline_hours":float(s["deadline_hours"])})
     if len({s["name"] for s in streams})!=len(streams):raise ValueError("Duplicate subsystem names in stream requirements")
     rate=float(gross_bps if gross_bps is not None else shared["downlink_gross_bps"])
     overhead=float(shared["protocol_overhead_fraction"])

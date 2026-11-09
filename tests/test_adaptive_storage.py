@@ -64,6 +64,16 @@ class AdaptiveStorageTests(unittest.TestCase):
                     self.assertFalse(a0<b1 and b0<a1,"Station/satellite double booking")
             for c in contacts:
                 self.assertGreaterEqual(float(c["downloaded_mbit"]),0)
+                # Full contact reservation includes 45+10+15 minutes overhead.
+                # At 204.8 kbps net and 5-minute steps, usable duration must
+                # match the recorded downlink upper bound (never exceed it).
+                duration=(datetime.fromisoformat(c["end_utc"].replace("Z","+00:00"))-
+                          datetime.fromisoformat(c["start_utc"].replace("Z","+00:00"))).total_seconds()
+                useful=max(0,duration-70*60)
+                self.assertLessEqual(float(c["downloaded_mbit"])*1e6,
+                                     useful*204800+10)
+            self.assertTrue(any(float(c["downloaded_mbit"])>0 for c in contacts),
+                            "No contact transferred any telemetry")
 
     def test_sizing_sweep(self):
         from ttc.memory_sizing import trade_study

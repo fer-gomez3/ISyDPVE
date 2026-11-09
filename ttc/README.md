@@ -53,3 +53,25 @@ do **not** present its charts as plots of the integrated schedule.
 Remaining engineering work: per-stream deadlines/priority, source-resolved
 telemetry, actual availability and acquisition, EPS/TCS closure, real antenna
 power cap, integrated plots, full test execution and PDF reconciliation.
+
+
+## Confirmed versus estimated telemetry in DSN pipeline
+
+The DSN pipeline now accepts `--telemetry-profile confirmed` (default) or
+`--telemetry-profile scenario`. Example:
+
+```bash
+python -m ttc.dsn_pipeline --telemetry-profile confirmed --output-dir outputs/dsn_confirmed
+python -m ttc.dsn_pipeline --telemetry-profile scenario --output-dir outputs/dsn_scenario
+python -m pytest -q tests/test_dsn_telemetry_profiles.py
+```
+
+`confirmed` uses only the documented 100+32 bps subtotal; unconfirmed
+subsystems are missing, **not zero**. `scenario` imports all seven
+channel-derived stream rates from the same inputs used by
+`integrated_preliminary`; the extra streams are explicitly assumptions.
+Both modes currently share the simpler DSN allocator and do not yet enforce
+per-stream deadlines or the detailed operational policy of
+`integrated_preliminary`. The scenario totals are not a replacement for
+subsystem-owner verification. The newly added regression tests have not
+been independently executed in this session.

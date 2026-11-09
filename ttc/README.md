@@ -75,3 +75,30 @@ per-stream deadlines or the detailed operational policy of
 `integrated_preliminary`. The scenario totals are not a replacement for
 subsystem-owner verification. The newly added regression tests have not
 been independently executed in this session.
+
+
+## DSN policy + deadline-aware integrated output (current development)
+
+Run:
+
+```bash
+python -m ttc.dsn_pipeline --telemetry-profile confirmed --output-dir outputs/dsn_confirmed
+python -m ttc.dsn_pipeline --telemetry-profile scenario --output-dir outputs/dsn_scenario
+python -m pytest -q tests/test_operational_interfaces.py tests/test_dsn_telemetry_profiles.py
+```
+
+The pipeline uses `data/dsn_operational_policy.json` to deduct acquisition,
+preparation and teardown from candidate contacts. Its `deadline_results`
+simulates per-stream delivery ages and priority for either the documented
+132 bps subtotal or seven-stream assumed scenario. Per-satellite `*_obdh.png`
+plots show buffer, cumulative downlink and TX activity, alongside CSV data.
+`report_comparison.csv` compares report inputs to modeled values and
+marks unclosed mass/power interfaces. `electrical_thermal` is reported
+per satellite; electrical and thermal totals remain **null** until the
+required independent component power draws and radiated RF power are known.
+
+**Limits:** heuristic station assignment is not deadline-optimized;
+availability is hypothetical; 2020 geometric windows are not 2030 ephemerides.
+No spacecraft flight EPS/TCS closure or DSN bookings are claimed. A
+passing unit test does not resolve missing source inputs. New commits must
+pass GitHub Actions before being called validated.

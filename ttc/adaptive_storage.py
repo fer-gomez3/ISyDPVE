@@ -122,7 +122,8 @@ def plan(config_path=None, output_dir=None):
         just_finished_satellites=set()
         # Advance ongoing contacts. Station and satellite resources stay locked.
         for sat, link in list(active_links.items()):
-            link["remaining"] -= 1
+            # Evaluate this reserved slot before decrementing the counter.
+            # The old order dropped one usable TX slot per contact.
             if link["setup"] > 0:
                 link["setup"] -= 1
             elif link["remaining"] <= teardown_steps:
@@ -146,6 +147,7 @@ def plan(config_path=None, output_dir=None):
                     budget-=bits
                     if budget <= 0: break
                 if budget < effective * dt: last_downlink[sat]=t+timedelta(seconds=dt)
+            link["remaining"] -= 1
             if link["remaining"] <= 0:
                 schedule.append({"satellite":sat,"station":link["station"],
                                  "start_utc":iso(link["start"]),"end_utc":iso(t+timedelta(seconds=dt)),

@@ -88,7 +88,10 @@ def run(config_path=None, output_path=None):
         # TX electrical load includes its own radio electronics; do not duplicate.
         powers["tx_dc_w"] = match["tx_dc_w"]
     power = power_modes(powers, config.get("mode_hours_per_day", {}))
+    from .antenna_sizing import minimum_diameter
+    sizing = minimum_diameter(rf, config["downlink_gross_bps"], config.get("max_tx_rf_w"))
     result = {"status": "PRELIMINARY_NOT_FLIGHT_VALIDATED", "antenna": opts,
+              "minimum_required_antenna": sizing,
               "selected_diameter_cm": None if selected is None else selected * 100,
               "communications_power": power,
               "lunar_uplink": {"status": "NOT_IN_DOCUMENTED_CDH_SCOPE", "note": "Surface PNT reception is a Payload service; lunar-to-orbit relay is not a confirmed requirement."},

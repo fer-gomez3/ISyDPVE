@@ -35,3 +35,21 @@ dependencies; adding tests is not equivalent to passing them.
 Known remaining limitations: final DSN grants, antenna conflicts and acquisition,
 per-stream deadlines, missing telemetry rates, actual EPS/TCS hardware draws,
 and flight-qualified X/Ka link inputs. Do not label the pipeline flight-validated.
+
+
+## Integrated preliminary DSN-to-OBDH workflow
+
+Run `python -m ttc.dsn_pipeline --downlink-bps 256000 --overhead 0.2 --minimum-contact-seconds 300`.
+This writes `outputs/dsn_pipeline/candidate_schedule.csv`, `summary.json`,
+and one `*_obdh.csv` per spacecraft. The allocation is a deterministic
+earliest-end heuristic, not a globally optimized DSN booking. Its optional
+station availability is an input scenario, not measured DSN availability.
+The 24h gap check applies to the supplied analysis horizon only; a compliant
+historical window does not establish compliance for the 2030 mission.
+For visualizations run `python -m ttc.obdh_report` (which currently uses
+the older candidate schedule, not the new allocator). Until unified,
+do **not** present its charts as plots of the integrated schedule.
+
+Remaining engineering work: per-stream deadlines/priority, source-resolved
+telemetry, actual availability and acquisition, EPS/TCS closure, real antenna
+power cap, integrated plots, full test execution and PDF reconciliation.

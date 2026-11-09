@@ -66,18 +66,38 @@ def run(output_dir=None, *, gross_bps=None, rf_scenario_path=None,
     if len({s["name"] for s in streams})!=len(streams):raise ValueError("Duplicate subsystem names in stream requirements")
     rate=float(gross_bps if gross_bps is not None else shared["downlink_gross_bps"])
     overhead=float(shared["protocol_overhead_fraction"])
-    # Adaptive-storage has already charged station setup, acquisition and
-    # teardown. Do not double-subtract it from its exported grants.
+    # The exported grants are FULL contact reservations, not TX-only slots.
+    # Setup, acquisition and teardown are deducted exactly once.
+    from datetime import timedelta
+    policy=json.loads((ROOT/"data"/"dsn_operational_policy.json").read_text(encoding="utf-8"))
+    pass_type=cfg.get("dsn_pass_type",policy["default_pass_type"])
+    setup_key={"standard_ttc":"standard_ttc_setup_minutes",
+               "ranging":"ranging_setup_minutes",
+               "downlink_only":"downlink_setup_minutes",
+               "uplink_downlink":"uplink_downlink_setup_minutes"}[pass_type]
+    preparation_minutes=float(policy[setup_key])+float(policy["acquisition_minutes"])
+    teardown_minutes=float(policy["teardown_minutes"])
+    total_overhead_minutes=preparation_minutes+teardown_minutes
     effective_grants=[g for g in grants if g["end_utc"]>g["start_utc"]]
+    usable_grants=[]
+    for g in effective_grants:
+        start=datetime.fromisoformat(g["start_utc"].replace("Z","+00:00"))
+        finish=datetime.fromisoformat(g["end_utc"].replace("Z","+00:00"))
+        tx_start=start+timedelta(minutes=preparation_minutes)
+        tx_end=finish-timedelta(minutes=teardown_minutes)
+        if tx_end>tx_start:
+            usable_grants.append({**g,"start_utc":tx_start.isoformat(),
+                "end_utc":tx_end.isoformat()})
     requests=propose(streams,visibility,gross_bps=rate,overhead=overhead,
-        setup_minutes=0,utilization=1,start_utc=epoch.isoformat(),
+        setup_minutes=total_overhead_minutes,utilization=1,start_utc=epoch.isoformat(),
         end_utc=horizon_end.isoformat())
     grant_results=grant_plan(streams,visibility,effective_grants,
-        utilization=1,overhead=overhead,setup_minutes=0,design_margin=0.2,epoch=epoch.isoformat())
-    delivery=simulate(streams,visibility,effective_grants,gross_bps=rate,
+        utilization=1,overhead=overhead,setup_minutes=total_overhead_minutes,
+        design_margin=0.2,epoch=epoch.isoformat())
+    delivery=simulate(streams,visibility,usable_grants,gross_bps=rate,
         overhead=overhead,utilization=1,setup_minutes=0,step_seconds=step_seconds,
         start_utc=epoch.isoformat(),end_utc=horizon_end.isoformat())
-    sizing=size_rate(streams,visibility,effective_grants,overhead=overhead,
+    sizing=size_rate(streams,visibility,usable_grants,overhead=overhead,
         utilization=1,setup_minutes=0,step_seconds=step_seconds,
         max_bps=max(rate*100,10000000),tolerance_bps=10,
         start_utc=epoch.isoformat(),end_utc=horizon_end.isoformat())
@@ -118,7 +138,7 @@ def run(output_dir=None, *, gross_bps=None, rf_scenario_path=None,
                            "ground_allocations":"external supplied grants (not confirmed bookings)" if grants_path else "hypothetical adaptive scheduler",
                            "delivery":"perfect-reception fluid-bit simulation",
                            "gross_bps":rate,"overhead_fraction":overhead,
-                           "setup":"already included by adaptive_storage"},
+                           "setup":"full contact grants converted once to useful TX intervals","preparation_minutes":preparation_minutes,"teardown_minutes":teardown_minutes},
             "baseline":baseline,"requests":requests,"grants":grant_results,
             "delivery":delivery,"required_rate":sizing,"rf_budget":rf,"rf_trade":rf_trade,
             "satellite_summary":per_sat,"station_summary":station_summary}
@@ -128,7 +148,7 @@ def run(output_dir=None, *, gross_bps=None, rf_scenario_path=None,
         "","## Assumptions",
         f"- Epoch: {epoch.isoformat()}; horizon end: {horizon_end.isoformat()}",
         f"- Gross downlink: {rate:,.0f} bps; protocol overhead: {overhead:.0%}.",
-        "- Ground-grant inputs are external unverified grants or hypothetical adaptive allocations; setup assumed already charged upstream.",
+        f"- Ground-grant inputs are unverified; preparation {preparation_minutes:g} min and teardown {teardown_minutes:g} min excluded from TX.",
         "- Deadline check assumes perfect reception and constant mean telemetry generation.",
         "","## Results",
         f"- Ground contact requests: {len(requests['requests'])}; proposed slots: {len(effective_grants)}.",

@@ -4,6 +4,7 @@ Run: python -m ttc.dsn_pipeline --downlink-bps 256000
 No DSN bookings or unknown telemetry rates are fabricated.
 """
 import argparse,csv,json
+from datetime import timedelta
 from pathlib import Path
 from .contact_analysis import load_contacts,write_csv
 from .dsn_allocator import allocate,verify_contacts
@@ -11,18 +12,24 @@ from .engineering_calculations import calculate
 from .obdh_timeline import timeline
 from .telemetry_generation import calculate as calculate_channels, apply_computed_rates
 from .transfer_planning import stream_requirements
+from .operational_interfaces import policy_seconds,usable_contacts,electrical_thermal
+from .ground_delivery import simulate as simulate_deadlines
 
 ROOT=Path(__file__).resolve().parents[1]
 DEFAULT_CONTACTS=str(ROOT/"data"/"contacts_master.csv")
 
 def run(contacts_path=DEFAULT_CONTACTS,output_dir="outputs/dsn_pipeline",
         downlink_bps=256000,overhead=0.2,minimum_contact_seconds=300,
-        setup_seconds=0,availability=None,telemetry_profile="confirmed"):
+        setup_seconds=0,availability=None,telemetry_profile="confirmed",pass_type=None,make_plots=True):
     contacts=load_contacts(contacts_path)
     if not contacts:
         raise ValueError("No input windows")
     start=min(c["start"] for c in contacts);end=max(c["end"] for c in contacts)
-    schedule=allocate(contacts,availability,minimum_contact_seconds,setup_seconds)
+    policy=policy_seconds(pass_type)
+    prep=policy["preparation_seconds"] if setup_seconds==0 else setup_seconds
+    teardown=policy["teardown_seconds"]
+    schedule=allocate(contacts,availability,max(minimum_contact_seconds,prep+teardown+1),0)
+    useful=usable_contacts(schedule,prep,teardown)
     sats=sorted({c["satellite"] for c in contacts})
     rates=calculate()
     known=sum(x["rate_bps"] for x in rates["telemetry"] if x["rate_bps"] is not None)
@@ -41,6 +48,21 @@ def run(contacts_path=DEFAULT_CONTACTS,output_dir="outputs/dsn_pipeline",
         if missing:
             raise ValueError("Missing scenario rates: "+", ".join(missing))
         known=sum(float(x["mean_rate_bps"]) for x in scenario_streams)
+    if scenario_streams is None:
+        streams=[{"name":x["subsystem"],"rate_bps":x["rate_bps"],"priority":3,"deadline_hours":24.}
+                 for x in rates["telemetry"] if x["rate_bps"] is not None]
+    else:
+        streams=[{"name":x["name"],"rate_bps":float(x["mean_rate_bps"]),
+                  "priority":int(x["priority"]),"deadline_hours":float(x["deadline_hours"])}
+                 for x in scenario_streams]
+    visibility=[{"satellite":c["satellite"],"station":c["station"],
+                 "start_utc":c["start"].isoformat(),"end_utc":c["end"].isoformat()} for c in contacts]
+    grants=[{"satellite":c["satellite"],"station":c["station"],
+             "start_utc":c["start"].isoformat(),"end_utc":c["end"].isoformat()} for c in useful]
+    deadline_results=simulate_deadlines(streams,visibility,grants,gross_bps=downlink_bps,
+        overhead=overhead,setup_minutes=0,start_utc=start.isoformat(),end_utc=end.isoformat())
+    cfg=json.loads((ROOT/"data"/"communications_budget_inputs.json").read_text(encoding="utf-8"))
+    powers=cfg["component_powers_w"]
     out=Path(output_dir);out.mkdir(parents=True,exist_ok=True)
     write_csv(out/"candidate_schedule.csv",schedule)
     result={"status":"PRELIMINARY_NOT_DSN_BOOKED","source":str(contacts_path),
@@ -49,20 +71,45 @@ def run(contacts_path=DEFAULT_CONTACTS,output_dir="outputs/dsn_pipeline",
         "scenario_warning":"ASSUMED_RATES_NOT_CONFIRMED" if scenario_streams is not None else None,
         "missing_rates":rates["missing_rates"],
         "scenario_downlink_gross_bps":downlink_bps,"overhead_fraction":overhead,
-        "setup_seconds_per_contact":setup_seconds,
+        "setup_seconds_per_contact":prep,"teardown_seconds_per_contact":teardown,
+        "operational_policy":policy,"deadline_results":deadline_results,
         "contact_gaps":verify_contacts(schedule,sats,start,end),
         "satellites":{}}
     for sat in sats:
         assigned=[c for c in schedule if c["satellite"]==sat]
         # Setup time is excluded from transmission by shifting the beginning.
-        useful=[{**c,"start":c["start"]+__import__("datetime").timedelta(seconds=setup_seconds)}
-                for c in assigned if c["usable_seconds"]>0]
-        t=timeline(useful,start,end,known,downlink_bps,overhead)
+        sat_useful=[c for c in useful if c["satellite"]==sat]
+        t=timeline(sat_useful,start,end,known,downlink_bps,overhead)
+        t["electrical_thermal"]=electrical_thermal(sat_useful,start,end,powers,rf_power_w=None)
         with (out/f"{sat}_obdh.csv").open("w",newline="",encoding="utf-8") as f:
             w=csv.DictWriter(f,fieldnames=list(t["rows"][0]))
             w.writeheader();w.writerows(t["rows"])
         result["satellites"][sat]={k:v for k,v in t.items() if k!="rows"}
-    (out/"summary.json").write_text(json.dumps(result,indent=2)+"\n",encoding="utf-8")
+    if make_plots:
+        try:
+            import matplotlib
+            matplotlib.use("Agg")
+            import matplotlib.pyplot as plt
+        except ImportError:
+            result["plot_status"]="MATPLOTLIB_NOT_INSTALLED"
+        else:
+            from datetime import datetime
+            for sat in sats:
+                with (out/f"{sat}_obdh.csv").open(newline="",encoding="utf-8") as f:
+                    rows=list(csv.DictReader(f))
+                times=[datetime.fromisoformat(x["time_utc"]) for x in rows]
+                fig,axes=plt.subplots(3,1,figsize=(11,8),sharex=True)
+                axes[0].plot(times,[float(x["buffer_mbit"]) for x in rows])
+                axes[0].set_ylabel("Buffer (Mbit)")
+                axes[1].plot(times,[float(x["downlinked_cumulative_mbit"]) for x in rows])
+                axes[1].set_ylabel("Downlinked (Mbit)")
+                axes[2].step(times,[int(x["contact_active"]=="True") for x in rows],where="post")
+                axes[2].set_ylabel("TX active");axes[2].set_xlabel("UTC")
+                fig.suptitle(f"SELENA {sat} — preliminary allocated DSN scenario")
+                fig.autofmt_xdate();fig.tight_layout()
+                fig.savefig(out/f"{sat}_obdh.png",dpi=140);plt.close(fig)
+            result["plot_status"]="GENERATED"
+    (out/"summary.json").write_text(json.dumps(result,indent=2,default=str)+"\n",encoding="utf-8")
     return result
 
 if __name__=="__main__":
@@ -73,7 +120,8 @@ if __name__=="__main__":
     p.add_argument("--overhead",type=float,default=0.2)
     p.add_argument("--minimum-contact-seconds",type=float,default=300)
     p.add_argument("--setup-seconds",type=float,default=0)
+    p.add_argument("--pass-type",choices=["standard_ttc","ranging","downlink_only","uplink_downlink"])
     p.add_argument("--telemetry-profile",choices=["confirmed","scenario"],default="confirmed")
     a=p.parse_args()
     print(json.dumps(run(a.contacts,a.output_dir,a.downlink_bps,a.overhead,
-                         a.minimum_contact_seconds,a.setup_seconds,telemetry_profile=a.telemetry_profile),indent=2))
+                         a.minimum_contact_seconds,a.setup_seconds,telemetry_profile=a.telemetry_profile,pass_type=a.pass_type),indent=2))

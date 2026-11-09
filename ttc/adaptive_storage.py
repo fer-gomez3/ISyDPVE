@@ -141,7 +141,7 @@ def plan(config_path=None, output_dir=None):
                         queue[0][1]-=consumed
                         remaining_to_remove-=consumed
                         if queue[0][1]<=1e-7: queue.pop(0)
-                    if bits>0: last_served_tier[sat][s["priority"]]=t+timedelta(seconds=dt)
+                    if bits>0 and backlog[sat][name]<=1e-7: last_served_tier[sat][s["priority"]]=t+timedelta(seconds=dt)
                     sent[(sat,name)]+=bits
                     link["sent_bits"]+=bits
                     budget-=bits

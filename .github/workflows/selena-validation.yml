@@ -1,0 +1,30 @@
+name: SELENA Python validation
+on:
+  push:
+    branches: [feature/ttc-initial-structure]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install test dependencies
+        run: python -m pip install pytest numpy matplotlib astropy
+      - name: Compile Python modules
+        run: python -m compileall -q ttc tests
+      - name: Run tests
+        run: python -m pytest -q tests
+      - name: Generate DSN-to-OBDH sample
+        run: python -m ttc.dsn_pipeline --downlink-bps 256000
+      - name: Upload analysis artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: selena-dsn-validation
+          path: outputs/dsn_pipeline/
+          if-no-files-found: ignore

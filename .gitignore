@@ -6,3 +6,6 @@ __pycache__/
 outputs/*.xlsx
 outputs/*.csv
 !outputs/.gitkeep
+outputs/dsn_pipeline/
+outputs/obdh/
+outputs/pytest-junit.xml

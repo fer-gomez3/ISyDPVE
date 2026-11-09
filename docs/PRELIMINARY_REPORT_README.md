@@ -83,3 +83,26 @@ fragments are acknowledged, and checkpoints/restores state with SHA-256
 integrity checks. This is **not** CCSDS CFDP, flight software or a ground
 radio protocol. Its traffic is not yet coupled to the integrated fluid-bit
 deadline simulation, which must remain labeled as a separate idealized model.
+
+## 2026-11-09 contact accounting correction
+
+- The adaptive scheduler now evaluates a reserved time slot **before**
+  decrementing its remaining-slot counter. This fixes a lost transmission
+  slot at the setup/teardown boundary.
+- Its reported grants remain **full reservations**, not transmit-only windows.
+  The integrated report now subtracts setup + acquisition at the beginning
+  and teardown at the end **exactly once** before running deadline/rate
+  simulation. The baseline standard TT&C scenario assumes 45 + 10 + 15
+  minutes, based on the unverified user-supplied policy file.
+- The older shared 15-minute setup is retained as a **legacy sensitivity
+  assumption**, not the standard TT&C operational policy. Do not combine
+  it with the detailed policy or subtract it again.
+- AOCS is priority 5 / max age 6 h in both planning configurations.
+- Ground **requests**, full **grants**, and **usable transmission windows**
+  are separate counts; they must not be compared as equivalent contacts.
+- Priority service bookkeeping no longer declares a stream served while
+  it still has pending backlog.
+- The nominal 100/32 bps streams remain preliminary aggregate rates; the
+  optional 12 bps ChatGPT filler must not be treated as measured telemetry.
+- No geometry, DSN allocation or coding/receiver parameters have been
+  externally verified. The report may legitimately remain infeasible.

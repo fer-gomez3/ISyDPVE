@@ -4,7 +4,7 @@ Updated 2026-11-09. **Do not check an item until its calculation, provenance, an
 
 ## 1. Overview and requirements
 - [x] Audit current telemetry, scheduling, link and RF-trade modules (initial code audit).
-- [ ] Recover approved Payload antenna mass allocation and original antenna configuration from source report; compare against alternatives.
+- [ ] Recover existing antenna diameter/configuration from Payload report; **mass and hardware selection are handled by user**.
 - [ ] Establish authoritative inputs and provenance; remove contradictions between legacy 15-min setup and 70-min full-contact overhead.
 - [ ] Verify station G/T, coding, frequency, losses, antenna efficiency and receiver requirements.
 
@@ -16,29 +16,29 @@ Updated 2026-11-09. **Do not check an item until its calculation, provenance, an
 - [ ] Replace 2020 calendar-shifted contact windows with propagated 2030 visibility and separately verified station allocations.
 - [ ] Validate protocol overhead, error/retransmission behavior and packet-level transfer assumptions.
 
-## 3. Antenna sizing and mass
-- [x] Research initial existing X-band space antenna examples and collect manufacturer specifications (initial sample only).
+## 3. Antenna diameter sizing (NO mass prediction)
+- [x] Initial research on existing antennas (reference only; user will select mass/hardware).
 - [ ] Build traceable same-technology diameter/area–mass dataset; separate patch arrays from reflectors.
 - [ ] Fit/compare m(D)=a D^b and areal-density model with uncertainty, holdout checks, and no unsupported extrapolation.
 - [ ] Add feed, mount, two-axis gimbal, cabling and mechanism mass; avoid double-counting structure.
-- [ ] Compute Earth and lunar link budgets across antenna options and required rate, including beamwidth and pointing.
-- [ ] Select a candidate only after comparing total antenna-assembly mass with Payload allocation.
+- [x] Implement Earth link diameter-grid sensitivity (illustrative assumptions; not validated).\n- [ ] Verify Earth and lunar link budgets across antenna options and required rate, including beamwidth and pointing.
+- [ ] Recommend a diameter based on link closure and available RF power; user maps diameter to actual antenna hardware/mass.
 
 ## 4. Communications electrical budget
 - [ ] TX RF, PA efficiency, electronics, standby and thermal dissipation.
 - [ ] Lunar RF receiver, LNA, demodulation and interface power.
 - [ ] OBDH communication-attributable processing/memory power without double-counting.
 - [ ] Two-axis pointing: acquisition/slew, tracking and idle power with duty cycles.
-- [ ] Modes: OFF, standby, lunar RX, Earth TX, pointing, simultaneous RX+TX.
+- [x] Implement mode accounting for OFF, standby, lunar RX, Earth TX, slew and simultaneous RX+TX (incomplete hardware inputs remain null).\n- [ ] Validate component powers and duty-cycle modes with owners.
 - [ ] Peak/average W, energy Wh/contact and Wh/day, per spacecraft and constellation, with margins.
 
 ## 5. Verification and deliverables
 - [ ] Integrate common inputs and outputs into one reproducible pipeline.
-- [ ] Unit tests: zero traffic, no contact, loss of visibility, no RF closure, high duty cycle, simultaneous mode and accounting conservation.
+- [x] Add initial mode accounting and RF-grid unit tests (CI result to verify).\n- [ ] Expand tests: zero traffic, no contact, loss of visibility, no RF closure, high duty cycle and conservation.
 - [ ] Sensitivity sweeps: 15/30/45 cm, G/T, bit rate, pointing error, efficiency, mass assumptions, ground hours.
 - [ ] Independent hand calculations and numerical cross-checks.
-- [ ] Payload interface: selected diameter, mass breakdown and uncertainty.
-- [ ] EPS interface: W by mode, W peak/mean, Wh/day and uncertainty.
+- [ ] Payload interface: recommended diameter, RF performance, pointing and assumptions; user selects hardware/mass.
+- [ ] EPS interface: W by mode, W peak/mean, Wh/day and uncertainty (currently null until owner inputs).
 - [ ] PDR communications chapter with plots, sources, constraints and unresolved requirements.
 
 ## Initial sourced antenna references (NOT interchangeable mass-vs-diameter calibration points)
@@ -64,3 +64,4 @@ Updated 2026-11-09. **Do not check an item until its calculation, provenance, an
 3. Run nominal and corner-case tests; check physical units and energy conservation.
 4. Compare against independent calculation and source specification.
 5. Record outputs, unresolved assumptions, and update checkboxes only when verified.
+\n## Implementation iteration 1 — 2026-11-09\n- Added `ttc/communications_budget.py`: RF diameter sweep with link requirements and optional RF power cap; explicit missing-data status. No antenna mass model.\n- Added `data/communications_budget_inputs.json`: 15/30/45 cm; current 30 cm; illustrative Earth downlink RF values; RX/OBDH/gimbal power inputs null.\n- Added `tests/test_communications_budget.py`: power accounting, missing-data propagation, monotonic diameter sensitivity and simultaneous-mode shared-load check.\n- Run: `python -m unittest discover -s tests -v` and `python -m ttc.communications_budget`.\n- **Unresolved:** rover link RF, component power specs, duty cycle, 2030 physical geometry, station allocation and final diameter selection.\n

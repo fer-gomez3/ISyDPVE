@@ -38,13 +38,13 @@
     },
     {
       "name": "aocs_nominal_hk",
-      "priority": 4,
+      "priority": 5,
       "mode": "continuous",
       "rate_bps": null,
       "bytes_per_event": null,
       "event_interval_hours": null,
-      "max_age_hours": null,
-      "source": "TBD by subsystem"
+      "max_age_hours": 6,
+      "source": "Preliminary 5/6h operational policy aligned with telemetry_detailed_scenario.json; rate TBD by subsystem"
     },
     {
       "name": "eps_hk",

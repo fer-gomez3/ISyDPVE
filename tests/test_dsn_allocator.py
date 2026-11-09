@@ -13,7 +13,16 @@ class TestDSNAllocator(unittest.TestCase):
               self.contact("S2","Madrid",0,600),
               self.contact("S1","Goldstone",0,600)]
         out=allocate(rows)
-        self.assertEqual(len(out),1)
+        # One antenna per station and one link per spacecraft: S1 takes
+        # Goldstone (earliest-end tie-break), so Madrid is free for S2 and the
+        # S1/Madrid candidate is dropped. Two contacts, never overlapping.
+        self.assertEqual({(c["satellite"],c["station"]) for c in out},
+                         {("S1","Goldstone"),("S2","Madrid")})
+        for key in ("station","satellite"):
+            for name in {c[key] for c in out}:
+                rows_k=sorted((c for c in out if c[key]==name),key=lambda c:c["start"])
+                for a,b in zip(rows_k,rows_k[1:]):
+                    self.assertLessEqual(a["end"],b["start"])
     def test_availability_clips_contact(self):
         rows=[self.contact("S1","Madrid",0,1200)]
         a=self.t+timedelta(seconds=300)

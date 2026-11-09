@@ -18,6 +18,13 @@ class CommunicationsBudgetTests(unittest.TestCase):
         self.assertAlmostEqual(r["average_w_over_24h"], 64/24)
         self.assertEqual(r["peak_w_in_scheduled_modes"], 21)
 
+    def test_partial_day_never_claims_daily_average(self):
+        p = dict(standby_w=2, tx_dc_w=8, memory_interface_w=1, gimbal_tracking_w=1)
+        r = power_modes(p, {"earth_tx": 1})
+        self.assertEqual(r["unallocated_hours"], 23)
+        self.assertIsNone(r["energy_wh_per_day"])
+        self.assertEqual(r["status"], "INCOMPLETE_DAILY_SCHEDULE")
+
     def test_invalid_durations(self):
         with self.assertRaises(ValueError):
             power_modes({}, {"standby": 25})

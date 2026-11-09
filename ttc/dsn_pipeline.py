@@ -10,7 +10,10 @@ from .dsn_allocator import allocate,verify_contacts
 from .engineering_calculations import calculate
 from .obdh_timeline import timeline
 
-def run(contacts_path="data/contacts_master.csv",output_dir="outputs/dsn_pipeline",
+ROOT=Path(__file__).resolve().parents[1]
+DEFAULT_CONTACTS=str(ROOT/"data"/"contacts_master.csv")
+
+def run(contacts_path=DEFAULT_CONTACTS,output_dir="outputs/dsn_pipeline",
         downlink_bps=256000,overhead=0.2,minimum_contact_seconds=300,
         setup_seconds=0,availability=None):
     contacts=load_contacts(contacts_path)
@@ -44,7 +47,7 @@ def run(contacts_path="data/contacts_master.csv",output_dir="outputs/dsn_pipelin
 
 if __name__=="__main__":
     p=argparse.ArgumentParser()
-    p.add_argument("--contacts",default="data/contacts_master.csv")
+    p.add_argument("--contacts",default=DEFAULT_CONTACTS)
     p.add_argument("--output-dir",default="outputs/dsn_pipeline")
     p.add_argument("--downlink-bps",type=float,default=256000)
     p.add_argument("--overhead",type=float,default=0.2)

@@ -11,7 +11,10 @@ from .contact_analysis import load_contacts,candidate_schedule,dt
 from .engineering_calculations import calculate
 from .obdh_timeline import timeline
 
-def run(contacts_path="data/contacts_master.csv",output_dir="outputs/obdh",
+ROOT=Path(__file__).resolve().parents[1]
+DEFAULT_CONTACTS=str(ROOT/"data"/"contacts_master.csv")
+
+def run(contacts_path=DEFAULT_CONTACTS,output_dir="outputs/obdh",
         downlink_bps=256000,overhead=0.2,step_seconds=60):
     contacts=load_contacts(contacts_path)
     if not contacts:
@@ -55,7 +58,7 @@ def run(contacts_path="data/contacts_master.csv",output_dir="outputs/obdh",
 
 if __name__=="__main__":
     parser=argparse.ArgumentParser()
-    parser.add_argument("--contacts",default="data/contacts_master.csv")
+    parser.add_argument("--contacts",default=DEFAULT_CONTACTS)
     parser.add_argument("--output-dir",default="outputs/obdh")
     parser.add_argument("--downlink-bps",type=float,default=256000)
     parser.add_argument("--overhead",type=float,default=0.2)

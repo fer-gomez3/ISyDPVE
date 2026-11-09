@@ -1,0 +1,41 @@
+{
+  "description": "Communications-only preliminary power and antenna diameter; null is unknown, not zero. Do not infer antenna mass.",
+  "downlink_gross_bps": 256000,
+  "diameters_m": [
+    0.15,
+    0.3,
+    0.45
+  ],
+  "selected_diameter_m": 0.3,
+  "max_tx_rf_w": null,
+  "earth_downlink": {
+    "frequency_hz": 8400000000,
+    "distance_km": 405000,
+    "tx_efficiency": 0.55,
+    "pointing_error_deg": 0.15,
+    "rx_gt_db_per_k": 45,
+    "required_ebn0_db": 6,
+    "losses_db": 4,
+    "margin_db": 3,
+    "pa_efficiency": 0.35,
+    "electronics_w": 8,
+    "provenance": "Illustrative sensitivity from rf_trade_assumptions.json, NOT flight-validated"
+  },
+  "component_powers_w": {
+    "standby_w": null,
+    "lunar_receiver_w": null,
+    "lunar_processing_w": null,
+    "memory_interface_w": null,
+    "gimbal_tracking_w": null,
+    "gimbal_slew_w": null,
+    "tx_dc_w": null
+  },
+  "mode_hours_per_day": {
+    "standby": 0,
+    "lunar_rx": 0,
+    "earth_tx": 1,
+    "simultaneous": 0,
+    "slew_acquisition": 0
+  },
+  "notes": "Durations are illustrative, no full 24h duty-cycle coverage; total energy is unknown until all active mode powers are sourced. Mode component powers must be incremental non-overlapping loads."
+}

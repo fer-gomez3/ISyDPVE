@@ -40,13 +40,15 @@ def power_modes(powers, durations_hours=None):
         hours = float(durations_hours.get(mode, 0))
         result[mode] = {"power_w": watts, "missing_inputs": missing,
                         "duration_hours": hours, "energy_wh": None if watts is None else watts * hours}
+    scheduled_hours = sum(v["duration_hours"] for v in result.values())
+    unallocated_hours = max(0.0, 24.0 - scheduled_hours)
     active = [v for v in result.values() if v["duration_hours"] > 0]
-    total_energy = None if any(v["energy_wh"] is None for v in active) else sum(v["energy_wh"] for v in active)
+    total_energy = None if unallocated_hours > 1e-9 or any(v["energy_wh"] is None for v in active) else sum(v["energy_wh"] for v in active)
     peak = None if any(v["power_w"] is None for v in active) else max((v["power_w"] for v in active), default=0)
-    return {"modes": result, "energy_wh_per_day": total_energy,
+    return {"modes": result, "scheduled_hours": scheduled_hours, "unallocated_hours": unallocated_hours, "energy_wh_per_day": total_energy,
             "average_w_over_24h": None if total_energy is None else total_energy / 24,
             "peak_w_in_scheduled_modes": peak,
-            "status": "INCOMPLETE_POWER_INPUTS" if any(v["missing_inputs"] for v in active) else "CALCULATED_FROM_INPUTS"}
+            "status": "INCOMPLETE_DAILY_SCHEDULE" if unallocated_hours > 1e-9 else ("INCOMPLETE_POWER_INPUTS" if any(v["missing_inputs"] for v in active) else "CALCULATED_FROM_INPUTS")}
 
 def antenna_options(rf, rate_bps, diameters_m, max_tx_rf_w=None):
     if rate_bps <= 0 or not math.isfinite(rate_bps):
@@ -89,7 +91,8 @@ def run(config_path=None, output_path=None):
     result = {"status": "PRELIMINARY_NOT_FLIGHT_VALIDATED", "antenna": opts,
               "selected_diameter_cm": None if selected is None else selected * 100,
               "communications_power": power,
-              "lunar_uplink": {"status": "NOT_SIZED_MISSING_ROVER_LINK_PARAMETERS"},
+              "lunar_uplink": {"status": "NOT_IN_DOCUMENTED_CDH_SCOPE", "note": "Surface PNT reception is a Payload service; lunar-to-orbit relay is not a confirmed requirement."},
+              "report_interfaces": config.get("report_interfaces"),
               "scope": "Communications power only, no spacecraft EPS generation or antenna mass"}
     if output_path:
         out = Path(output_path); out.parent.mkdir(parents=True, exist_ok=True)

@@ -85,6 +85,31 @@ def run(contacts_path=DEFAULT_CONTACTS,output_dir="outputs/dsn_pipeline",
             w=csv.DictWriter(f,fieldnames=list(t["rows"][0]))
             w.writeheader();w.writerows(t["rows"])
         result["satellites"][sat]={k:v for k,v in t.items() if k!="rows"}
+    # Traceability against report-confirmed telemetry and hardware interfaces.
+    comparison=[
+        {"parameter":"Payload housekeeping","report_value":100.0,
+         "calculated_value":next((x["rate_bps"] for x in streams if x["name"]=="payload_housekeeping"),None),
+         "unit":"bps","status":"DOCUMENTED_AGGREGATE_OR_SCENARIO","note":"PDF rate; itemised channel inventory incomplete"},
+        {"parameter":"Structures housekeeping","report_value":32.0,
+         "calculated_value":next((x["rate_bps"] for x in streams if x["name"]=="structures_mechanisms"),None),
+         "unit":"bps","status":"DOCUMENTED_AGGREGATE_OR_SCENARIO","note":"PDF rate; itemised channel inventory incomplete"},
+        {"parameter":"TT&C + OBDH mass allocation","report_value":11.4,
+         "calculated_value":None,"unit":"kg","status":"MISSING_HARDWARE_MASSES",
+         "note":"No component mass estimate or antenna mass fabricated"},
+        {"parameter":"OBC nominal power reference minimum","report_value":25.0,
+         "calculated_value":None,"unit":"W","status":"NOT_A_MEASURED_COMPONENT_DRAW",
+         "note":"Reference range 25-30 W; cannot infer complete TT&C bus load"},
+        {"parameter":"OBC nominal power reference maximum","report_value":30.0,
+         "calculated_value":None,"unit":"W","status":"NOT_A_MEASURED_COMPONENT_DRAW",
+         "note":"Avoid double-counting OBC allocation in EPS"},
+    ]
+    for row in comparison:
+        a,b=row["report_value"],row["calculated_value"]
+        row["difference"]=None if a is None or b is None else b-a
+    result["report_comparison"]=comparison
+    with (out/"report_comparison.csv").open("w",newline="",encoding="utf-8") as f:
+        writer=csv.DictWriter(f,fieldnames=list(comparison[0]))
+        writer.writeheader();writer.writerows(comparison)
     if make_plots:
         try:
             import matplotlib

@@ -1,0 +1,574 @@
+{
+  "status": "PRELIMINARY_HYPOTHETICAL_NOT_BOOKED",
+  "note": "2020 windows shifted by calendar to 2030, NOT repropagated. DSN cap is hypothetical; memory and environment events are assumptions. Greedy rolling heuristic, not a proven global optimum. FIFO age uses timestamps at 5-minute resolution.",
+  "scenario_start_utc": "2030-07-14T22:10:10.811000Z",
+  "scenario_end_utc": "2030-07-18T22:10:10.811000Z",
+  "effective_downlink_bps": 204800.0,
+  "dsn_policy_status": "USER_SUPPLIED_OPERATIONAL_PLANNING_ASSUMPTIONS_NOT_INDEPENDENTLY_VERIFIED",
+  "dsn_pass_type": "standard_ttc",
+  "dsn_setup_minutes": 45,
+  "dsn_acquisition_minutes": 10,
+  "dsn_teardown_minutes": 15,
+  "dsn_handover_overlap_minutes": 10,
+  "dsn_handover_status": "NOT_IMPLEMENTED_NO_AUTOMATIC_HANDOVERS",
+  "emergency_antenna_response_minutes": 120,
+  "emergency_initial_continuous_hours": 72,
+  "emergency_policy_status": "PLANNING_PARAMETERS_ONLY_NO_GUARANTEED_DSN_ALLOCATION",
+  "memory_capacity_mbit_per_satellite": 1024.0,
+  "memory_allocation_policy": "volume_proportional_shared_pool_not_hard_partition",
+  "memory_reserve_fraction": 0.15,
+  "satellites": {
+    "SELENA_11": {
+      "generated_mbit": 834.8805,
+      "downlinked_mbit": 0.0,
+      "remaining_mbit": 834.8805,
+      "dropped_mbit": 0.0,
+      "initial_memory_mbit": 0.0,
+      "peak_memory_mbit": 834.8805,
+      "peak_occupancy_fraction": 0.81531,
+      "contacts": 0,
+      "warnings": [
+        "24H_CONTACT_GAP",
+        "DATA_AGE_aocs_nominal_hk",
+        "DATA_AGE_eps_hk",
+        "DATA_AGE_obdh_hk_logs",
+        "DATA_AGE_payload_housekeeping",
+        "DATA_AGE_propulsion_hk",
+        "DATA_AGE_structures_mechanisms",
+        "DATA_AGE_thermal_hk"
+      ],
+      "by_subsystem": {
+        "payload_housekeeping": {
+          "generated_mbit": 34.56,
+          "downlinked_mbit": 0.0,
+          "remaining_mbit": 34.56,
+          "dropped_mbit": 0.0
+        },
+        "structures_mechanisms": {
+          "generated_mbit": 11.0592,
+          "downlinked_mbit": 0.0,
+          "remaining_mbit": 11.0592,
+          "dropped_mbit": 0.0
+        },
+        "aocs_nominal_hk": {
+          "generated_mbit": 582.8198,
+          "downlinked_mbit": 0.0,
+          "remaining_mbit": 582.8198,
+          "dropped_mbit": 0.0
+        },
+        "propulsion_hk": {
+          "generated_mbit": 13.271,
+          "downlinked_mbit": 0.0,
+          "remaining_mbit": 13.271,
+          "dropped_mbit": 0.0
+        },
+        "eps_hk": {
+          "generated_mbit": 51.7018,
+          "downlinked_mbit": 0.0,
+          "remaining_mbit": 51.7018,
+          "dropped_mbit": 0.0
+        },
+        "thermal_hk": {
+          "generated_mbit": 35.2512,
+          "downlinked_mbit": 0.0,
+          "remaining_mbit": 35.2512,
+          "dropped_mbit": 0.0
+        },
+        "obdh_hk_logs": {
+          "generated_mbit": 106.2175,
+          "downlinked_mbit": 0.0,
+          "remaining_mbit": 106.2175,
+          "dropped_mbit": 0.0
+        }
+      }
+    },
+    "SELENA_12": {
+      "generated_mbit": 834.8805,
+      "downlinked_mbit": 0.0,
+      "remaining_mbit": 834.8805,
+      "dropped_mbit": 0.0,
+      "initial_memory_mbit": 0.0,
+      "peak_memory_mbit": 834.8805,
+      "peak_occupancy_fraction": 0.81531,
+      "contacts": 0,
+      "warnings": [
+        "24H_CONTACT_GAP",
+        "DATA_AGE_aocs_nominal_hk",
+        "DATA_AGE_eps_hk",
+        "DATA_AGE_obdh_hk_logs",
+        "DATA_AGE_payload_housekeeping",
+        "DATA_AGE_propulsion_hk",
+        "DATA_AGE_structures_mechanisms",
+        "DATA_AGE_thermal_hk"
+      ],
+      "by_subsystem": {
+        "payload_housekeeping": {
+          "generated_mbit": 34.56,
+          "downlinked_mbit": 0.0,
+          "remaining_mbit": 34.56,
+          "dropped_mbit": 0.0
+        },
+        "structures_mechanisms": {
+          "generated_mbit": 11.0592,
+          "downlinked_mbit": 0.0,
+          "remaining_mbit": 11.0592,
+          "dropped_mbit": 0.0
+        },
+        "aocs_nominal_hk": {
+          "generated_mbit": 582.8198,
+          "downlinked_mbit": 0.0,
+          "remaining_mbit": 582.8198,
+          "dropped_mbit": 0.0
+        },
+        "propulsion_hk": {
+          "generated_mbit": 13.271,
+          "downlinked_mbit": 0.0,
+          "remaining_mbit": 13.271,
+          "dropped_mbit": 0.0
+        },
+        "eps_hk": {
+          "generated_mbit": 51.7018,
+          "downlinked_mbit": 0.0,
+          "remaining_mbit": 51.7018,
+          "dropped_mbit": 0.0
+        },
+        "thermal_hk": {
+          "generated_mbit": 35.2512,
+          "downlinked_mbit": 0.0,
+          "remaining_mbit": 35.2512,
+          "dropped_mbit": 0.0
+        },
+        "obdh_hk_logs": {
+          "generated_mbit": 106.2175,
+          "downlinked_mbit": 0.0,
+          "remaining_mbit": 106.2175,
+          "dropped_mbit": 0.0
+        }
+      }
+    },
+    "SELENA_13": {
+      "generated_mbit": 834.8805,
+      "downlinked_mbit": 667.0835,
+      "remaining_mbit": 167.797,
+      "dropped_mbit": 0.0,
+      "initial_memory_mbit": 0.0,
+      "peak_memory_mbit": 659.4878,
+      "peak_occupancy_fraction": 0.64403,
+      "contacts": 1,
+      "warnings": [
+        "24H_CONTACT_GAP",
+        "DATA_AGE_aocs_nominal_hk",
+        "DATA_AGE_eps_hk",
+        "DATA_AGE_obdh_hk_logs",
+        "DATA_AGE_payload_housekeeping",
+        "DATA_AGE_propulsion_hk",
+        "DATA_AGE_structures_mechanisms",
+        "DATA_AGE_thermal_hk"
+      ],
+      "by_subsystem": {
+        "payload_housekeeping": {
+          "generated_mbit": 34.56,
+          "downlinked_mbit": 27.27,
+          "remaining_mbit": 7.29,
+          "dropped_mbit": 0.0
+        },
+        "structures_mechanisms": {
+          "generated_mbit": 11.0592,
+          "downlinked_mbit": 8.7264,
+          "remaining_mbit": 2.3328,
+          "dropped_mbit": 0.0
+        },
+        "aocs_nominal_hk": {
+          "generated_mbit": 582.8198,
+          "downlinked_mbit": 467.113,
+          "remaining_mbit": 115.7069,
+          "dropped_mbit": 0.0
+        },
+        "propulsion_hk": {
+          "generated_mbit": 13.271,
+          "downlinked_mbit": 10.4717,
+          "remaining_mbit": 2.7994,
+          "dropped_mbit": 0.0
+        },
+        "eps_hk": {
+          "generated_mbit": 51.7018,
+          "downlinked_mbit": 41.4374,
+          "remaining_mbit": 10.2643,
+          "dropped_mbit": 0.0
+        },
+        "thermal_hk": {
+          "generated_mbit": 35.2512,
+          "downlinked_mbit": 28.2528,
+          "remaining_mbit": 6.9984,
+          "dropped_mbit": 0.0
+        },
+        "obdh_hk_logs": {
+          "generated_mbit": 106.2175,
+          "downlinked_mbit": 83.8122,
+          "remaining_mbit": 22.4052,
+          "dropped_mbit": 0.0
+        }
+      }
+    },
+    "SELENA_21": {
+      "generated_mbit": 834.8805,
+      "downlinked_mbit": 466.1414,
+      "remaining_mbit": 368.7391,
+      "dropped_mbit": 0.0,
+      "initial_memory_mbit": 0.0,
+      "peak_memory_mbit": 460.6172,
+      "peak_occupancy_fraction": 0.44982,
+      "contacts": 1,
+      "warnings": [
+        "24H_CONTACT_GAP",
+        "DATA_AGE_aocs_nominal_hk",
+        "DATA_AGE_eps_hk",
+        "DATA_AGE_obdh_hk_logs",
+        "DATA_AGE_payload_housekeeping",
+        "DATA_AGE_propulsion_hk",
+        "DATA_AGE_structures_mechanisms",
+        "DATA_AGE_thermal_hk"
+      ],
+      "by_subsystem": {
+        "payload_housekeeping": {
+          "generated_mbit": 34.56,
+          "downlinked_mbit": 18.54,
+          "remaining_mbit": 16.02,
+          "dropped_mbit": 0.0
+        },
+        "structures_mechanisms": {
+          "generated_mbit": 11.0592,
+          "downlinked_mbit": 5.9328,
+          "remaining_mbit": 5.1264,
+          "dropped_mbit": 0.0
+        },
+        "aocs_nominal_hk": {
+          "generated_mbit": 582.8198,
+          "downlinked_mbit": 328.5504,
+          "remaining_mbit": 254.2694,
+          "dropped_mbit": 0.0
+        },
+        "propulsion_hk": {
+          "generated_mbit": 13.271,
+          "downlinked_mbit": 7.1194,
+          "remaining_mbit": 6.1517,
+          "dropped_mbit": 0.0
+        },
+        "eps_hk": {
+          "generated_mbit": 51.7018,
+          "downlinked_mbit": 29.1456,
+          "remaining_mbit": 22.5562,
+          "dropped_mbit": 0.0
+        },
+        "thermal_hk": {
+          "generated_mbit": 35.2512,
+          "downlinked_mbit": 19.872,
+          "remaining_mbit": 15.3792,
+          "dropped_mbit": 0.0
+        },
+        "obdh_hk_logs": {
+          "generated_mbit": 106.2175,
+          "downlinked_mbit": 56.9812,
+          "remaining_mbit": 49.2362,
+          "dropped_mbit": 0.0
+        }
+      }
+    },
+    "SELENA_22": {
+      "generated_mbit": 834.8805,
+      "downlinked_mbit": 229.944,
+      "remaining_mbit": 604.9365,
+      "dropped_mbit": 0.0,
+      "initial_memory_mbit": 0.0,
+      "peak_memory_mbit": 604.9365,
+      "peak_occupancy_fraction": 0.59076,
+      "contacts": 1,
+      "warnings": [
+        "24H_CONTACT_GAP",
+        "DATA_AGE_aocs_nominal_hk",
+        "DATA_AGE_eps_hk",
+        "DATA_AGE_obdh_hk_logs",
+        "DATA_AGE_payload_housekeeping",
+        "DATA_AGE_propulsion_hk",
+        "DATA_AGE_structures_mechanisms",
+        "DATA_AGE_thermal_hk"
+      ],
+      "by_subsystem": {
+        "payload_housekeeping": {
+          "generated_mbit": 34.56,
+          "downlinked_mbit": 9.99,
+          "remaining_mbit": 24.57,
+          "dropped_mbit": 0.0
+        },
+        "structures_mechanisms": {
+          "generated_mbit": 11.0592,
+          "downlinked_mbit": 3.1968,
+          "remaining_mbit": 7.8624,
+          "dropped_mbit": 0.0
+        },
+        "aocs_nominal_hk": {
+          "generated_mbit": 582.8198,
+          "downlinked_mbit": 158.5613,
+          "remaining_mbit": 424.2586,
+          "dropped_mbit": 0.0
+        },
+        "propulsion_hk": {
+          "generated_mbit": 13.271,
+          "downlinked_mbit": 3.8362,
+          "remaining_mbit": 9.4349,
+          "dropped_mbit": 0.0
+        },
+        "eps_hk": {
+          "generated_mbit": 51.7018,
+          "downlinked_mbit": 14.0659,
+          "remaining_mbit": 37.6358,
+          "dropped_mbit": 0.0
+        },
+        "thermal_hk": {
+          "generated_mbit": 35.2512,
+          "downlinked_mbit": 9.5904,
+          "remaining_mbit": 25.6608,
+          "dropped_mbit": 0.0
+        },
+        "obdh_hk_logs": {
+          "generated_mbit": 106.2175,
+          "downlinked_mbit": 30.7035,
+          "remaining_mbit": 75.514,
+          "dropped_mbit": 0.0
+        }
+      }
+    },
+    "SELENA_23": {
+      "generated_mbit": 834.8805,
+      "downlinked_mbit": 225.1104,
+      "remaining_mbit": 609.7701,
+      "dropped_mbit": 0.0,
+      "initial_memory_mbit": 0.0,
+      "peak_memory_mbit": 609.7701,
+      "peak_occupancy_fraction": 0.59548,
+      "contacts": 1,
+      "warnings": [
+        "24H_CONTACT_GAP",
+        "DATA_AGE_aocs_nominal_hk",
+        "DATA_AGE_eps_hk",
+        "DATA_AGE_obdh_hk_logs",
+        "DATA_AGE_payload_housekeeping",
+        "DATA_AGE_propulsion_hk",
+        "DATA_AGE_structures_mechanisms",
+        "DATA_AGE_thermal_hk"
+      ],
+      "by_subsystem": {
+        "payload_housekeeping": {
+          "generated_mbit": 34.56,
+          "downlinked_mbit": 9.78,
+          "remaining_mbit": 24.78,
+          "dropped_mbit": 0.0
+        },
+        "structures_mechanisms": {
+          "generated_mbit": 11.0592,
+          "downlinked_mbit": 3.1296,
+          "remaining_mbit": 7.9296,
+          "dropped_mbit": 0.0
+        },
+        "aocs_nominal_hk": {
+          "generated_mbit": 582.8198,
+          "downlinked_mbit": 155.2282,
+          "remaining_mbit": 427.5917,
+          "dropped_mbit": 0.0
+        },
+        "propulsion_hk": {
+          "generated_mbit": 13.271,
+          "downlinked_mbit": 3.7555,
+          "remaining_mbit": 9.5155,
+          "dropped_mbit": 0.0
+        },
+        "eps_hk": {
+          "generated_mbit": 51.7018,
+          "downlinked_mbit": 13.7702,
+          "remaining_mbit": 37.9315,
+          "dropped_mbit": 0.0
+        },
+        "thermal_hk": {
+          "generated_mbit": 35.2512,
+          "downlinked_mbit": 9.3888,
+          "remaining_mbit": 25.8624,
+          "dropped_mbit": 0.0
+        },
+        "obdh_hk_logs": {
+          "generated_mbit": 106.2175,
+          "downlinked_mbit": 30.0581,
+          "remaining_mbit": 76.1594,
+          "dropped_mbit": 0.0
+        }
+      }
+    },
+    "SELENA_31": {
+      "generated_mbit": 834.8805,
+      "downlinked_mbit": 41.4314,
+      "remaining_mbit": 793.4492,
+      "dropped_mbit": 0.0,
+      "initial_memory_mbit": 0.0,
+      "peak_memory_mbit": 793.4492,
+      "peak_occupancy_fraction": 0.77485,
+      "contacts": 1,
+      "warnings": [
+        "24H_CONTACT_GAP",
+        "DATA_AGE_aocs_nominal_hk",
+        "DATA_AGE_eps_hk",
+        "DATA_AGE_obdh_hk_logs",
+        "DATA_AGE_payload_housekeeping",
+        "DATA_AGE_propulsion_hk",
+        "DATA_AGE_structures_mechanisms",
+        "DATA_AGE_thermal_hk"
+      ],
+      "by_subsystem": {
+        "payload_housekeeping": {
+          "generated_mbit": 34.56,
+          "downlinked_mbit": 1.8,
+          "remaining_mbit": 32.76,
+          "dropped_mbit": 0.0
+        },
+        "structures_mechanisms": {
+          "generated_mbit": 11.0592,
+          "downlinked_mbit": 0.576,
+          "remaining_mbit": 10.4832,
+          "dropped_mbit": 0.0
+        },
+        "aocs_nominal_hk": {
+          "generated_mbit": 582.8198,
+          "downlinked_mbit": 28.5696,
+          "remaining_mbit": 554.2502,
+          "dropped_mbit": 0.0
+        },
+        "propulsion_hk": {
+          "generated_mbit": 13.271,
+          "downlinked_mbit": 0.6912,
+          "remaining_mbit": 12.5798,
+          "dropped_mbit": 0.0
+        },
+        "eps_hk": {
+          "generated_mbit": 51.7018,
+          "downlinked_mbit": 2.5344,
+          "remaining_mbit": 49.1674,
+          "dropped_mbit": 0.0
+        },
+        "thermal_hk": {
+          "generated_mbit": 35.2512,
+          "downlinked_mbit": 1.728,
+          "remaining_mbit": 33.5232,
+          "dropped_mbit": 0.0
+        },
+        "obdh_hk_logs": {
+          "generated_mbit": 106.2175,
+          "downlinked_mbit": 5.5322,
+          "remaining_mbit": 100.6853,
+          "dropped_mbit": 0.0
+        }
+      }
+    },
+    "SELENA_32": {
+      "generated_mbit": 834.8805,
+      "downlinked_mbit": 41.4314,
+      "remaining_mbit": 793.4492,
+      "dropped_mbit": 0.0,
+      "initial_memory_mbit": 0.0,
+      "peak_memory_mbit": 793.4492,
+      "peak_occupancy_fraction": 0.77485,
+      "contacts": 1,
+      "warnings": [
+        "24H_CONTACT_GAP",
+        "DATA_AGE_aocs_nominal_hk",
+        "DATA_AGE_eps_hk",
+        "DATA_AGE_obdh_hk_logs",
+        "DATA_AGE_payload_housekeeping",
+        "DATA_AGE_propulsion_hk",
+        "DATA_AGE_structures_mechanisms",
+        "DATA_AGE_thermal_hk"
+      ],
+      "by_subsystem": {
+        "payload_housekeeping": {
+          "generated_mbit": 34.56,
+          "downlinked_mbit": 1.8,
+          "remaining_mbit": 32.76,
+          "dropped_mbit": 0.0
+        },
+        "structures_mechanisms": {
+          "generated_mbit": 11.0592,
+          "downlinked_mbit": 0.576,
+          "remaining_mbit": 10.4832,
+          "dropped_mbit": 0.0
+        },
+        "aocs_nominal_hk": {
+          "generated_mbit": 582.8198,
+          "downlinked_mbit": 28.5696,
+          "remaining_mbit": 554.2502,
+          "dropped_mbit": 0.0
+        },
+        "propulsion_hk": {
+          "generated_mbit": 13.271,
+          "downlinked_mbit": 0.6912,
+          "remaining_mbit": 12.5798,
+          "dropped_mbit": 0.0
+        },
+        "eps_hk": {
+          "generated_mbit": 51.7018,
+          "downlinked_mbit": 2.5344,
+          "remaining_mbit": 49.1674,
+          "dropped_mbit": 0.0
+        },
+        "thermal_hk": {
+          "generated_mbit": 35.2512,
+          "downlinked_mbit": 1.728,
+          "remaining_mbit": 33.5232,
+          "dropped_mbit": 0.0
+        },
+        "obdh_hk_logs": {
+          "generated_mbit": 106.2175,
+          "downlinked_mbit": 5.5322,
+          "remaining_mbit": 100.6853,
+          "dropped_mbit": 0.0
+        }
+      }
+    }
+  },
+  "contacts": 6,
+  "dsn_assigned_hours": 9.417,
+  "memory_quotas_by_subsystem": {
+    "payload_housekeeping": {
+      "volume_mbit": 34.56,
+      "share_fraction": 0.04344535154047562,
+      "quota_mbit": 37.81483398082998
+    },
+    "structures_mechanisms": {
+      "volume_mbit": 11.0592,
+      "share_fraction": 0.013902512492952199,
+      "quota_mbit": 12.100746873865594
+    },
+    "aocs_nominal_hk": {
+      "volume_mbit": 548.53632,
+      "share_fraction": 0.689564619650429,
+      "quota_mbit": 600.1970449437334
+    },
+    "propulsion_hk": {
+      "volume_mbit": 13.27104,
+      "share_fraction": 0.016683014991542636,
+      "quota_mbit": 14.520896248638712
+    },
+    "eps_hk": {
+      "volume_mbit": 48.66048000000001,
+      "share_fraction": 0.06117105496898968,
+      "quota_mbit": 53.24328624500862
+    },
+    "thermal_hk": {
+      "volume_mbit": 33.1776,
+      "share_fraction": 0.04170753747885659,
+      "quota_mbit": 36.30224062159678
+    },
+    "obdh_hk_logs": {
+      "volume_mbit": 106.217472,
+      "share_fraction": 0.13352590887675422,
+      "quota_mbit": 116.22095108632686
+    }
+  },
+  "external_flows_status": "Lunar relay and Earth uplink excluded until traffic volumes and contact geometry are specified"
+}

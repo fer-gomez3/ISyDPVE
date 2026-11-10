@@ -102,3 +102,44 @@ availability is hypothetical; 2020 geometric windows are not 2030 ephemerides.
 No spacecraft flight EPS/TCS closure or DSN bookings are claimed. A
 passing unit test does not resolve missing source inputs. New commits must
 pass GitHub Actions before being called validated.
+
+## Unified DSN contact scheduler (`ttc/dsn_scheduler.py`)
+
+`dsn_pipeline` and `integrated_preliminary` now share one assignment criterion.
+It replaces the earliest-end whole-window greedy and the separate adaptive
+rolling scheduler as the source of contacts (legacy modules stay available).
+
+Constraints respected: geometric visibility windows, one satellite per station
+and one station per satellite at a time, preparation (45 + 10 min), teardown
+(15 min), minimum useful TX (5 min) and the shared 3 h per UTC day budget counted
+on the full reservation. Only the TX part moves data.
+
+Policy, in order:
+1. **Coverage guard** – an exact search (5-min grid) decides whether all 8
+   satellites can be served. If so, minimal anchor contacts are reserved so the
+   heuristic cannot starve any satellite (e.g. SELENA_12/13). If not, the best
+   feasible subset is scheduled and `diagnostics.coverage.analysis` names the
+   binding constraints (`GEOMETRY`, `STATION_AVAILABILITY`, `DAILY_BUDGET`,
+   `STATION_CONFLICT`, `SEARCH_LIMIT`).
+2. **Critical deadlines first** – streams whose slack is at most one minimal
+   pass, ordered by priority at risk.
+3. **Equity** – remaining budget goes to the satellite with the least usable
+   contact time so far.
+
+It is a deterministic heuristic with a coverage guarantee, not a proven optimum,
+and it never forces a positive result: `deadline_explanation` in the summary
+states whether unmet deadlines come from the daily budget, geometry, station
+availability or transmission rate.
+
+Result in the current scenarios: all 8 satellites get contacts, but deadlines
+are still missed. The cause is the 3 h/day budget (holding a 6 h deadline over
+96 h needs >= 16 passes per satellite, roughly 160 h versus about 14 h
+available), not geometry (union gap <= 0.28 h) nor link rate.
+
+**The historical 2020 windows are not confirmed DSN availability for 2030.**
+The 3 h/day budget and the 55/15 min policy are user-supplied hypotheses.
+
+Before/after: `python -m ttc.allocator_comparison` writes
+`outputs/allocator_comparison/allocator_comparison.{csv,json,md}`. The legacy
+pipeline allocator delivered more volume only because it ignored the daily
+budget (about 140 h reserved versus 15 h).

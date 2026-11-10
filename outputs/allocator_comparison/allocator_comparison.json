@@ -1,0 +1,69 @@
+{
+  "status": "PRELIMINARY_NOT_DSN_BOOKED",
+  "scenario_downlink_gross_bps": 256000,
+  "telemetry": "seven-stream scenario (assumed, unconfirmed rates)",
+  "daily_budget_hours": 3.0,
+  "pass_overhead_minutes": {
+    "preparation": 55.0,
+    "teardown": 15.0
+  },
+  "visibility_note": "2020 windows (and their calendar-shifted 2030 copy) are NOT confirmed DSN availability",
+  "summaries": [
+    {
+      "case": "pipeline_2020_horizon",
+      "method": "before_earliest_end_whole_windows",
+      "satellites_without_contact": [
+        "SELENA_12",
+        "SELENA_13"
+      ],
+      "contacts_total": 14,
+      "reserved_hours_total": 139.566,
+      "delivered_mbit_total": 3582.431,
+      "max_peak_memory_mbit": 918.837,
+      "satellites_with_deadline_violation": 8,
+      "streams_over_deadline_total": 53,
+      "all_deadlines_met": false
+    },
+    {
+      "case": "pipeline_2020_horizon",
+      "method": "after_unified_scheduler",
+      "satellites_without_contact": [],
+      "contacts_total": 9,
+      "reserved_hours_total": 14.902,
+      "delivered_mbit_total": 3228.285,
+      "max_peak_memory_mbit": 860.833,
+      "satellites_with_deadline_violation": 8,
+      "streams_over_deadline_total": 56,
+      "all_deadlines_met": false,
+      "coverage": "FEASIBLE"
+    },
+    {
+      "case": "integrated_2030_shifted_96h",
+      "method": "before_adaptive_storage_rolling",
+      "satellites_without_contact": [
+        "SELENA_11",
+        "SELENA_12"
+      ],
+      "contacts_total": 6,
+      "reserved_hours_total": 9.917,
+      "delivered_mbit_total": 1592.344,
+      "max_peak_memory_mbit": 795.482,
+      "satellites_with_deadline_violation": 8,
+      "streams_over_deadline_total": 56,
+      "all_deadlines_met": false
+    },
+    {
+      "case": "integrated_2030_shifted_96h",
+      "method": "after_unified_scheduler",
+      "satellites_without_contact": [],
+      "contacts_total": 8,
+      "reserved_hours_total": 11.38,
+      "delivered_mbit_total": 1491.834,
+      "max_peak_memory_mbit": 747.836,
+      "satellites_with_deadline_violation": 8,
+      "streams_over_deadline_total": 56,
+      "all_deadlines_met": false,
+      "coverage": "FEASIBLE"
+    }
+  ]
+}

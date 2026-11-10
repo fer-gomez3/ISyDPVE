@@ -12,7 +12,8 @@ from .adaptive_storage import ROOT, plan as storage_plan, shift_contacts
 from .contact_analysis import load_contacts
 from .ground_delivery import simulate, size_rate
 from .ground_requests import propose
-from .ground_protocol_planner import plan as grant_plan
+from .ground_protocol_planner import plan as grant_plan, utc as _utc
+from .dsn_scheduler import schedule_contacts, explain_unmet_deadlines
 from .link_budget import evaluate_link
 from .rf_trade_study import run as run_rf_trade
 
@@ -45,9 +46,9 @@ def run(output_dir=None, *, gross_bps=None, rf_scenario_path=None,
         for w in visibility:
             if not (epoch<=datetime.fromisoformat(w["start_utc"].replace("Z","+00:00"))<horizon_end):
                 raise ValueError("External visibility must match configured mission epoch/horizon")
-    grants=[{"satellite":g["satellite"],"station":g["station"],
-             "start_utc":g["start_utc"],"end_utc":g["end_utc"]}
-            for g in _rows(grants_path or out/"adaptive_contact_schedule.csv")]
+    grants=None if grants_path is None else [
+        {"satellite":g["satellite"],"station":g["station"],
+         "start_utc":g["start_utc"],"end_utc":g["end_utc"]} for g in _rows(grants_path)]
     # Use same stream requirements as adaptive_storage, rather than a second
     # contradictory hand-maintained telemetry file.
     from .telemetry_generation import calculate, apply_computed_rates
@@ -78,6 +79,25 @@ def run(output_dir=None, *, gross_bps=None, rf_scenario_path=None,
     preparation_minutes=float(policy[setup_key])+float(policy["acquisition_minutes"])
     teardown_minutes=float(policy["teardown_minutes"])
     total_overhead_minutes=preparation_minutes+teardown_minutes
+    # Same scheduling criterion as dsn_pipeline (ttc.dsn_scheduler): geometric
+    # visibility, station/satellite conflicts, pass overhead, shared daily budget,
+    # critical deadlines first and then equitable sharing.
+    allocation=None
+    if grants is None:
+        unified=schedule_contacts(
+            [{"satellite":w["satellite"],"station":w["station"],
+              "start":_utc(w["start_utc"]),"end":_utc(w["end_utc"])} for w in visibility],
+            streams,start=epoch,end=horizon_end,gross_bps=rate,overhead=overhead,
+            prep_s=preparation_minutes*60,teardown_s=teardown_minutes*60,
+            min_tx_s=float(shared["min_useful_tx_minutes"])*60,
+            daily_cap_s=float(shared["dsn_daily_network_hours"])*3600,step_s=300)
+        allocation=unified["diagnostics"]
+        grants=[{"satellite":c["satellite"],"station":c["station"],
+                 "start_utc":c["start"].isoformat(),"end_utc":c["end"].isoformat()}
+                for c in unified["contacts"]]
+        _write_csv(out/"unified_contact_schedule.csv",[
+            {k:(v.isoformat() if hasattr(v,"isoformat") else v) for k,v in c.items()}
+            for c in unified["contacts"]])
     effective_grants=[g for g in grants if g["end_utc"]>g["start_utc"]]
     usable_grants=[]
     for g in effective_grants:
@@ -101,6 +121,12 @@ def run(output_dir=None, *, gross_bps=None, rf_scenario_path=None,
         utilization=1,setup_minutes=0,step_seconds=step_seconds,
         max_bps=max(rate*100,10000000),tolerance_bps=10,
         start_utc=epoch.isoformat(),end_utc=horizon_end.isoformat())
+    explanation=explain_unmet_deadlines(streams,
+        [{"satellite":w["satellite"],"station":w["station"],"start":w["start_utc"],"end":w["end_utc"]} for w in visibility],
+        epoch,horizon_end,schedule=effective_grants,delivery=delivery,prep_s=preparation_minutes*60,
+        teardown_s=teardown_minutes*60,min_tx_s=float(shared["min_useful_tx_minutes"])*60,
+        daily_cap_s=float(shared["dsn_daily_network_hours"])*3600,gross_bps=rate,overhead=overhead,
+        size_rate_result=sizing)
     rf_path=Path(rf_scenario_path or ROOT/"data"/"link_budget_inputs.json")
     rf_inputs=json.loads(rf_path.read_text(encoding="utf-8"))
     rf_inputs["data_rate_bps"]=sizing["required_gross_bps"] if sizing["required_gross_bps"] is not None else rate
@@ -135,11 +161,11 @@ def run(output_dir=None, *, gross_bps=None, rf_scenario_path=None,
     result={"status":"PRELIMINARY_EXTERNAL_GEOMETRY_UNVERIFIED" if visibility_path else "PRELIMINARY_SYNTHETIC_GEOMETRY_NOT_FLIGHT_VALIDATED",
             "epoch_utc":epoch.isoformat(),"scenario_end_utc":horizon_end.isoformat(),
             "assumptions":{"contact_source":"external supplied visibility (provenance unverified)" if visibility_path else "2020 calendar-shifted visibility",
-                           "ground_allocations":"external supplied grants (not confirmed bookings)" if grants_path else "hypothetical adaptive scheduler",
+                           "ground_allocations":"external supplied grants (not confirmed bookings)" if grants_path else "unified fair scheduler (ttc.dsn_scheduler), hypothetical, not DSN bookings",
                            "delivery":"perfect-reception fluid-bit simulation",
                            "gross_bps":rate,"overhead_fraction":overhead,
                            "setup":"full contact grants converted once to useful TX intervals","preparation_minutes":preparation_minutes,"teardown_minutes":teardown_minutes},
-            "baseline":baseline,"requests":requests,"grants":grant_results,
+            "baseline":baseline,"allocation":allocation,"deadline_explanation":explanation,"requests":requests,"grants":grant_results,
             "delivery":delivery,"required_rate":sizing,"rf_budget":rf,"rf_trade":rf_trade,
             "satellite_summary":per_sat,"station_summary":station_summary}
     (out/"integrated_preliminary.json").write_text(json.dumps(result,indent=2,default=str)+"\n",encoding="utf-8")
@@ -150,6 +176,7 @@ def run(output_dir=None, *, gross_bps=None, rf_scenario_path=None,
         f"- Gross downlink: {rate:,.0f} bps; protocol overhead: {overhead:.0%}.",
         f"- Ground-grant inputs are unverified; preparation {preparation_minutes:g} min and teardown {teardown_minutes:g} min excluded from TX.",
         "- Deadline check assumes perfect reception and constant mean telemetry generation.",
+        "- Contact allocation: unified scheduler (`ttc.dsn_scheduler`); visibility is NOT confirmed DSN availability and the daily DSN budget is hypothetical." if allocation else "- Contact allocation: externally supplied grants.",
         "","## Results",
         f"- Ground contact requests: {len(requests['requests'])}; proposed slots: {len(effective_grants)}.",
         f"- All modeled deadlines met at baseline rate: **{delivery['all_deadlines_met']}**.",
@@ -159,6 +186,19 @@ def run(output_dir=None, *, gross_bps=None, rf_scenario_path=None,
         "","| Satellite | Produced (Mbit) | Delivered (Mbit) | Remaining (Mbit) | Peak backlog (Mbit) | Deadline violations |",
         "|---|---:|---:|---:|---:|---|"]
     report += [f"| {x['satellite']} | {x['produced_mbit']} | {x['delivered_mbit']} | {x['remaining_mbit']} | {x['peak_memory_mbit']} | {x['deadline_violations'] or 'None'} |" for x in per_sat]
+    if allocation:
+        cov=allocation["coverage"]
+        report += ["","## Contact allocation",
+            f"- Every satellite served at least once: **{cov['all_satellites_covered']}** "
+            f"(coverage search: {cov['initial_feasibility']}).",
+            f"- Shared DSN budget used: {allocation['budget_used_hours_total']} h "
+            f"(cap {allocation['policy']['daily_cap_hours']:g} h per UTC day).",
+            f"- Fairness (Jain index of usable time): {allocation['jain_fairness_usable_time']}."]
+        for f in cov.get("analysis",{}).get("binding_constraints",[]):
+            report.append(f"- Coverage constraint **{f['constraint']}**: {f['detail']}")
+    if not explanation["all_deadlines_met"]:
+        report += ["","## Why deadlines are not met"]
+        report += [f"- **{f['constraint']}**: {f['detail']}" for f in explanation["findings"]]
     report += ["","## Station allocations (hypothetical)",
         "| Station | Contacts | Granted hours |","|---|---:|---:|"]
     report += [f"| {x['station']} | {x['contacts']} | {x['granted_hours']} |" for x in station_summary]

@@ -7,13 +7,12 @@ import csv
 import json
 import os
 import unittest
-from datetime import timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 import tempfile
 
 from ttc import dsn_pipeline, obdh_report
 from ttc.contact_analysis import load_contacts
-from ttc.dsn_allocator import allocate
 
 ROOT = Path(__file__).resolve().parents[1]
 EPS = 1e-6  # Mbit
@@ -32,7 +31,9 @@ class TestDSNPipeline(unittest.TestCase):
         finally:
             os.chdir(cls.old)
         cls.contacts = load_contacts(ROOT / "data" / "contacts_master.csv")
-        cls.schedule = allocate(cls.contacts, None, 300, 0)
+        with (cls.out / "candidate_schedule.csv").open(newline="", encoding="utf-8") as f:
+            cls.schedule = [dict(r, start=datetime.fromisoformat(r["start"]),
+                                 end=datetime.fromisoformat(r["end"])) for r in csv.DictReader(f)]
 
     @classmethod
     def tearDownClass(cls):
@@ -90,6 +91,24 @@ class TestDSNPipeline(unittest.TestCase):
             self.assertGreater(c["end"], c["start"])
             self.assertIn(c["station"], stations)
             self.assertEqual(c["status"], "HYPOTHETICAL_ALLOCATION_NOT_DSN_BOOKING")
+
+    def test_all_satellites_served_and_daily_budget_respected(self):
+        sats = {c["satellite"] for c in self.contacts}
+        self.assertEqual({c["satellite"] for c in self.schedule}, sats)
+        per_day = {}
+        for c in self.schedule:
+            a = c["start"]
+            while a < c["end"]:
+                nxt = min(c["end"], datetime.combine(a.date() + timedelta(days=1),
+                                                     datetime.min.time(), tzinfo=a.tzinfo))
+                per_day[a.date()] = per_day.get(a.date(), 0) + (nxt - a).total_seconds()
+                a = nxt
+        for day, secs in per_day.items():
+            self.assertLessEqual(secs, 3 * 3600 + 1e-6, str(day))
+        summary = json.loads((self.out / "summary.json").read_text(encoding="utf-8"))
+        self.assertIn("allocation", summary)
+        self.assertIn("deadline_explanation", summary)
+        self.assertIn("NOT confirmed", summary["allocation"]["visibility_note"])
 
 
 class TestOBDHReport(unittest.TestCase):

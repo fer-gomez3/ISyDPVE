@@ -8,19 +8,21 @@ from datetime import timedelta
 from pathlib import Path
 from .contact_analysis import load_contacts,write_csv
 from .dsn_allocator import allocate,verify_contacts
+from .dsn_scheduler import schedule_contacts,explain_unmet_deadlines
 from .engineering_calculations import calculate
 from .obdh_timeline import timeline
 from .telemetry_generation import calculate as calculate_channels, apply_computed_rates
 from .transfer_planning import stream_requirements
 from .operational_interfaces import policy_seconds,usable_contacts,electrical_thermal
-from .ground_delivery import simulate as simulate_deadlines
+from .ground_delivery import simulate as simulate_deadlines, size_rate
 
 ROOT=Path(__file__).resolve().parents[1]
 DEFAULT_CONTACTS=str(ROOT/"data"/"contacts_master.csv")
 
 def run(contacts_path=DEFAULT_CONTACTS,output_dir="outputs/dsn_pipeline",
         downlink_bps=256000,overhead=0.2,minimum_contact_seconds=300,
-        setup_seconds=0,availability=None,telemetry_profile="confirmed",pass_type=None,make_plots=True):
+        setup_seconds=0,availability=None,telemetry_profile="confirmed",pass_type=None,make_plots=True,
+        daily_cap_hours=None):
     contacts=load_contacts(contacts_path)
     if not contacts:
         raise ValueError("No input windows")
@@ -28,8 +30,6 @@ def run(contacts_path=DEFAULT_CONTACTS,output_dir="outputs/dsn_pipeline",
     policy=policy_seconds(pass_type)
     prep=policy["preparation_seconds"] if setup_seconds==0 else setup_seconds
     teardown=policy["teardown_seconds"]
-    schedule=allocate(contacts,availability,max(minimum_contact_seconds,prep+teardown+1),0)
-    useful=usable_contacts(schedule,prep,teardown)
     sats=sorted({c["satellite"] for c in contacts})
     rates=calculate()
     known=sum(x["rate_bps"] for x in rates["telemetry"] if x["rate_bps"] is not None)
@@ -55,6 +55,25 @@ def run(contacts_path=DEFAULT_CONTACTS,output_dir="outputs/dsn_pipeline",
         streams=[{"name":x["name"],"rate_bps":float(x["mean_rate_bps"]),
                   "priority":int(x["priority"]),"deadline_hours":float(x["deadline_hours"])}
                  for x in scenario_streams]
+    shared=json.loads((ROOT/"data"/"ttc_parameters.json").read_text(encoding="utf-8"))
+    cap_hours=float(daily_cap_hours if daily_cap_hours is not None else shared["dsn_daily_network_hours"])
+    # Station availability (if supplied) restricts the windows the scheduler may use.
+    offered=contacts
+    if availability:
+        offered=[]
+        for c in contacts:
+            spans=availability.get(c["station"])
+            if spans is None:
+                offered.append(c)
+            else:
+                for a,b in spans:
+                    lo,hi=max(c["start"],a),min(c["end"],b)
+                    if hi>lo:offered.append({**c,"start":lo,"end":hi})
+    unified=schedule_contacts(offered,streams,start=start,end=end,gross_bps=downlink_bps,
+        overhead=overhead,prep_s=prep,teardown_s=teardown,min_tx_s=minimum_contact_seconds,
+        daily_cap_s=cap_hours*3600,geometric_windows=contacts)
+    schedule=unified["contacts"]
+    useful=[{**c,"start":c["tx_start"],"end":c["tx_end"],"seconds":c["usable_seconds"]} for c in schedule]
     visibility=[{"satellite":c["satellite"],"station":c["station"],
                  "start_utc":c["start"].isoformat(),"end_utc":c["end"].isoformat()} for c in contacts]
     grants=[{"satellite":c["satellite"],"station":c["station"],
@@ -64,7 +83,16 @@ def run(contacts_path=DEFAULT_CONTACTS,output_dir="outputs/dsn_pipeline",
     cfg=json.loads((ROOT/"data"/"communications_budget_inputs.json").read_text(encoding="utf-8"))
     powers=cfg["component_powers_w"]
     out=Path(output_dir);out.mkdir(parents=True,exist_ok=True)
-    write_csv(out/"candidate_schedule.csv",schedule)
+    sched_rows=[{k:(v.isoformat() if hasattr(v,"isoformat") else v) for k,v in c.items()} for c in schedule]
+    with (out/"candidate_schedule.csv").open("w",newline="",encoding="utf-8") as f:
+        w=csv.DictWriter(f,fieldnames=list(sched_rows[0]) if sched_rows else ["satellite","station","start","end"])
+        w.writeheader();w.writerows(sched_rows)
+    explanation=explain_unmet_deadlines(streams,visibility,start,end,schedule=schedule,
+        delivery=deadline_results,prep_s=prep,teardown_s=teardown,min_tx_s=minimum_contact_seconds,
+        daily_cap_s=cap_hours*3600,gross_bps=downlink_bps,overhead=overhead,
+        size_rate_result=size_rate(streams,visibility,grants,overhead=overhead,utilization=1,
+            setup_minutes=0,step_seconds=300,max_bps=max(downlink_bps*100,10000000),tolerance_bps=100,
+            start_utc=start.isoformat(),end_utc=end.isoformat()))
     result={"status":"PRELIMINARY_NOT_DSN_BOOKED","source":str(contacts_path),
         "known_generation_bps":confirmed_rate,"modeled_generation_bps":known,
         "telemetry_profile":telemetry_profile,"scenario_streams":scenario_streams,
@@ -73,6 +101,8 @@ def run(contacts_path=DEFAULT_CONTACTS,output_dir="outputs/dsn_pipeline",
         "scenario_downlink_gross_bps":downlink_bps,"overhead_fraction":overhead,
         "setup_seconds_per_contact":prep,"teardown_seconds_per_contact":teardown,
         "operational_policy":policy,"deadline_results":deadline_results,
+        "allocation":unified["diagnostics"],"deadline_explanation":explanation,
+        "allocation_scope":"Historical 2020 visibility windows are NOT confirmed DSN availability for 2030; the daily DSN hours are hypothetical.",
         "contact_gaps":verify_contacts(schedule,sats,start,end),
         "satellites":{}}
     for sat in sats:
@@ -145,8 +175,9 @@ if __name__=="__main__":
     p.add_argument("--overhead",type=float,default=0.2)
     p.add_argument("--minimum-contact-seconds",type=float,default=300)
     p.add_argument("--setup-seconds",type=float,default=0)
+    p.add_argument("--daily-cap-hours",type=float,default=None,help="shared DSN hours per UTC day (default: data/ttc_parameters.json)")
     p.add_argument("--pass-type",choices=["standard_ttc","ranging","downlink_only","uplink_downlink"])
     p.add_argument("--telemetry-profile",choices=["confirmed","scenario"],default="confirmed")
     a=p.parse_args()
     print(json.dumps(run(a.contacts,a.output_dir,a.downlink_bps,a.overhead,
-                         a.minimum_contact_seconds,a.setup_seconds,telemetry_profile=a.telemetry_profile,pass_type=a.pass_type),indent=2))
+                         a.minimum_contact_seconds,a.setup_seconds,telemetry_profile=a.telemetry_profile,pass_type=a.pass_type,daily_cap_hours=a.daily_cap_hours),indent=2))

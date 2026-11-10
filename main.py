@@ -105,7 +105,7 @@ def main():
             (out/"telemetry_generation.json").read_text(encoding="utf-8"),encoding="utf-8")
         integrated=build(detailed,rf_power_w=args.rf_power_w)
         summary["integrated_requirements"]=integrated
-        (out/"overview.json").write_text(json.dumps(summary,indent=2,ensure_ascii=False)+"\\n",encoding="utf-8")
+        (out/"overview.json").write_text(json.dumps(summary,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
     print(json.dumps(summary,indent=2,ensure_ascii=False))
     return summary
 

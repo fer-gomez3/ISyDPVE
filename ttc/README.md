@@ -143,3 +143,17 @@ Before/after: `python -m ttc.allocator_comparison` writes
 `outputs/allocator_comparison/allocator_comparison.{csv,json,md}`. The legacy
 pipeline allocator delivered more volume only because it ignored the daily
 budget (about 140 h reserved versus 15 h).
+
+
+## PDR closeout deliverables
+
+- `docs/SELENA_TTC_OBDH_PDR_preliminary.md` — preliminary PDR text,
+  baseline comparison, RF/EPS/TCS open interfaces and explicit limitations.
+- `python -m ttc.dsn_sensitivity --hours 1 3 6 12 24` — compare
+  shared DSN daily-hour budgets under identical scheduling and telemetry
+  assumptions; exports CSV, JSON and (if matplotlib available) PNG.
+- `python -m pytest -q tests/test_dsn_sensitivity.py` — regression checks.
+
+**No design compliance is implied** until physical 2030 geometry, DSN
+allocation, approved stream deadlines, RF hardware and EPS/TCS inputs
+are verified. These newest changes require fresh CI validation.

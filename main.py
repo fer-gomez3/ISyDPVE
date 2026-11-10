@@ -32,6 +32,8 @@ def main():
     parser.add_argument("--telemetry-input",default="data/telemetry_generation_inputs.json",help="Sensor/channel inventories (what-if runs without editing the repository data)")
     parser.add_argument("--link-input",default="data/link_budget_inputs.json")
     parser.add_argument("--output-dir",default="outputs")
+    parser.add_argument("--integrated",action="store_true",help="Run detailed DSN backlog and antenna/EPS/TCS interface outputs")
+    parser.add_argument("--rf-power-w",type=float,default=None,help="Available RF power budget in W; omitted means antenna diameter TBD")
     args=parser.parse_args()
     out=Path(args.output_dir);out.mkdir(parents=True,exist_ok=True)
     contacts_path=args.contacts
@@ -92,6 +94,18 @@ def main():
     workbook=export_excel(output=str(out/"SELENA_TTC_Model.xlsx"),link_input=args.link_input,out_dir=args.output_dir)
     summary["excel_workbook"]=str(workbook)
     (out/"overview.json").write_text(json.dumps(summary,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
+    if args.integrated:
+        from ttc.dsn_pipeline import run as run_dsn_pipeline
+        from ttc.integrated_requirements import build as build_integrated
+        detailed=out/"integrated"
+        run_dsn_pipeline(contacts_path=contacts_path,output_dir=str(detailed),
+                         telemetry_profile="scenario",make_plots=False)
+        # Reuse generated telemetry and the detailed candidate-window backlog.
+        (detailed/"telemetry_generation.json").write_text(
+            (out/"telemetry_generation.json").read_text(encoding="utf-8"),encoding="utf-8")
+        integrated=build(detailed,rf_power_w=args.rf_power_w)
+        summary["integrated_requirements"]=integrated
+        (out/"overview.json").write_text(json.dumps(summary,indent=2,ensure_ascii=False)+"\\n",encoding="utf-8")
     print(json.dumps(summary,indent=2,ensure_ascii=False))
     return summary
 

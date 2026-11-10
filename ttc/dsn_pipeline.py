@@ -11,6 +11,7 @@ from .dsn_allocator import allocate,verify_contacts
 from .dsn_scheduler import schedule_contacts,explain_unmet_deadlines
 from .engineering_calculations import calculate
 from .obdh_timeline import timeline
+from .contact_duration import estimate_requests
 from .telemetry_generation import calculate as calculate_channels, apply_computed_rates
 from .transfer_planning import stream_requirements
 from .operational_interfaces import policy_seconds,usable_contacts,electrical_thermal
@@ -105,16 +106,28 @@ def run(contacts_path=DEFAULT_CONTACTS,output_dir="outputs/dsn_pipeline",
         "allocation_scope":"Historical 2020 visibility windows are NOT confirmed DSN availability for 2030; the daily DSN hours are hypothetical.",
         "contact_gaps":verify_contacts(schedule,sats,start,end),
         "satellites":{}}
+    memory_timelines={}
     for sat in sats:
         assigned=[c for c in schedule if c["satellite"]==sat]
         # Setup time is excluded from transmission by shifting the beginning.
         sat_useful=[c for c in useful if c["satellite"]==sat]
         t=timeline(sat_useful,start,end,known,downlink_bps,overhead)
+        from datetime import datetime
+        memory_timelines[sat]=([datetime.fromisoformat(x["time_utc"]) for x in t["rows"]],
+                               [x["buffer_mbit"] for x in t["rows"]])
         t["electrical_thermal"]=electrical_thermal(sat_useful,start,end,powers,rf_power_w=None)
         with (out/f"{sat}_obdh.csv").open("w",newline="",encoding="utf-8") as f:
             w=csv.DictWriter(f,fieldnames=list(t["rows"][0]))
             w.writeheader();w.writerows(t["rows"])
         result["satellites"][sat]={k:v for k,v in t.items() if k!="rows"}
+    requested=estimate_requests(contacts,memory_timelines,known,downlink_bps,overhead,
+        prep,teardown,minimum_contact_seconds,out/"requested_contact_durations.csv")
+    result["contact_duration_output"]={
+        "file":"requested_contact_durations.csv",
+        "count":len(requested),
+        "interpretation":"Independent per-window estimates from modeled OBDH backlog; NOT a conflict-free DSN allocation",
+        "assumptions":"Uses backlog from the scheduled simulation, and accounts for telemetry generated during transmission; no simultaneous contacts",
+    }
     # Traceability against report-confirmed telemetry and hardware interfaces.
     comparison=[
         {"parameter":"Payload housekeeping","report_value":100.0,

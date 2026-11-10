@@ -6,9 +6,10 @@
 python -m ttc.integrated_preliminary
 ```
 
-This runs the existing adaptive-storage baseline and then uses **the same**
-telemetry generation requirements, calendar-shifted visibility and simulated
-allocated contacts for an integrated ground-contact request, deadline/rate,
+This runs the existing adaptive-storage baseline (kept as a separate
+illustrative scenario) and then uses **the same** telemetry generation
+requirements and calendar-shifted visibility, with contacts allocated by the
+unified scheduler (`ttc/dsn_scheduler.py`, same criterion as `dsn_pipeline`), for an integrated ground-contact request, deadline/rate,
 RF/EPS/TCS sensitivity assessment.
 
 ## Outputs
@@ -83,6 +84,13 @@ fragments are acknowledged, and checkpoints/restores state with SHA-256
 integrity checks. This is **not** CCSDS CFDP, flight software or a ground
 radio protocol. Its traffic is not yet coupled to the integrated fluid-bit
 deadline simulation, which must remain labeled as a separate idealized model.
+
+## 2026-11-10 unified contact allocation
+
+- `dsn_pipeline` and `integrated_preliminary` share `ttc/dsn_scheduler.py`
+  (coverage guard, critical deadlines first, equitable sharing, 3 h/day budget on
+  full reservations). The `adaptive_storage` scheduler is no longer the source of
+  integrated contacts. See `ttc/README.md`.
 
 ## 2026-11-09 contact accounting correction
 

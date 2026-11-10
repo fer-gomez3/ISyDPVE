@@ -426,11 +426,12 @@ def schedule_contacts(windows, streams, *, start, end, gross_bps, overhead, prep
                                                "they are NOT confirmed DSN availability for 2030."}}
 
 
-def explain_unmet_deadlines(streams, windows, start, end, *, schedule, delivery, prep_s, teardown_s,
+def explain_unmet_deadlines(streams, windows, start, end, *, delivery, prep_s, teardown_s,
                             min_tx_s, daily_cap_s, gross_bps, overhead, size_rate_result=None):
     """Which constraint explains deadlines that are still not met?
 
-    Compares the minimum reservation time the tightest deadline demands with the
+    Structural lower-bound analysis (independent of the concrete calendar): it
+    compares the minimum reservation time the tightest deadline demands with the
     budget, the geometric gaps with the deadlines, and uses the rate-sizing result
     to separate a rate problem from a contact-time problem.
     """

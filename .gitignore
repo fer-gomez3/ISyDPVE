@@ -9,3 +9,4 @@ outputs/*.csv
 outputs/dsn_pipeline/
 outputs/obdh/
 outputs/pytest-junit.xml
+outputs/allocator_comparison/adaptive_baseline/

@@ -41,8 +41,9 @@ and flight-qualified X/Ka link inputs. Do not label the pipeline flight-validate
 
 Run `python -m ttc.dsn_pipeline --downlink-bps 256000 --overhead 0.2 --minimum-contact-seconds 300`.
 This writes `outputs/dsn_pipeline/candidate_schedule.csv`, `summary.json`,
-and one `*_obdh.csv` per spacecraft. The allocation is a deterministic
-earliest-end heuristic, not a globally optimized DSN booking. Its optional
+and one `*_obdh.csv` per spacecraft. The allocation comes from the unified
+scheduler (`ttc/dsn_scheduler.py`, see below): a deterministic heuristic with a
+coverage guarantee, not a globally optimized DSN booking. Its optional
 station availability is an input scenario, not measured DSN availability.
 The 24h gap check applies to the supplied analysis horizon only; a compliant
 historical window does not establish compliance for the 2030 mission.
@@ -157,3 +158,21 @@ budget (about 140 h reserved versus 15 h).
 **No design compliance is implied** until physical 2030 geometry, DSN
 allocation, approved stream deadlines, RF hardware and EPS/TCS inputs
 are verified. These newest changes require fresh CI validation.
+
+## OBDH memory: shared pool with logical queues per subsystem (`ttc/memory_queues.py`)
+
+Each satellite has its own independent OBDH memory (scenario values: 1024 Mbit,
+870.4 usable, 153.6 reserve; levels 65 % preventive and 70/85/95 % watch/urgent/
+critical, from `data/adaptive_storage_scenario.json`). The memory is a **shared
+pool**: there are no physical partitions or fixed quotas per subsystem. Inside it
+the data are organised **logically** into one FIFO queue per stream with priority,
+age of the oldest bit and maximum delivery age. Downlink order is earliest
+deadline first, priority as tie breaker. Telemetry is never reduced or dropped.
+
+`dsn_pipeline` and `integrated_preliminary` now write `memory_queues.csv`
+(per satellite and stream, sampled every 30 min) and `memory_queues_summary.json`:
+generated vs downloaded data (per satellite and for the constellation), queue
+Mbit per subsystem at the total peak, peak per queue, oldest age against the
+maximum age, and first crossing of each level. Capacity, reserve and levels are
+simulation values, not approved requirements nor a selected memory device.
+Generated data is not the same as downloaded data.

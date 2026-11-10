@@ -9,7 +9,7 @@ Every value in the model carries one of four statuses. The workbook colours them
 | Status | Meaning | Examples |
 |---|---|---|
 | **DOC** | Taken from the project documentation | 8 satellites; payload housekeeping 100 bps (PDF 2.7.3, provisional); structures 32 bps (PDF 7.5.3); TT&C + OBDH mass allocation 11.40 kg; HGA gimbal counted in Structures |
-| **ASSUMPTION** | Preliminary engineering assumption, not verified | HGA 0.38 m, aperture efficiency 0.6, 8.4 GHz; downlink 256 kbps; protocol overhead 20 %; DSN setup 15 min; minimum useful transmit 5 min; 3 h/day of DSN time for all satellites; ADCS/EPS/thermal/propulsion/OBDH sensor inventories; data-age deadlines per priority |
+| **ASSUMPTION** | Preliminary engineering assumption, not verified | HGA 0.38 m, aperture efficiency 0.6, 8.4 GHz; downlink 256 kbps; protocol overhead 20 %; DSN preparation 45 min + acquisition 10 min and teardown 15 min per contact (standard TT&C policy, user-supplied, unverified; the former 15 min setup is a legacy sensitivity); minimum useful transmit 5 min; 3 h/day of DSN time for all satellites; ADCS/EPS/thermal/propulsion/OBDH sensor inventories; data-age deadlines per priority |
 | **CALC** | Calculated by the model from the values above | Telemetry rates, HGA gain, capacity, allocation, backlog |
 | **INPUT NEEDED** | Missing, prevents final validation | Distance from real geometry, DSN G/T, required Eb/N0, losses, margin, PA efficiency, transponder power |
 

@@ -7,7 +7,7 @@ import argparse,csv,json
 from datetime import timedelta
 from pathlib import Path
 from .contact_analysis import load_contacts,write_csv
-from .dsn_allocator import allocate,verify_contacts
+from .dsn_allocator import verify_contacts
 from .dsn_scheduler import schedule_contacts,explain_unmet_deadlines
 from .engineering_calculations import calculate
 from .obdh_timeline import timeline
@@ -16,6 +16,7 @@ from .telemetry_generation import calculate as calculate_channels, apply_compute
 from .transfer_planning import stream_requirements
 from .operational_interfaces import policy_seconds,usable_contacts,electrical_thermal
 from .ground_delivery import simulate as simulate_deadlines, size_rate
+from .memory_queues import QueueObserver, load_memory_config, write_outputs as write_queue_outputs
 
 ROOT=Path(__file__).resolve().parents[1]
 DEFAULT_CONTACTS=str(ROOT/"data"/"contacts_master.csv")
@@ -79,17 +80,18 @@ def run(contacts_path=DEFAULT_CONTACTS,output_dir="outputs/dsn_pipeline",
                  "start_utc":c["start"].isoformat(),"end_utc":c["end"].isoformat()} for c in contacts]
     grants=[{"satellite":c["satellite"],"station":c["station"],
              "start_utc":c["start"].isoformat(),"end_utc":c["end"].isoformat()} for c in useful]
+    queues=QueueObserver(streams,start,load_memory_config())
     deadline_results=simulate_deadlines(streams,visibility,grants,gross_bps=downlink_bps,
-        overhead=overhead,setup_minutes=0,start_utc=start.isoformat(),end_utc=end.isoformat())
+        overhead=overhead,setup_minutes=0,start_utc=start.isoformat(),end_utc=end.isoformat(),observer=queues)
     cfg=json.loads((ROOT/"data"/"communications_budget_inputs.json").read_text(encoding="utf-8"))
     powers=cfg["component_powers_w"]
     out=Path(output_dir);out.mkdir(parents=True,exist_ok=True)
+    memory_queues=write_queue_outputs(queues,deadline_results,(end-start).total_seconds()/3600,out)
     sched_rows=[{k:(v.isoformat() if hasattr(v,"isoformat") else v) for k,v in c.items()} for c in schedule]
     with (out/"candidate_schedule.csv").open("w",newline="",encoding="utf-8") as f:
         w=csv.DictWriter(f,fieldnames=list(sched_rows[0]) if sched_rows else ["satellite","station","start","end"])
         w.writeheader();w.writerows(sched_rows)
-    explanation=explain_unmet_deadlines(streams,visibility,start,end,schedule=schedule,
-        delivery=deadline_results,prep_s=prep,teardown_s=teardown,min_tx_s=minimum_contact_seconds,
+    explanation=explain_unmet_deadlines(streams,visibility,start,end,delivery=deadline_results,prep_s=prep,teardown_s=teardown,min_tx_s=minimum_contact_seconds,
         daily_cap_s=cap_hours*3600,gross_bps=downlink_bps,overhead=overhead,
         size_rate_result=size_rate(streams,visibility,grants,overhead=overhead,utilization=1,
             setup_minutes=0,step_seconds=300,max_bps=max(downlink_bps*100,10000000),tolerance_bps=100,
@@ -102,7 +104,7 @@ def run(contacts_path=DEFAULT_CONTACTS,output_dir="outputs/dsn_pipeline",
         "scenario_downlink_gross_bps":downlink_bps,"overhead_fraction":overhead,
         "setup_seconds_per_contact":prep,"teardown_seconds_per_contact":teardown,
         "operational_policy":policy,"deadline_results":deadline_results,
-        "allocation":unified["diagnostics"],"deadline_explanation":explanation,
+        "allocation":unified["diagnostics"],"memory_queues":memory_queues,"deadline_explanation":explanation,
         "allocation_scope":"Historical 2020 visibility windows are NOT confirmed DSN availability for 2030; the daily DSN hours are hypothetical.",
         "contact_gaps":verify_contacts(schedule,sats,start,end),
         "satellites":{}}

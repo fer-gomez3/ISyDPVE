@@ -34,12 +34,16 @@ def _validate(streams, visibility, grants):
 
 def simulate(streams,visibility,grants,*,gross_bps,utilization=1.0,
              overhead=0.2,setup_minutes=15,step_seconds=30,
-             start_utc=None,end_utc=None):
+             start_utc=None,end_utc=None,observer=None):
     """Time-step FIFO model with per-stream max-age checks.
 
     Deadline violations are evaluated using oldest generated undelivered bit.
     Fluid-bit transmission and perfect delivery are assumed. A confirmed
     delivery requires a separate ACK implementation.
+
+    ``observer(sat, time, backlog_bits, oldest, taken_bits)`` is optional and
+    read-only: it is called after every step with the per-stream queue state so
+    callers can account memory occupancy without a second implementation.
     """
     windows=_validate(streams,visibility,grants)
     if gross_bps<0 or not 0<utilization<=1 or not 0<=overhead<1 or setup_minutes<0 or step_seconds<=0:
@@ -83,10 +87,12 @@ def simulate(streams,visibility,grants,*,gross_bps,utilization=1.0,
             order=sorted(streams,key=lambda s:(oldest[s["name"]]+timedelta(hours=float(s["deadline_hours"]))
                          if oldest[s["name"]] is not None else end+timedelta(days=1),
                          -int(s["priority"]),s["name"]))
+            taken={}
             for s in order:
                 name=s["name"]
                 take=min(capacity,backlog[name])
                 if take<=0:continue
+                taken[name]=take
                 before=backlog[name];backlog[name]-=take;sent[name]+=take;capacity-=take
                 if backlog[name]<1e-8:
                     backlog[name]=0.0;oldest[name]=None
@@ -100,6 +106,8 @@ def simulate(streams,visibility,grants,*,gross_bps,utilization=1.0,
                     if name not in violations:
                         deadline_events.append({"subsystem":name,"first_violation_utc":next_t.isoformat()})
                     violations.add(name)
+            if observer is not None:
+                observer(sat,next_t,backlog,oldest,taken)
             t=next_t
         result[sat]={"produced_bits":sum(produced.values()),"delivered_bits_assuming_perfect_link":sum(sent.values()),
                      "remaining_bits":sum(backlog.values()),"peak_backlog_bits":peak,

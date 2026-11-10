@@ -160,7 +160,7 @@ class TestDeadlineExplanation(unittest.TestCase):
         windows = [win("S1", "A", 0, 96), win("S2", "B", 0, 96)]
         streams = [{"name": "aocs", "rate_bps": 1500.0, "priority": 5, "deadline_hours": 6.0}]
         end = T0 + timedelta(hours=96)
-        out = explain_unmet_deadlines(streams, windows, T0, end, schedule=[], delivery={"all_deadlines_met": False},
+        out = explain_unmet_deadlines(streams, windows, T0, end, delivery={"all_deadlines_met": False},
                                       prep_s=PREP, teardown_s=TEAR, min_tx_s=MINTX, daily_cap_s=3 * 3600,
                                       gross_bps=256000, overhead=0.2,
                                       size_rate_result={"status": "INFEASIBLE_WITH_GIVEN_GRANTS"})
@@ -172,8 +172,7 @@ class TestDeadlineExplanation(unittest.TestCase):
         self.assertGreater(budget["required_hours"], budget["available_hours"])
 
     def test_met_deadlines_need_no_explanation(self):
-        out = explain_unmet_deadlines(LOW, [win("S1", "A", 0, 5)], T0, T0 + timedelta(hours=5), schedule=[],
-                                      delivery={"all_deadlines_met": True}, prep_s=PREP, teardown_s=TEAR,
+        out = explain_unmet_deadlines(LOW, [win("S1", "A", 0, 5)], T0, T0 + timedelta(hours=5), delivery={"all_deadlines_met": True}, prep_s=PREP, teardown_s=TEAR,
                                       min_tx_s=MINTX, daily_cap_s=3 * 3600, gross_bps=256000, overhead=0.2)
         self.assertTrue(out["all_deadlines_met"])
 

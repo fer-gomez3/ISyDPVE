@@ -16,6 +16,7 @@ from .ground_protocol_planner import plan as grant_plan, utc as _utc
 from .dsn_scheduler import schedule_contacts, explain_unmet_deadlines
 from .link_budget import evaluate_link
 from .rf_trade_study import run as run_rf_trade
+from .memory_queues import QueueObserver, load_memory_config, write_outputs as write_queue_outputs
 
 def _rows(path):
     with Path(path).open(newline="",encoding="utf-8") as f:
@@ -114,16 +115,18 @@ def run(output_dir=None, *, gross_bps=None, rf_scenario_path=None,
     grant_results=grant_plan(streams,visibility,effective_grants,
         utilization=1,overhead=overhead,setup_minutes=total_overhead_minutes,
         design_margin=0.2,epoch=epoch.isoformat())
+    queues=QueueObserver(streams,epoch,load_memory_config())
     delivery=simulate(streams,visibility,usable_grants,gross_bps=rate,
         overhead=overhead,utilization=1,setup_minutes=0,step_seconds=step_seconds,
-        start_utc=epoch.isoformat(),end_utc=horizon_end.isoformat())
+        start_utc=epoch.isoformat(),end_utc=horizon_end.isoformat(),observer=queues)
+    memory_queues=write_queue_outputs(queues,delivery,(horizon_end-epoch).total_seconds()/3600,out)
     sizing=size_rate(streams,visibility,usable_grants,overhead=overhead,
         utilization=1,setup_minutes=0,step_seconds=step_seconds,
         max_bps=max(rate*100,10000000),tolerance_bps=10,
         start_utc=epoch.isoformat(),end_utc=horizon_end.isoformat())
     explanation=explain_unmet_deadlines(streams,
         [{"satellite":w["satellite"],"station":w["station"],"start":w["start_utc"],"end":w["end_utc"]} for w in visibility],
-        epoch,horizon_end,schedule=effective_grants,delivery=delivery,prep_s=preparation_minutes*60,
+        epoch,horizon_end,delivery=delivery,prep_s=preparation_minutes*60,
         teardown_s=teardown_minutes*60,min_tx_s=float(shared["min_useful_tx_minutes"])*60,
         daily_cap_s=float(shared["dsn_daily_network_hours"])*3600,gross_bps=rate,overhead=overhead,
         size_rate_result=sizing)
@@ -165,7 +168,7 @@ def run(output_dir=None, *, gross_bps=None, rf_scenario_path=None,
                            "delivery":"perfect-reception fluid-bit simulation",
                            "gross_bps":rate,"overhead_fraction":overhead,
                            "setup":"full contact grants converted once to useful TX intervals","preparation_minutes":preparation_minutes,"teardown_minutes":teardown_minutes},
-            "baseline":baseline,"allocation":allocation,"deadline_explanation":explanation,"requests":requests,"grants":grant_results,
+            "baseline":baseline,"allocation":allocation,"deadline_explanation":explanation,"memory_queues":memory_queues,"requests":requests,"grants":grant_results,
             "delivery":delivery,"required_rate":sizing,"rf_budget":rf,"rf_trade":rf_trade,
             "satellite_summary":per_sat,"station_summary":station_summary}
     (out/"integrated_preliminary.json").write_text(json.dumps(result,indent=2,default=str)+"\n",encoding="utf-8")
@@ -196,6 +199,18 @@ def run(output_dir=None, *, gross_bps=None, rf_scenario_path=None,
             f"- Fairness (Jain index of usable time): {allocation['jain_fairness_usable_time']}."]
         for f in cov.get("analysis",{}).get("binding_constraints",[]):
             report.append(f"- Coverage constraint **{f['constraint']}**: {f['detail']}")
+    mem=memory_queues["memory"];gen=memory_queues["generation"]
+    report += ["","## OBDH memory: shared pool with logical queues per subsystem",
+        f"- {len(per_sat)} independent memories of {mem['capacity_mbit']:g} Mbit ({mem['usable_mbit']:g} usable, {mem['reserve_mbit']:g} reserve); "
+        "no physical partitions or quotas per subsystem; queues are logical (priority, age, maximum delivery age).",
+        f"- Generated (not downloaded): {gen['per_satellite_bps']:,} bps and {gen['per_satellite_mbit_per_day']:,} Mbit/day per satellite; "
+        f"{gen['constellation_bps']:,} bps, {gen['constellation_mbit_per_day']:,} Mbit/day and {gen['constellation_mbit_horizon']:,} Mbit over the horizon for {gen['constellation_satellites']} satellites.",
+        f"- Downlink order: {memory_queues['download_order_policy']}.",
+        "- Capacity, reserve and 65/70/85/95 % levels are simulation values, not approved requirements.",
+        "","| Satellite | Peak (Mbit) | % usable | Subsystem occupying most at peak | Usable limit exceeded |","|---|---:|---:|---|---|"]
+    for sat,v in memory_queues["satellites"].items():
+        top=max(v["by_stream"].items(),key=lambda kv:kv[1]["queue_mbit_at_total_peak"])
+        report.append(f"| {sat} | {v['peak_total_mbit']} | {v['peak_fraction_of_usable']:.1%} | {top[0]} ({top[1]['queue_mbit_at_total_peak']} Mbit) | {v['usable_limit_exceeded']} |")
     if not explanation["all_deadlines_met"]:
         report += ["","## Why deadlines are not met"]
         report += [f"- **{f['constraint']}**: {f['detail']}" for f in explanation["findings"]]

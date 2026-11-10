@@ -1,7 +1,0 @@
-satellite,station,start_utc,end_utc,downloaded_mbit,reason,priority_tier,pass_type,setup_minutes,acquisition_minutes,teardown_minutes
-SELENA_32,Goldstone,2030-07-15T02:05:10.811000Z,2030-07-15T03:25:10.811000Z,41.43136,adaptive_memory_deadline,5,standard_ttc,45,10,15
-SELENA_31,Canberra,2030-07-15T02:05:10.811000Z,2030-07-15T03:25:10.811000Z,41.43136,adaptive_memory_deadline,5,standard_ttc,45,10,15
-SELENA_23,Goldstone,2030-07-16T00:00:10.811000Z,2030-07-16T01:35:10.811000Z,225.11039,adaptive_memory_deadline,5,standard_ttc,45,10,15
-SELENA_22,Canberra,2030-07-16T00:35:10.811000Z,2030-07-16T02:10:10.811000Z,229.94405,adaptive_memory_deadline,5,standard_ttc,45,10,15
-SELENA_21,Goldstone,2030-07-17T00:00:10.811000Z,2030-07-17T01:55:10.811000Z,466.14141,adaptive_memory_deadline,5,standard_ttc,45,10,15
-SELENA_13,Goldstone,2030-07-18T00:00:10.811000Z,2030-07-18T02:10:10.811000Z,667.0835,adaptive_memory_deadline,5,standard_ttc,45,10,15

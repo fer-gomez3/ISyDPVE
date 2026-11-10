@@ -15,11 +15,29 @@ Capacity, reserve and thresholds come from ``data/adaptive_storage_scenario.json
 preventive trigger 65 %). They are simulation values, NOT approved requirements
 and NOT a selected physical memory device.
 """
+import csv
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 STATUS = "LOGICAL_QUEUES_IN_SHARED_MEMORY_PRELIMINARY"
+CONTACT_SOURCE = "ASSIGNED_CONTACTS_FROM_ttc.dsn_scheduler"
+TOL_MBIT = 1e-6  # one bit
+
+
+def _dt(v):
+    if isinstance(v, str):
+        v = datetime.fromisoformat(v.replace("Z", "+00:00"))
+    return v.astimezone(timezone.utc)
+
+
+def _ov(a, b, c, d):
+    return max(0.0, (min(b, d) - max(a, c)).total_seconds())
+
+
+def _window(w):
+    return (w["satellite"], w["station"], _dt(w.get("start", w.get("start_utc"))), _dt(w.get("end", w.get("end_utc"))))
 
 
 def load_memory_config(path=None):
@@ -37,15 +55,38 @@ def load_memory_config(path=None):
 class QueueObserver:
     """Read-only observer for ``ground_delivery.simulate(observer=...)``."""
 
-    def __init__(self, streams, start, config, sample_seconds=1800):
+    def __init__(self, streams, start, config, sample_seconds=1800, contacts=None,
+                 visibility=None, min_tx_s=None, satellites=None):
+        """``contacts``: ASSIGNED contacts (dicts satellite, station, start, end,
+        tx_start, tx_end). None = contact accounting disabled; [] = no contact was
+        assigned (a requirement failure for every satellite)."""
         self.streams = {s["name"]: s for s in streams}
         self.cfg = config
-        self.start = start
+        self.start = _dt(start)
         self.sample = sample_seconds
         self.rows = []
         self.stats = {}
         self._last_sample = {}
         self._prev_t = {}
+        self._state = {}
+        self._max_dt = 0.0
+        self.visibility = None if visibility is None else [_window(w) for w in visibility]
+        self.min_tx_s = min_tx_s
+        self.track_contacts = contacts is not None
+        self.records = {}
+        self.unattributed = {}
+        for c in (contacts or []):
+            rec = {"satellite": c["satellite"], "station": c["station"], "start": _dt(c["start"]),
+                   "end": _dt(c["end"]), "tx_start": _dt(c["tx_start"]), "tx_end": _dt(c["tx_end"]),
+                   "reason": c.get("reason"), "backlog_start": None, "backlog_tx_start": None,
+                   "backlog_end": None, "generated": {n: 0.0 for n in self.streams},
+                   "downloaded": {n: 0.0 for n in self.streams}}
+            self.records.setdefault(c["satellite"], []).append(rec)
+        for recs in self.records.values():
+            recs.sort(key=lambda r: r["start"])
+        self.sats_expected = sorted(set(satellites or ()) | {w[0] for w in (self.visibility or ())} | set(self.records))
+        self.cut_times = sorted({x for recs in self.records.values() for r in recs
+                                 for x in (r["start"], r["end"], r["tx_start"], r["tx_end"])})
 
     def _stat(self, sat):
         return self.stats.setdefault(sat, {
@@ -60,6 +101,10 @@ class QueueObserver:
         prev = self._prev_t.get(sat, self.start)
         dt = (t - prev).total_seconds()
         self._prev_t[sat] = t
+        self._max_dt = max(self._max_dt, dt)
+        if self.track_contacts:
+            self._account_contacts(sat, prev, t, backlog, taken)
+        self._state[sat] = {n: v for n, v in backlog.items()}
         total = sum(backlog.values())
         st["elapsed_s"] += dt
         cap = self.cfg["capacity_mbit"] * 1e6
@@ -92,6 +137,139 @@ class QueueObserver:
                                   "sent_in_step_mbit": round(taken.get(n, 0.0) / 1e6, 6),
                                   "total_occupancy_fraction": round(total / cap, 5)})
 
+    def _account_contacts(self, sat, prev, t, backlog, taken):
+        """Attribute generation, backlog snapshots and downloads to assigned contacts.
+
+        Snapshots use the end-of-previous-step state, exact when contact
+        boundaries lie on simulation steps (the scheduler grid does)."""
+        last = self._state.get(sat) or {n: 0.0 for n in self.streams}
+        recs = self.records.get(sat, [])
+        best, best_ov = None, 0.0
+        for r in recs:
+            if r["backlog_start"] is None and t > r["start"]:
+                r["backlog_start"] = dict(last)
+            if r["backlog_tx_start"] is None and t > r["tx_start"]:
+                r["backlog_tx_start"] = dict(last)
+            ov = _ov(prev, t, r["start"], r["end"])
+            if ov > 0:
+                for n, s in self.streams.items():
+                    r["generated"][n] += float(s["rate_bps"]) * ov
+            if r["backlog_end"] is None and t >= r["end"]:
+                r["backlog_end"] = dict(backlog)
+            tov = _ov(prev, t, r["tx_start"], r["tx_end"])
+            if tov > best_ov:
+                best, best_ov = r, tov
+        if taken:
+            if best is None:
+                u = self.unattributed.setdefault(sat, {n: 0.0 for n in self.streams})
+                for n, v in taken.items():
+                    u[n] += v
+            else:
+                for n, v in taken.items():
+                    best["downloaded"][n] += v
+
+    def _finalize_contacts(self):
+        for sat, recs in self.records.items():
+            final = self._state.get(sat, {n: 0.0 for n in self.streams})
+            for r in recs:
+                for key in ("backlog_start", "backlog_tx_start", "backlog_end"):
+                    if r[key] is None:
+                        r[key] = dict(final)
+
+    def contact_rows(self):
+        """Assigned contacts with data accounting (Mbit)."""
+        self._finalize_contacts()
+        rows = []
+        for sat, recs in sorted(self.records.items()):
+            for r in recs:
+                m = lambda d: {n: v / 1e6 for n, v in d.items()}
+                b0, b1, g, dl, b2 = (m(r["backlog_start"]), m(r["backlog_tx_start"]), m(r["generated"]),
+                                     m(r["downloaded"]), m(r["backlog_end"]))
+                resid = sum(b0.values()) + sum(g.values()) - sum(dl.values()) - sum(b2.values())
+                rows.append({
+                    "satellite": sat, "station": r["station"],
+                    "start_utc": r["start"].isoformat(), "end_utc": r["end"].isoformat(),
+                    "reserved_minutes": round((r["end"] - r["start"]).total_seconds() / 60, 4),
+                    "tx_start_utc": r["tx_start"].isoformat(), "tx_end_utc": r["tx_end"].isoformat(),
+                    "useful_tx_minutes": round(max(0.0, (r["tx_end"] - r["tx_start"]).total_seconds()) / 60, 4),
+                    "reason": r["reason"],
+                    "backlog_at_start_mbit": round(sum(b0.values()), 6),
+                    "backlog_at_tx_start_mbit": round(sum(b1.values()), 6),
+                    "generated_during_contact_mbit": round(sum(g.values()), 6),
+                    "downloaded_mbit": round(sum(dl.values()), 6),
+                    "backlog_after_mbit": round(sum(b2.values()), 6),
+                    "backlog_drained": sum(b2.values()) < 1e-6,
+                    "balance_residual_mbit": round(resid, 9),
+                    "backlog_at_start_by_stream_mbit": {n: round(v, 6) for n, v in b0.items()},
+                    "generated_during_contact_by_stream_mbit": {n: round(v, 6) for n, v in g.items()},
+                    "downloaded_by_stream_mbit": {n: round(v, 6) for n, v in dl.items()},
+                    "backlog_after_by_stream_mbit": {n: round(v, 6) for n, v in b2.items()},
+                    "status": "ASSIGNED_CONTACT_NOT_DSN_BOOKING"})
+        rows.sort(key=lambda x: (x["start_utc"], x["station"], x["satellite"]))
+        return rows
+
+    def requirement_failures(self, delivery):
+        """Explicit failures: lost/overflowing data, missed deadlines, bad contacts."""
+        cap = self.cfg["capacity_mbit"]
+        usable = self.cfg["usable_mbit"]
+        out = []
+
+        def fail(code, detail, sat=None, stream=None, **extra):
+            out.append({"code": code, "satellite": sat, "stream": stream, "detail": detail,
+                        "severity": "REQUIREMENT_FAILURE", **extra})
+
+        for sat, st in sorted(self.stats.items()):
+            d = delivery["satellites"][sat]
+            for n, x in d["by_stream"].items():
+                res = (x["produced_bits"] - x["delivered_bits"] - x["remaining_bits"]) / 1e6
+                if abs(res) > TOL_MBIT:
+                    fail("DATA_CONSERVATION_VIOLATION", f"initial + generated - downloaded - final = {res:.9f} Mbit", sat, n)
+                expected = float(self.streams[n]["rate_bps"]) * st["elapsed_s"] / 1e6
+                if abs(x["produced_bits"] / 1e6 - expected) > 1e-3:
+                    fail("DATA_GENERATION_MISMATCH", f"generated {x['produced_bits']/1e6:.6f} Mbit, rate x time {expected:.6f} Mbit", sat, n)
+            peak = st["peak_total_bits"] / 1e6
+            if peak > cap + TOL_MBIT:
+                fail("MEMORY_OVERFLOW", f"peak {peak:.2f} Mbit exceeds capacity {cap:g} Mbit by {peak-cap:.2f} Mbit; "
+                     "this data would be lost on a real memory (the model does not drop it)", sat,
+                     overflow_mbit=round(peak - cap, 4))
+            elif peak > usable + TOL_MBIT:
+                fail("MEMORY_RESERVE_EXCEEDED", f"peak {peak:.2f} Mbit uses the reserve (usable {usable:g} Mbit)", sat)
+            for ev in d["deadline_events"]:
+                fail("DEADLINE_MISSED", f"first age violation at {ev['first_violation_utc']} "
+                     f"(maximum age {self.streams[ev['subsystem']]['deadline_hours']:g} h)", sat, ev["subsystem"],
+                     first_violation_utc=ev["first_violation_utc"])
+        if not self.track_contacts:
+            return out
+        for sat in self.sats_expected:
+            if not self.records.get(sat):
+                fail("NO_CONTACT", "no contact was assigned to this satellite", sat)
+        for sat, u in self.unattributed.items():
+            tot = sum(u.values()) / 1e6
+            if tot > TOL_MBIT:
+                fail("UNATTRIBUTED_DOWNLOAD", f"{tot:.6f} Mbit downloaded outside any assigned contact", sat)
+        tol = 10 * TOL_MBIT  # exact: simulation steps are cut at contact boundaries
+        for r in self.contact_rows():
+            if abs(r["balance_residual_mbit"]) > tol:
+                fail("CONTACT_BALANCE_VIOLATION", f"contact {r['start_utc']}: backlog + generated - downloaded - "
+                     f"backlog_after = {r['balance_residual_mbit']} Mbit", r["satellite"])
+            if self.min_tx_s is not None and r["useful_tx_minutes"] * 60 < self.min_tx_s - 1e-6:
+                fail("CONTACT_BELOW_MINIMUM_TX", f"useful TX {r['useful_tx_minutes']} min is below the minimum", r["satellite"])
+        flat = [(sat, r) for sat, recs in self.records.items() for r in recs]
+        for key, label in (("station", "STATION"), ("satellite", "SATELLITE")):
+            names = {r[key] for _, r in flat}
+            for name in sorted(names):
+                mine = sorted((r for _, r in flat if r[key] == name), key=lambda r: r["start"])
+                for a, b in zip(mine, mine[1:]):
+                    if a["end"] > b["start"]:
+                        fail(f"CONTACT_OVERLAP_{label}", f"{name}: {a['start'].isoformat()} overlaps {b['start'].isoformat()}",
+                             a["satellite"] if key == "satellite" else None)
+        if self.visibility is not None:
+            for sat, r in flat:
+                if not any(w[0] == sat and w[1] == r["station"] and w[2] <= r["start"] and r["end"] <= w[3]
+                           for w in self.visibility):
+                    fail("CONTACT_OUTSIDE_VISIBILITY", f"{r['station']} {r['start'].isoformat()}", sat)
+        return out
+
     def summary(self, delivery, horizon_hours):
         cap_mbit = self.cfg["capacity_mbit"]
         sats = {}
@@ -121,7 +299,37 @@ class QueueObserver:
         gen = {n: sum(delivery["satellites"][s]["by_stream"][n]["produced_bits"] for s in sats) / 1e6 for n in self.streams}
         total_rate = sum(float(s["rate_bps"]) for s in self.streams.values())
         n_sat = len(sats)
+        conservation = {}
+        for sat in sats:
+            by = delivery["satellites"][sat]["by_stream"]
+            streams_c = {n: {"initial_mbit": 0.0, "generated_mbit": round(x["produced_bits"] / 1e6, 6),
+                             "downloaded_mbit": round(x["delivered_bits"] / 1e6, 6),
+                             "final_mbit": round(x["remaining_bits"] / 1e6, 6),
+                             "residual_mbit": round((x["produced_bits"] - x["delivered_bits"] - x["remaining_bits"]) / 1e6, 9)}
+                         for n, x in by.items()}
+            conservation[sat] = {
+                "initial_mbit": 0.0,
+                "generated_mbit": round(sum(v["generated_mbit"] for v in streams_c.values()), 6),
+                "downloaded_mbit": round(sum(v["downloaded_mbit"] for v in streams_c.values()), 6),
+                "final_mbit": round(sum(v["final_mbit"] for v in streams_c.values()), 6),
+                "residual_mbit": round(sum(v["residual_mbit"] for v in streams_c.values()), 9),
+                "by_stream": streams_c}
+        failures = self.requirement_failures(delivery)
+        counts = {}
+        for f in failures:
+            counts[f["code"]] = counts.get(f["code"], 0) + 1
+        contacts_out = self.contact_rows() if self.track_contacts else None
         return {"status": STATUS,
+                "conservation": {"equation": "M_initial + D_generated = D_downloaded + M_final (per satellite and per subsystem)",
+                                 "initial_state": "memory empty at the start of the horizon (simulation assumption)",
+                                 "max_abs_residual_mbit": max([abs(c["residual_mbit"]) for c in conservation.values()] +
+                                                              [abs(v["residual_mbit"]) for c in conservation.values() for v in c["by_stream"].values()] or [0.0]),
+                                 "satellites": conservation},
+                "requirements": {"status": "REQUIREMENTS_MET" if not failures else "REQUIREMENTS_NOT_MET",
+                                 "failures": failures, "counts_by_code": counts,
+                                 "note": "Overflow, loss and missed deadlines are reported as failures; nothing is hidden or reduced."},
+                "contact_source": CONTACT_SOURCE if self.track_contacts else None,
+                "assigned_contacts": contacts_out,
                 "model": "one independent OBDH memory per satellite; shared pool, logical queue per stream; "
                          "no physical partitions or fixed quotas; telemetry is not reduced",
                 "download_order_policy": "earliest deadline first (oldest bit + max age), priority as tie breaker, FIFO inside each stream",
@@ -143,16 +351,66 @@ class QueueObserver:
                 "satellites": sats}
 
 
+def _write_csv(path, rows, fields=None):
+    rows = list(rows)
+    fields = fields or (list(rows[0]) if rows else ["satellite"])
+    with Path(path).open("w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=fields)
+        w.writeheader()
+        w.writerows(rows)
+
+
+def requested_duration_rows(contacts):
+    """Rows for ``requested_contact_durations.csv`` built ONLY from assigned contacts.
+
+    Candidate visibility windows are never mixed in; the file is the input of the
+    antenna / EPS / thermal sizing chain.
+    """
+    return [{"satellite": c["satellite"], "station": c["station"],
+             "reservation_start_utc": c["start_utc"], "reservation_end_utc": c["end_utc"],
+             "reserved_minutes": c["reserved_minutes"],
+             "assigned_useful_tx_minutes": c["useful_tx_minutes"],
+             "backlog_at_start_mbit": c["backlog_at_start_mbit"],
+             "backlog_at_tx_start_mbit": c["backlog_at_tx_start_mbit"],
+             "generated_during_contact_mbit": c["generated_during_contact_mbit"],
+             "downloaded_mbit": c["downloaded_mbit"],
+             "backlog_after_mbit": c["backlog_after_mbit"],
+             "backlog_drained": c["backlog_drained"],
+             "source": CONTACT_SOURCE, "status": c["status"]} for c in contacts]
+
+
 def write_outputs(observer, delivery, horizon_hours, out_dir):
-    """Write ``memory_queues.csv`` (sampled) and ``memory_queues_summary.json``."""
-    import csv
+    """Write the queue / contact / download tables and the JSON summary.
+
+    memory_queues.csv            sampled per-subsystem queue curves
+    assigned_contacts.csv        contacts actually assigned, with data accounting
+    requested_contact_durations.csv  same contacts, input of the antenna/EPS/thermal chain
+    downloaded_by_subsystem.csv  generated / downloaded / remaining per satellite and subsystem
+    memory_queues_summary.json   everything, plus conservation and requirement failures
+    """
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
     summary = observer.summary(delivery, horizon_hours)
     if observer.rows:
-        with (out / "memory_queues.csv").open("w", newline="", encoding="utf-8") as f:
-            w = csv.DictWriter(f, fieldnames=list(observer.rows[0]))
-            w.writeheader()
-            w.writerows(observer.rows)
+        _write_csv(out / "memory_queues.csv", observer.rows)
+    dl = [{"satellite": sat, "stream": n, "priority": x["priority"], "max_age_hours": x["max_age_hours"],
+           "generated_mbit": x["generated_mbit"], "downloaded_mbit": x["delivered_mbit"],
+           "remaining_mbit": x["remaining_mbit"], "peak_queue_mbit": x["peak_queue_mbit"],
+           "max_oldest_age_hours": x["max_oldest_age_hours"], "deadline_violated": x["deadline_violated"]}
+          for sat, v in summary["satellites"].items() for n, x in v["by_stream"].items()]
+    if dl:
+        _write_csv(out / "downloaded_by_subsystem.csv", dl)
+    contacts = summary["assigned_contacts"]
+    if contacts is not None:
+        flat = [{k: v for k, v in c.items() if not isinstance(v, dict)} for c in contacts]
+        for c, row in zip(contacts, flat):
+            for key in ("backlog_at_start_by_stream_mbit", "downloaded_by_stream_mbit"):
+                for n, v in c[key].items():
+                    row[f"{key.replace('_by_stream_mbit', '')}_{n}_mbit"] = v
+        fields = list(flat[0]) if flat else ["satellite", "station", "start_utc", "end_utc"]
+        _write_csv(out / "assigned_contacts.csv", flat, fields)
+        req = requested_duration_rows(contacts)
+        _write_csv(out / "requested_contact_durations.csv", req,
+                   list(req[0]) if req else ["satellite", "station", "reservation_start_utc", "assigned_useful_tx_minutes", "source"])
     (out / "memory_queues_summary.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
     return summary

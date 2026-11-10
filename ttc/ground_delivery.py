@@ -43,7 +43,9 @@ def simulate(streams,visibility,grants,*,gross_bps,utilization=1.0,
 
     ``observer(sat, time, backlog_bits, oldest, taken_bits)`` is optional and
     read-only: it is called after every step with the per-stream queue state so
-    callers can account memory occupancy without a second implementation.
+    callers can account memory occupancy without a second implementation. If the
+    observer exposes ``cut_times`` (contact boundaries), steps are split there so
+    its per-contact accounting is exact; downloads were already exact.
     """
     windows=_validate(streams,visibility,grants)
     if gross_bps<0 or not 0<utilization<=1 or not 0<=overhead<1 or setup_minutes<0 or step_seconds<=0:
@@ -60,6 +62,7 @@ def simulate(streams,visibility,grants,*,gross_bps,utilization=1.0,
         tx_start=a+timedelta(minutes=setup_minutes)
         schedule.setdefault(g["satellite"],[]).append((tx_start,finish,g["station"]))
     for sat in schedule:schedule[sat].sort()
+    cuts=sorted(getattr(observer,"cut_times",()) or ())
     result={}
     for sat in sats:
         backlog={s["name"]:0.0 for s in streams}
@@ -72,6 +75,9 @@ def simulate(streams,visibility,grants,*,gross_bps,utilization=1.0,
         while t<end:
             dt=min(step_seconds,(end-t).total_seconds())
             next_t=t+timedelta(seconds=dt)
+            cut=next((c for c in cuts if c>t),None)
+            if cut is not None and cut<next_t:
+                next_t=cut;dt=(next_t-t).total_seconds()
             # Generate uniformly; timestamp midpoint approximates generation time.
             for s in streams:
                 name=s["name"];rate=float(s["rate_bps"])

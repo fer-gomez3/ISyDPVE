@@ -24,17 +24,23 @@ def build(output_dir, config_path="data/communications_budget_inputs.json",
         with durations.open(newline="",encoding="utf-8") as f:
             candidates=list(csv.DictReader(f))
         for c in candidates:
-            backlog=float(c["backlog_at_start_mbit"])
-            tx=c.get("required_useful_tx_minutes")
-            if not tx:
+            # Only ASSIGNED contacts (ttc.dsn_scheduler) are accepted; candidate
+            # visibility windows must never be sized as if they were reservations.
+            if not c.get("assigned_useful_tx_minutes") or "ASSIGNED_CONTACTS" not in (c.get("source") or ""):
+                continue
+            backlog=float(c["backlog_at_tx_start_mbit"])
+            tx=c["assigned_useful_tx_minutes"]
+            if float(tx)<=0:
                 continue
             result=size(cfg,backlog,float(tx),float(rate),rf_power_w)
             rows.append({"satellite":c["satellite"],"station":c["station"],
-                         "visibility_start_utc":c["visibility_start_utc"],
-                         "visibility_minutes":c["visibility_minutes"],
-                         "requested_reservation_minutes":c["requested_reservation_minutes"],
+                         "reservation_start_utc":c["reservation_start_utc"],
+                         "reserved_minutes":c["reserved_minutes"],
+                         "assigned_useful_tx_minutes":c["assigned_useful_tx_minutes"],
+                         "backlog_drained":c["backlog_drained"],
+                         "downloaded_mbit":c["downloaded_mbit"],
                          **result})
-        source="scheduled_memory_backlog_from_dsn_pipeline"
+        source="assigned_contacts_from_dsn_scheduler"
     else:
         source="NO_SCHEDULED_BACKLOG_AVAILABLE"
     if not rows:
@@ -56,7 +62,7 @@ def build(output_dir, config_path="data/communications_budget_inputs.json",
             "cases":len(rows),"missing_inputs":missing,
             "antenna_sizing_file":"integrated_antenna_eps_thermal.csv" if rows else None,
             "eps_thermal_note":"TX DC and heat only. Complete EPS/TCS budgets cannot be closed with missing subsystem component powers and thermal boundary conditions.",
-            "dsn_note":"Estimates per candidate window, not an overlap-free booked allocation.",
+            "dsn_note":"Sized on contacts assigned by ttc.dsn_scheduler (hypothetical allocation, not DSN bookings); candidate visibility windows are not used.",
             "geometry_note":"Historical visibility shifted to 2030 is not mission propagation."}
     (out/"integrated_antenna_eps_thermal.json").write_text(json.dumps(result,indent=2)+"\n",encoding="utf-8")
     return result

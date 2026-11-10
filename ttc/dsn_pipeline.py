@@ -80,7 +80,8 @@ def run(contacts_path=DEFAULT_CONTACTS,output_dir="outputs/dsn_pipeline",
                  "start_utc":c["start"].isoformat(),"end_utc":c["end"].isoformat()} for c in contacts]
     grants=[{"satellite":c["satellite"],"station":c["station"],
              "start_utc":c["start"].isoformat(),"end_utc":c["end"].isoformat()} for c in useful]
-    queues=QueueObserver(streams,start,load_memory_config())
+    queues=QueueObserver(streams,start,load_memory_config(),contacts=schedule,visibility=offered,
+        min_tx_s=minimum_contact_seconds,satellites=sats)
     deadline_results=simulate_deadlines(streams,visibility,grants,gross_bps=downlink_bps,
         overhead=overhead,setup_minutes=0,start_utc=start.isoformat(),end_utc=end.isoformat(),observer=queues)
     cfg=json.loads((ROOT/"data"/"communications_budget_inputs.json").read_text(encoding="utf-8"))
@@ -123,13 +124,17 @@ def run(contacts_path=DEFAULT_CONTACTS,output_dir="outputs/dsn_pipeline",
             w.writeheader();w.writerows(t["rows"])
         result["satellites"][sat]={k:v for k,v in t.items() if k!="rows"}
     requested=estimate_requests(contacts,memory_timelines,known,downlink_bps,overhead,
-        prep,teardown,minimum_contact_seconds,out/"requested_contact_durations.csv")
+        prep,teardown,minimum_contact_seconds,out/"candidate_window_requests.csv")
     result["contact_duration_output"]={
         "file":"requested_contact_durations.csv",
-        "count":len(requested),
-        "interpretation":"Independent per-window estimates from modeled OBDH backlog; NOT a conflict-free DSN allocation",
-        "assumptions":"Uses backlog from the scheduled simulation, and accounts for telemetry generated during transmission; no simultaneous contacts",
+        "count":len(memory_queues["assigned_contacts"]),
+        "source":memory_queues["contact_source"],
+        "interpretation":"ASSIGNED contacts from ttc.dsn_scheduler (single source of truth): actual backlog, generated and downloaded data per contact. Input of the antenna/EPS/thermal chain.",
+        "candidate_windows_file":"candidate_window_requests.csv",
+        "candidate_windows_interpretation":"Independent per-visibility-window estimates; NOT reservations, NOT conflict-free, for visibility analysis only",
     }
+    result["requirements"]=memory_queues["requirements"]
+    result["data_conservation"]=memory_queues["conservation"]
     # Traceability against report-confirmed telemetry and hardware interfaces.
     comparison=[
         {"parameter":"Payload housekeeping","report_value":100.0,

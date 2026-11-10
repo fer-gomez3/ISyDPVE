@@ -115,7 +115,16 @@ def run(output_dir=None, *, gross_bps=None, rf_scenario_path=None,
     grant_results=grant_plan(streams,visibility,effective_grants,
         utilization=1,overhead=overhead,setup_minutes=total_overhead_minutes,
         design_margin=0.2,epoch=epoch.isoformat())
-    queues=QueueObserver(streams,epoch,load_memory_config())
+    assigned=[]
+    for g in effective_grants:
+        a,b=_utc(g["start_utc"]),_utc(g["end_utc"])
+        tx_a,tx_b=a+timedelta(minutes=preparation_minutes),b-timedelta(minutes=teardown_minutes)
+        if tx_b<=tx_a:tx_a=tx_b=a
+        assigned.append({"satellite":g["satellite"],"station":g["station"],"start":a,"end":b,
+                         "tx_start":tx_a,"tx_end":tx_b})
+    queues=QueueObserver(streams,epoch,load_memory_config(),contacts=assigned,visibility=visibility,
+        min_tx_s=float(shared["min_useful_tx_minutes"])*60,
+        satellites=sorted({w["satellite"] for w in visibility}))
     delivery=simulate(streams,visibility,usable_grants,gross_bps=rate,
         overhead=overhead,utilization=1,setup_minutes=0,step_seconds=step_seconds,
         start_utc=epoch.isoformat(),end_utc=horizon_end.isoformat(),observer=queues)
@@ -168,7 +177,7 @@ def run(output_dir=None, *, gross_bps=None, rf_scenario_path=None,
                            "delivery":"perfect-reception fluid-bit simulation",
                            "gross_bps":rate,"overhead_fraction":overhead,
                            "setup":"full contact grants converted once to useful TX intervals","preparation_minutes":preparation_minutes,"teardown_minutes":teardown_minutes},
-            "baseline":baseline,"allocation":allocation,"deadline_explanation":explanation,"memory_queues":memory_queues,"requests":requests,"grants":grant_results,
+            "baseline":baseline,"allocation":allocation,"deadline_explanation":explanation,"memory_queues":memory_queues,"requirements":memory_queues["requirements"],"requests":requests,"grants":grant_results,
             "delivery":delivery,"required_rate":sizing,"rf_budget":rf,"rf_trade":rf_trade,
             "satellite_summary":per_sat,"station_summary":station_summary}
     (out/"integrated_preliminary.json").write_text(json.dumps(result,indent=2,default=str)+"\n",encoding="utf-8")

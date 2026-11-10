@@ -176,3 +176,33 @@ Mbit per subsystem at the total peak, peak per queue, oldest age against the
 maximum age, and first crossing of each level. Capacity, reserve and levels are
 simulation values, not approved requirements nor a selected memory device.
 Generated data is not the same as downloaded data.
+
+## Single source of truth for DSN contacts (priority 1)
+
+`ttc.dsn_scheduler.schedule_contacts` is the only source of DSN contacts. Every
+downstream calculation reads the **assigned** contacts; candidate visibility
+windows are kept only for visibility analysis and are never reservations.
+
+| File (`dsn_pipeline` / `integrated_preliminary` output) | Content |
+|---|---|
+| `assigned_contacts.csv` | per contact: satellite, station, reservation start/end, useful TX, backlog at start (total and per subsystem), generated during the contact, downloaded, backlog after, balance residual |
+| `requested_contact_durations.csv` | the same assigned contacts; **the only input** of `integrated_requirements` (antenna, EPS, thermal). Rows without `source=ASSIGNED_CONTACTS_...` are refused. |
+| `candidate_window_requests.csv` | per-visibility-window estimates (`ttc.contact_duration`), NOT reservations, NOT conflict-free |
+| `memory_queues.csv`, `downloaded_by_subsystem.csv`, `memory_queues_summary.json` | per-subsystem curves, generated/downloaded/remaining, conservation and requirement failures |
+
+**Data conservation**, per satellite and per subsystem:
+`M_initial + D_generated = D_downloaded + M_final` (memory empty at the start).
+The delivery simulation splits its time steps at contact boundaries, so the
+per-contact accounting is exact (residual below 1 bit). Anything that breaks a
+requirement is reported explicitly in `requirements.failures` (status
+`REQUIREMENTS_NOT_MET`), never hidden: `DEADLINE_MISSED`, `MEMORY_OVERFLOW`
+(data that would be lost; the model itself does not drop data),
+`MEMORY_RESERVE_EXCEEDED`, `NO_CONTACT`, `DATA_CONSERVATION_VIOLATION`,
+`UNATTRIBUTED_DOWNLOAD`, `CONTACT_OVERLAP_STATION/SATELLITE`,
+`CONTACT_OUTSIDE_VISIBILITY`, `CONTACT_BELOW_MINIMUM_TX`.
+
+`ttc/pdr_data.py` loads these tables for the PDR report and draws memory curves
+by subsystem, downloaded data by subsystem/satellite and the contacts used
+(`pdr_data.plot_figures(output_dir)`, needs matplotlib). No engineering
+assumption was changed (45/10/15 min, AOCS 5/6 h and the provisional rates are
+as before). The 2020 windows remain NOT confirmed DSN availability for 2030.

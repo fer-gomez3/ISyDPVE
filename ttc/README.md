@@ -206,3 +206,42 @@ by subsystem, downloaded data by subsystem/satellite and the contacts used
 (`pdr_data.plot_figures(output_dir)`, needs matplotlib). No engineering
 assumption was changed (45/10/15 min, AOCS 5/6 h and the provisional rates are
 as before). The 2020 windows remain NOT confirmed DSN availability for 2030.
+
+## Antenna and RF budget from the assigned contacts (priority 2, `ttc/contact_rf_budget.py`)
+
+`python -m ttc.contact_rf_budget --input-dir outputs/dsn_pipeline` (after
+`python -m ttc.dsn_pipeline --telemetry-profile scenario`, or on the output of
+`integrated_preliminary`). It reads **only** `assigned_contacts.csv`; files that
+are not scheduler contacts or lack the needed columns are refused.
+
+Chain per assigned contact: backlog at the start of transmission and useful
+transmission time -> required net rate `backlog / t_tx + generation` and gross
+rate `/ (1 - overhead)` -> required EIRP (`link_budget.evaluate_link`) -> antenna
+gain after pointing loss -> RF power -> DC power `P_RF / eta_PA + P_el`, heat
+`P_DC - P_RF` and energy `P_DC * t_tx`. The antenna is driven by the most
+demanding assigned contact (identical satellites, one design). Energy is also
+given if the RF power followed each contact's rate. The design at the gross rate
+the scheduler assumed is reported separately (`design_at_scheduler_rate`).
+
+* **Parameters** come from the existing hypotheses, each with its source
+  (`parameters` in `rf_budget_summary.json`): link values from
+  `data/communications_budget_inputs.json` (illustrative), diameter and aperture
+  efficiency of the reference scenario from `data/hga_preliminary_design.json`
+  (`HYPOTHETICAL_NOT_SELECTED`), gimbal placeholder (2 W) and the EPS/thermal
+  allocations from `data/ttc_eps_preliminary_budget.json`.
+* **Missing parameter**: listed in `missing_parameters`; supply it to run a
+  reference scenario: `--diameter-m` (RF power is solved), `--rf-power-w` (the
+  minimum diameter is solved) or any of `--pa-efficiency`, `--electronics-w`,
+  `--required-ebn0-db`, `--rx-gt-db-per-k`, ... (`--no-hga-reference` ignores the HGA file).
+* **Not computed**: antenna mass, mechanical envelope, comparison between
+  diameters, lunar-surface return link, electrical loads of preparation /
+  acquisition / teardown (component powers unknown; the gimbal placeholder is
+  shown separately).
+
+Outputs: `rf_budget_summary.json`, `rf_budget_by_contact.csv`,
+`rf_budget_energy_by_day.csv`, `rf_coherence_checks.csv` (EPS, Thermal, ADCS and
+DSN checks with PASS / FAIL / WARNING / PENDING), `rf_parameter_conflicts.csv`
+(documented hypotheses that disagree and their effect on the RF power) and
+`figures/rf_*.png` (matplotlib). `main.py --integrated` and
+`integrated_preliminary` run it; `ttc.pdr_data.load` returns its tables.
+`ttc.rf_trade_study` remains a legacy illustrative grid and is not a sizing.

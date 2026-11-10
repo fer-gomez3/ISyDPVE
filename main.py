@@ -33,7 +33,8 @@ def main():
     parser.add_argument("--link-input",default="data/link_budget_inputs.json")
     parser.add_argument("--output-dir",default="outputs")
     parser.add_argument("--integrated",action="store_true",help="Run detailed DSN backlog and antenna/EPS/TCS interface outputs")
-    parser.add_argument("--rf-power-w",type=float,default=None,help="Available RF power budget in W; omitted means antenna diameter TBD")
+    parser.add_argument("--rf-power-w",type=float,default=None,help="Available RF power budget in W (cap): the antenna diameter is solved from the assigned contacts")
+    parser.add_argument("--diameter-m",type=float,default=None,help="Antenna diameter of the reference scenario in m (default: data/hga_preliminary_design.json, hypothetical); RF power is solved")
     args=parser.parse_args()
     out=Path(args.output_dir);out.mkdir(parents=True,exist_ok=True)
     contacts_path=args.contacts
@@ -103,7 +104,7 @@ def main():
         # Reuse generated telemetry and the detailed candidate-window backlog.
         (detailed/"telemetry_generation.json").write_text(
             (out/"telemetry_generation.json").read_text(encoding="utf-8"),encoding="utf-8")
-        integrated=build(detailed,rf_power_w=args.rf_power_w)
+        integrated=build(detailed,rf_power_w=args.rf_power_w,diameter_m=args.diameter_m)
         summary["integrated_requirements"]=integrated
         (out/"overview.json").write_text(json.dumps(summary,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
     print(json.dumps(summary,indent=2,ensure_ascii=False))

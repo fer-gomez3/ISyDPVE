@@ -16,6 +16,7 @@ from .ground_protocol_planner import plan as grant_plan, utc as _utc
 from .dsn_scheduler import schedule_contacts, explain_unmet_deadlines
 from .link_budget import evaluate_link
 from .rf_trade_study import run as run_rf_trade
+from .contact_rf_budget import run as rf_contact_run
 from .memory_queues import QueueObserver, load_memory_config, write_outputs as write_queue_outputs
 
 def _rows(path):
@@ -129,6 +130,8 @@ def run(output_dir=None, *, gross_bps=None, rf_scenario_path=None,
         overhead=overhead,utilization=1,setup_minutes=0,step_seconds=step_seconds,
         start_utc=epoch.isoformat(),end_utc=horizon_end.isoformat(),observer=queues)
     memory_queues=write_queue_outputs(queues,delivery,(horizon_end-epoch).total_seconds()/3600,out)
+    rf_contact=rf_contact_run(out,generation_bps=memory_queues["generation"]["per_satellite_bps"],
+        overhead=overhead,scheduler_gross_bps=rate,make_figures=True)
     sizing=size_rate(streams,visibility,usable_grants,overhead=overhead,
         utilization=1,setup_minutes=0,step_seconds=step_seconds,
         max_bps=max(rate*100,10000000),tolerance_bps=10,
@@ -177,7 +180,7 @@ def run(output_dir=None, *, gross_bps=None, rf_scenario_path=None,
                            "delivery":"perfect-reception fluid-bit simulation",
                            "gross_bps":rate,"overhead_fraction":overhead,
                            "setup":"full contact grants converted once to useful TX intervals","preparation_minutes":preparation_minutes,"teardown_minutes":teardown_minutes},
-            "baseline":baseline,"allocation":allocation,"deadline_explanation":explanation,"memory_queues":memory_queues,"requirements":memory_queues["requirements"],"requests":requests,"grants":grant_results,
+            "baseline":baseline,"allocation":allocation,"deadline_explanation":explanation,"memory_queues":memory_queues,"requirements":memory_queues["requirements"],"rf_contact_budget":{k:rf_contact.get(k) for k in ("status","missing_parameters","design","design_at_scheduler_rate","totals","verdict","checks","parameter_conflicts")},"requests":requests,"grants":grant_results,
             "delivery":delivery,"required_rate":sizing,"rf_budget":rf,"rf_trade":rf_trade,
             "satellite_summary":per_sat,"station_summary":station_summary}
     (out/"integrated_preliminary.json").write_text(json.dumps(result,indent=2,default=str)+"\n",encoding="utf-8")
@@ -194,7 +197,7 @@ def run(output_dir=None, *, gross_bps=None, rf_scenario_path=None,
         f"- All modeled deadlines met at baseline rate: **{delivery['all_deadlines_met']}**.",
         f"- Minimum modeled gross rate: **{sizing['required_gross_bps']} bps** ({sizing['status']}).",
         f"- RF link status: **{rf['status']}**. Missing inputs: {', '.join(rf.get('missing_inputs',[])) or 'none'}.",
-        "- RF antenna diameter/power/energy sensitivities: rf_trade_study.csv (illustrative inputs, not hardware selection).",
+        "- RF sizing from the ASSIGNED contacts: rf_budget_summary.json / rf_budget_by_contact.csv (section below). `rf_trade_study.csv` is a legacy illustrative sensitivity grid, not a hardware selection or a sizing.",
         "","| Satellite | Produced (Mbit) | Delivered (Mbit) | Remaining (Mbit) | Peak backlog (Mbit) | Deadline violations |",
         "|---|---:|---:|---:|---:|---|"]
     report += [f"| {x['satellite']} | {x['produced_mbit']} | {x['delivered_mbit']} | {x['remaining_mbit']} | {x['peak_memory_mbit']} | {x['deadline_violations'] or 'None'} |" for x in per_sat]
@@ -220,6 +223,19 @@ def run(output_dir=None, *, gross_bps=None, rf_scenario_path=None,
     for sat,v in memory_queues["satellites"].items():
         top=max(v["by_stream"].items(),key=lambda kv:kv[1]["queue_mbit_at_total_peak"])
         report.append(f"| {sat} | {v['peak_total_mbit']} | {v['peak_fraction_of_usable']:.1%} | {top[0]} ({top[1]['queue_mbit_at_total_peak']} Mbit) | {v['usable_limit_exceeded']} |")
+    d=rf_contact.get("design")
+    report += ["","## Antenna and RF budget from assigned contacts"]
+    if d and d.get("tx_dc_w") is not None:
+        dc=d["driving_contact"];tot=rf_contact["totals"];vd=rf_contact["verdict"]
+        report += [f"- Driving contact: {dc['satellite']} at {dc['start_utc']}, {dc['useful_tx_minutes']:.1f} min useful TX, "
+            f"{dc['backlog_at_tx_start_mbit']:.1f} Mbit queued, required gross rate {dc['required_gross_bps']/1e3:,.1f} kbps (limited by: {dc['limited_by']}).",
+            f"- Antenna ({d['mode']}): diameter {d['diameter_m']*100:.1f} cm, gain {d['gain_dbi']:.2f} dBi, half-power beamwidth {d['beamwidth_3db_deg']:.2f} deg; "
+            f"RF {d['rf_power_w']:.3f} W, DC {d['tx_dc_w']:.2f} W, heat {d['tx_heat_w']:.2f} W.",
+            f"- Energy of useful transmission: {tot['energy_tx_wh']:.1f} Wh over {rf_contact['contacts_used']} contacts ({tot['tx_hours']:.2f} h); heat {tot['heat_tx_wh']:.1f} Wh.",
+            f"- Coherence checks: {vd['PASS']} pass, {vd['FAIL']} fail, {vd['WARNING']} warning, {vd['PENDING']} pending (rf_coherence_checks.csv)."]
+    else:
+        report += [f"- Status **{rf_contact['status']}**; missing: {', '.join(rf_contact.get('missing_parameters') or []) or 'see summary'}."]
+    report += ["- Excluded: antenna mass, lunar-surface return link and the electrical loads of preparation/acquisition/teardown (component powers unknown)."]
     if not explanation["all_deadlines_met"]:
         report += ["","## Why deadlines are not met"]
         report += [f"- **{f['constraint']}**: {f['detail']}" for f in explanation["findings"]]

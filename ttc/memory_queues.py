@@ -79,7 +79,7 @@ class QueueObserver:
             rec = {"satellite": c["satellite"], "station": c["station"], "start": _dt(c["start"]),
                    "end": _dt(c["end"]), "tx_start": _dt(c["tx_start"]), "tx_end": _dt(c["tx_end"]),
                    "reason": c.get("reason"), "backlog_start": None, "backlog_tx_start": None,
-                   "backlog_end": None, "generated": {n: 0.0 for n in self.streams},
+                   "backlog_end": None, "backlog_tx_end": None, "generated": {n: 0.0 for n in self.streams},
                    "downloaded": {n: 0.0 for n in self.streams}}
             self.records.setdefault(c["satellite"], []).append(rec)
         for recs in self.records.values():
@@ -154,6 +154,8 @@ class QueueObserver:
             if ov > 0:
                 for n, s in self.streams.items():
                     r["generated"][n] += float(s["rate_bps"]) * ov
+            if r["backlog_tx_end"] is None and t >= r["tx_end"]:
+                r["backlog_tx_end"] = dict(backlog)
             if r["backlog_end"] is None and t >= r["end"]:
                 r["backlog_end"] = dict(backlog)
             tov = _ov(prev, t, r["tx_start"], r["tx_end"])
@@ -172,7 +174,7 @@ class QueueObserver:
         for sat, recs in self.records.items():
             final = self._state.get(sat, {n: 0.0 for n in self.streams})
             for r in recs:
-                for key in ("backlog_start", "backlog_tx_start", "backlog_end"):
+                for key in ("backlog_start", "backlog_tx_start", "backlog_tx_end", "backlog_end"):
                     if r[key] is None:
                         r[key] = dict(final)
 
@@ -185,6 +187,7 @@ class QueueObserver:
                 m = lambda d: {n: v / 1e6 for n, v in d.items()}
                 b0, b1, g, dl, b2 = (m(r["backlog_start"]), m(r["backlog_tx_start"]), m(r["generated"]),
                                      m(r["downloaded"]), m(r["backlog_end"]))
+                b3 = m(r["backlog_tx_end"])
                 resid = sum(b0.values()) + sum(g.values()) - sum(dl.values()) - sum(b2.values())
                 rows.append({
                     "satellite": sat, "station": r["station"],
@@ -198,7 +201,9 @@ class QueueObserver:
                     "generated_during_contact_mbit": round(sum(g.values()), 6),
                     "downloaded_mbit": round(sum(dl.values()), 6),
                     "backlog_after_mbit": round(sum(b2.values()), 6),
+                    "backlog_after_tx_mbit": round(sum(b3.values()), 6),
                     "backlog_drained": sum(b2.values()) < 1e-6,
+                    "backlog_drained_at_tx_end": sum(b3.values()) < 1e-3,
                     "balance_residual_mbit": round(resid, 9),
                     "backlog_at_start_by_stream_mbit": {n: round(v, 6) for n, v in b0.items()},
                     "generated_during_contact_by_stream_mbit": {n: round(v, 6) for n, v in g.items()},
@@ -375,7 +380,10 @@ def requested_duration_rows(contacts):
              "generated_during_contact_mbit": c["generated_during_contact_mbit"],
              "downloaded_mbit": c["downloaded_mbit"],
              "backlog_after_mbit": c["backlog_after_mbit"],
+             "backlog_after_tx_mbit": c["backlog_after_tx_mbit"],
+             "backlog_drained_at_tx_end": c["backlog_drained_at_tx_end"],
              "backlog_drained": c["backlog_drained"],
+             "tx_start_utc": c["tx_start_utc"], "tx_end_utc": c["tx_end_utc"],
              "source": CONTACT_SOURCE, "status": c["status"]} for c in contacts]
 
 

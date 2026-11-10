@@ -6,6 +6,10 @@
 * downloaded data by subsystem and satellite,
 * the DSN contacts actually used (assigned contacts, not candidate windows).
 
+The antenna/RF budget (``ttc.contact_rf_budget``: rate, EIRP, antenna, RF power,
+DC, heat, energy per contact and per day, coherence checks) is loaded with the
+same call and its figures are written by ``ttc.contact_rf_budget.run``.
+
 Everything comes from ``memory_queues.csv``, ``downloaded_by_subsystem.csv``,
 ``assigned_contacts.csv`` and ``memory_queues_summary.json`` written by
 ``dsn_pipeline`` / ``integrated_preliminary``. Figures are labelled as
@@ -36,6 +40,11 @@ def load(output_dir):
             "downloaded_by_subsystem": _rows(out / "downloaded_by_subsystem.csv"),
             "assigned_contacts": _rows(out / "assigned_contacts.csv"),
             "summary": summary,
+            "rf_budget": (json.loads((out / "rf_budget_summary.json").read_text(encoding="utf-8"))
+                          if (out / "rf_budget_summary.json").exists() else None),
+            "rf_by_contact": _rows(out / "rf_budget_by_contact.csv"),
+            "rf_energy_by_day": _rows(out / "rf_budget_energy_by_day.csv"),
+            "rf_coherence_checks": _rows(out / "rf_coherence_checks.csv"),
             "requirements": None if summary is None else summary["requirements"],
             "conservation": None if summary is None else summary["conservation"],
             "caveat": CAVEAT}

@@ -1,0 +1,19 @@
+{
+  "status": "ILLUSTRATIVE_ENGINEERING_SENSITIVITY_NOT_APPROVED_OR_DSN_GUARANTEED",
+  "description": "Values are scenario placeholders for a trade study, not sourced hardware or a verified DSN configuration. Validate frequencies, DSN G/T, modulation/FEC Eb/N0 and losses before PDR selection.",
+  "frequency_hz": 8400000000,
+  "distance_km": 405000,
+  "tx_diameters_m": [
+    0.15,
+    0.3,
+    0.45
+  ],
+  "tx_efficiency": 0.55,
+  "pointing_error_deg": 0.15,
+  "rx_gt_db_per_k": 45,
+  "required_ebn0_db": 6,
+  "losses_db": 4,
+  "margin_db": 3,
+  "pa_efficiency": 0.35,
+  "electronics_w": 8
+}

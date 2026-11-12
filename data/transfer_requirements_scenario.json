@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "description": "WORKING SCENARIO: PDF values plus explicitly hypothetical subsystem rates. Not approved flight requirements.",
+  "policy": {
+    "priority_max_age_hours": {
+      "1": 168,
+      "2": 72,
+      "3": 24,
+      "4": 12,
+      "5": 6
+    },
+    "priority_scale": "1=low,5=critical. Priority and max data age are planning assumptions.",
+    "transmitter_dc_w": null,
+    "transmitter_rf_w": null,
+    "transmitter_standby_w": null,
+    "_shared_parameters": "Shared values (downlink rate, overhead, setup, minimum contact, DSN hours) live only in data/ttc_parameters.json."
+  },
+  "streams": [
+    {
+      "name": "payload_housekeeping",
+      "priority": 3,
+      "mode": "continuous",
+      "rate_bps": 100,
+      "max_age_hours": 24,
+      "status": "PDF_BASELINE",
+      "source": "Subsystems PDF §2.7.3 (printed p.14): 100 bps X-band DTE housekeeping. Table 4 XD3 range is a separate interface/capacity statement; do not add without clarification."
+    },
+    {
+      "name": "structures_mechanisms",
+      "priority": 3,
+      "mode": "continuous",
+      "rate_bps": 32,
+      "max_age_hours": 24,
+      "status": "PDF_BASELINE",
+      "source": "Subsystems PDF §7.5.3 (printed p.52): 32 bps total mechanisms HK. Contains 6 RTD channels sampled at 0.2 Hz."
+    },
+    {
+      "name": "aocs_nominal_hk",
+      "priority": 4,
+      "mode": "continuous",
+      "rate_bps": 256,
+      "max_age_hours": 12,
+      "status": "ASSUMED_TBC",
+      "source": "Engineering placeholder: 256 bps average, NOT measured in PDF. PDF §3.1 identifies actuators/sensors."
+    },
+    {
+      "name": "aocs_maneuver_logs",
+      "priority": 4,
+      "mode": "event",
+      "bytes_per_event": 8192,
+      "event_interval_hours": 168,
+      "max_age_hours": 12,
+      "status": "ASSUMED_TBC",
+      "source": "Engineering placeholder: 8 KiB per weekly event; real maneuver rate TBD."
+    },
+    {
+      "name": "eps_hk",
+      "priority": 4,
+      "mode": "continuous",
+      "rate_bps": 128,
+      "max_age_hours": 12,
+      "status": "ASSUMED_TBC",
+      "source": "Engineering placeholder: 128 bps average; EPS PDF §4 specifies electrical architecture, not telemetry throughput."
+    },
+    {
+      "name": "thermal_hk",
+      "priority": 3,
+      "mode": "continuous",
+      "rate_bps": 64,
+      "max_age_hours": 24,
+      "status": "ASSUMED_TBC",
+      "source": "Engineering placeholder: 64 bps average; PDF §5 identifies PT100/PT1000 and heater channels, counts/cadence TBD."
+    },
+    {
+      "name": "propulsion_hk",
+      "priority": 4,
+      "mode": "continuous",
+      "rate_bps": 32,
+      "max_age_hours": 12,
+      "status": "ASSUMED_TBC",
+      "source": "Engineering placeholder: 32 bps baseline propulsion health."
+    },
+    {
+      "name": "propulsion_maneuver_logs",
+      "priority": 5,
+      "mode": "event",
+      "bytes_per_event": 16384,
+      "event_interval_hours": 720,
+      "max_age_hours": 6,
+      "status": "ASSUMED_TBC",
+      "source": "Engineering placeholder: 16 KiB per 30-day equivalent event. Actual maneuvers are irregular; mean only."
+    },
+    {
+      "name": "obdh_hk_logs",
+      "priority": 5,
+      "mode": "continuous",
+      "rate_bps": 128,
+      "max_age_hours": 6,
+      "status": "ASSUMED_TBC",
+      "source": "Engineering placeholder: 128 bps average for OBC/FDIR logs; bursts and memory TBD."
+    }
+  ]
+}

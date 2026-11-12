@@ -1,0 +1,69 @@
+name: SELENA Python validation
+on:
+  push:
+    branches: [feature/ttc-initial-structure]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: selena-validation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.11', '3.12']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: requirements.txt
+      - name: Install dependencies
+        # requirements.txt holds everything the tests import (numpy, astropy,
+        # openpyxl, pytest); matplotlib is optional and only draws PNG plots.
+        run: python -m pip install -r requirements.txt matplotlib
+      - name: Compile Python modules
+        run: python -m compileall -q ttc tests
+      - name: Run tests
+        run: python -m pytest -ra --junitxml=outputs/pytest-junit.xml tests
+      - name: Generate DSN-to-OBDH scenario (256 kbps is illustrative, not confirmed)
+        run: python -m ttc.dsn_pipeline --downlink-bps 256000
+      - name: Check that the pipeline produced CSV and JSON
+        run: |
+          test -s outputs/dsn_pipeline/summary.json
+          test -s outputs/dsn_pipeline/candidate_schedule.csv
+          test "$(ls outputs/dsn_pipeline/*_obdh.csv | wc -l)" -eq 8
+          python -c "import json; json.load(open('outputs/dsn_pipeline/summary.json'))"
+      - name: Test summary
+        if: always()
+        run: |
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import xml.etree.ElementTree as ET, os
+          p = "outputs/pytest-junit.xml"
+          if os.path.exists(p):
+              s = ET.parse(p).getroot()
+              s = s if s.tag == "testsuite" else s[0]
+              n = {k: int(s.get(k, 0)) for k in ("tests", "failures", "errors", "skipped")}
+              print(f"### pytest (Python ${{ matrix.python-version }})\n")
+              print(f"passed: {n['tests'] - n['failures'] - n['errors'] - n['skipped']} | "
+                    f"failed: {n['failures']} | errors: {n['errors']} | skipped: {n['skipped']}")
+          else:
+              print("pytest produced no JUnit report (collection or install failed)")
+          PY
+      - name: Upload analysis artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: selena-validation-py${{ matrix.python-version }}
+          path: |
+            outputs/dsn_pipeline/
+            outputs/pytest-junit.xml
+          if-no-files-found: ignore

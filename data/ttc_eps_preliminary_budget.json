@@ -1,0 +1,15 @@
+{
+  "status": "PRELIMINARY_DESIGN_ALLOWANCE_NOT_HARDWARE_VERIFIED",
+  "active_ttc_dc_budget_w_per_spacecraft": 15,
+  "thermal_upper_bound_w_per_spacecraft": 15,
+  "nominal_minimum_link_dc_w": 5.34965267163072,
+  "nominal_minimum_rf_w": 0.13986106865228806,
+  "nominal_minimum_heat_w": 5.209791602978432,
+  "pointing_actuator_power_included": false,
+  "standby_power_w": null,
+  "notes": "15 W is an EPS/TCS provisional active-mode allocation, not measured equipment consumption. RF minimum assumes idealized link, 40% PA efficiency, 5 W electronics, 33 dBi HGA, 40 dB/K DSN G/T. Thermal upper bound assumes all budgeted power could dissipate as heat; validate after hardware selection.",
+  "source_urls": [
+    "https://deepspace.jpl.nasa.gov/files/875-0001-H1.pdf",
+    "https://deepspace.jpl.nasa.gov/dsndocs/810-007/"
+  ]
+}

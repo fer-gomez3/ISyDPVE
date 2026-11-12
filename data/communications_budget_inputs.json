@@ -1,0 +1,73 @@
+{
+  "description": "SELENA C&DH baseline from Subsystems report 2026-11-09: Earth TT&C + OBDH only. Lunar S-band PNT broadcast is Payload; no surface-to-satellite return link specified. null means unconfirmed.",
+  "downlink_gross_bps": 256000,
+  "diameters_m": [
+    0.15,
+    0.3,
+    0.45
+  ],
+  "selected_diameter_m": 0.3,
+  "max_tx_rf_w": null,
+  "earth_downlink": {
+    "frequency_hz": 8400000000,
+    "distance_km": 405000,
+    "tx_efficiency": 0.55,
+    "pointing_error_deg": 0.15,
+    "rx_gt_db_per_k": 45,
+    "required_ebn0_db": 6,
+    "losses_db": 4,
+    "margin_db": 3,
+    "pa_efficiency": 0.35,
+    "electronics_w": 8,
+    "provenance": "Illustrative sensitivity from rf_trade_assumptions.json, NOT flight-validated"
+  },
+  "component_powers_w": {
+    "standby_w": null,
+    "lunar_receiver_w": null,
+    "lunar_processing_w": null,
+    "memory_interface_w": null,
+    "gimbal_tracking_w": null,
+    "gimbal_slew_w": null,
+    "tx_dc_w": null
+  },
+  "mode_hours_per_day": {
+    "standby": 23,
+    "lunar_rx": 0,
+    "earth_tx": 1,
+    "simultaneous": 0,
+    "slew_acquisition": 0
+  },
+  "notes": "Earth downlink link values remain illustrative. OBC 25-30 W is an EPS allocation, not confirmed measured draw. Component powers missing; no fabricated total. PNT S-band 21.60 Mb/day is broadcast, not stored for DSN.",
+  "report_interfaces": {
+    "scope": "Earth TT&C and OBDH; no lunar surface uplink baseline",
+    "earth_uplink_xu3_frequency_hz_range": [
+      7190000000,
+      7235000000
+    ],
+    "earth_uplink_net_bps_approx": 2000,
+    "earth_uplink_volume_mbit_per_day_range": [
+      0.1,
+      1
+    ],
+    "payload_housekeeping_bps": 100,
+    "structures_housekeeping_bps": 32,
+    "known_housekeeping_total_bps": 132,
+    "payload_xd3_volume_mbit_per_day_range": [
+      4.32,
+      43.2
+    ],
+    "payload_xd3_discrepancy": "Payload section 2.5.1 XD3 range conflicts with C&DH 100 bps housekeeping baseline; requires reconciliation",
+    "obc_power_w_range": [
+      25,
+      30
+    ],
+    "bus_voltage_v": 28,
+    "ttc_obdh_mass_allocation_kg": 11.4,
+    "source": "SUBSYSTEMS_Grupo_B_ISyDPVE (1).pdf, 2026-11-09, sections 2.5.1 and 6.1-6.9"
+  },
+  "lunar_surface_return_link": {
+    "required": false,
+    "status": "NOT_IN_DOCUMENTED_CDH_SCOPE",
+    "note": "Optional relay requires separate mission requirement; do not silently include in TT&C power."
+  }
+}

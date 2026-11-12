@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+.env
+outputs/*.xlsx
+outputs/*.csv
+!outputs/.gitkeep
+outputs/dsn_pipeline/
+outputs/obdh/
+outputs/pytest-junit.xml
+outputs/allocator_comparison/adaptive_baseline/

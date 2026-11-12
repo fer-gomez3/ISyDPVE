@@ -1,0 +1,29 @@
+{
+  "status": "ILLUSTRATIVE_NOT_TEAM_CONFIRMED",
+  "streams": [
+    {
+      "name": "aocs_nominal_hk",
+      "rate_bps": 1587.2,
+      "priority": 5,
+      "deadline_hours": 6
+    },
+    {
+      "name": "obdh_hk_logs",
+      "rate_bps": 307.34,
+      "priority": 5,
+      "deadline_hours": 6
+    },
+    {
+      "name": "eps_hk",
+      "rate_bps": 140.8,
+      "priority": 4,
+      "deadline_hours": 12
+    },
+    {
+      "name": "payload_housekeeping",
+      "rate_bps": 100,
+      "priority": 3,
+      "deadline_hours": 24
+    }
+  ]
+}

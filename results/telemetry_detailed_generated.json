@@ -1,0 +1,89 @@
+{
+  "description": "Detailed telemetry scenario, per spacecraft. PDF totals override preliminary component sums. Not validated. Stream rates are NOT stored here: they are always computed from data/telemetry_generation_inputs.json (null = filled at run time).",
+  "policy": {
+    "priority_max_age_hours": {
+      "1": 168,
+      "2": 72,
+      "3": 24,
+      "4": 12,
+      "5": 6
+    },
+    "transmitter_dc_w": null,
+    "transmitter_rf_w": null,
+    "transmitter_standby_w": null,
+    "_shared_parameters": "Shared values (downlink rate, overhead, setup, minimum contact, DSN hours) live only in data/ttc_parameters.json.",
+    "net_downlink_bps": 256000.0,
+    "protocol_overhead_fraction": 0.2,
+    "setup_minutes": 15.0,
+    "min_contact_minutes": 20.0,
+    "daily_network_hours": 3.0,
+    "daily_network_hours_sensitivity": [
+      1,
+      3,
+      6
+    ],
+    "setup_minutes_sensitivity": [
+      5,
+      15,
+      30
+    ]
+  },
+  "streams": [
+    {
+      "name": "payload_housekeeping",
+      "mode": "continuous",
+      "rate_bps": 100.0,
+      "priority": 3,
+      "max_age_hours": 24,
+      "status": "PDF"
+    },
+    {
+      "name": "structures_mechanisms",
+      "mode": "continuous",
+      "rate_bps": 32.0,
+      "priority": 3,
+      "max_age_hours": 24,
+      "status": "PDF"
+    },
+    {
+      "name": "aocs_nominal_hk",
+      "mode": "continuous",
+      "rate_bps": 1587.2,
+      "priority": 4,
+      "max_age_hours": 12,
+      "status": "PRE"
+    },
+    {
+      "name": "propulsion_hk",
+      "mode": "continuous",
+      "rate_bps": 38.4,
+      "priority": 4,
+      "max_age_hours": 12,
+      "status": "PRE"
+    },
+    {
+      "name": "eps_hk",
+      "mode": "continuous",
+      "rate_bps": 140.8,
+      "priority": 4,
+      "max_age_hours": 12,
+      "status": "PRE"
+    },
+    {
+      "name": "thermal_hk",
+      "mode": "continuous",
+      "rate_bps": 96.0,
+      "priority": 3,
+      "max_age_hours": 24,
+      "status": "PRE"
+    },
+    {
+      "name": "obdh_hk_logs",
+      "mode": "continuous",
+      "rate_bps": 307.34222222222223,
+      "priority": 5,
+      "max_age_hours": 6,
+      "status": "PRE"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "status": "HYPOTHETICAL_NOT_SELECTED",
+  "frequency_hz": 8400000000,
+  "diameter_m": 0.38,
+  "aperture_efficiency": 0.6,
+  "reflector_feed_mass_kg_min": 1.5,
+  "reflector_feed_mass_kg_max": 2.2,
+  "reflector_feed_mass_kg_nominal": 1.85,
+  "gimbal_mass_kg": 1.5,
+  "gimbal_power_w": 2,
+  "gimbal_mass_budget_owner": "Structures (do not add to TT&C)",
+  "ttc_obdh_mass_allocation_kg": 11.4,
+  "notes": "380 mm and 1.5-2.2 kg are preliminary estimates from subsystem team; gain is calculated, not a manufacturer guarantee. Antenna receive uplink and pointing losses require separate validation.",
+  "_shared_parameters": "Downlink rate lives only in data/ttc_parameters.json."
+}

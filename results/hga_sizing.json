@@ -1,0 +1,28 @@
+{
+  "status": "PRELIMINARY_HYPOTHETICAL",
+  "diameter_m": 0.38,
+  "aperture_efficiency_assumed": 0.6,
+  "calculated_idealized_gain_dbi": 28.269353552734398,
+  "mass_reflector_feed_kg_nominal": 1.85,
+  "mass_reflector_feed_kg_range": [
+    1.5,
+    2.2
+  ],
+  "gimbal_mass_kg_in_structures_not_ttc": 1.5,
+  "ttc_obdh_mass_allocation_kg": 11.4,
+  "other_ttc_obdh_mass_available_kg_before_margins": 9.55,
+  "link": {
+    "status": "MISSING_INPUTS",
+    "missing_inputs": [
+      "distance_km",
+      "rx_gt_db_per_k",
+      "required_ebn0_db",
+      "losses_db",
+      "margin_db"
+    ],
+    "note": "No RF power or feasibility claim until inputs are supplied."
+  },
+  "required_gain_dbi_for_assumed_rf_power": null,
+  "minimum_diameter_m_for_assumed_rf_power": null,
+  "warning": "Gain assumes circular aperture and efficiency, neglects pointing/polarization unless in link losses. Check 7.2 GHz uplink separately. Required diameter uses tx_rf_w if specified; otherwise it is trivially equal to input diameter and NOT a sizing constraint."
+}

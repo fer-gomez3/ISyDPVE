@@ -97,6 +97,29 @@ With the assumed 15 min setup, **one contact per satellite per day does not fit 
 
 Under the sensitivity of `dsn_access_sensitivity.json` (useful hours in the epoch): 3 h/day with 5, 15, 30 min setup gives 15.4, 10.3, 5.0 h.
 
+### 4.3.1 Proposed four-contact DSN reservation plan (MAR-based planning case)
+
+The **SELENA Mission Analysis Report (MAR), Section 7.5.1 (Global Coverage)** states that each spacecraft has **more than 8.5 h/day (510 min/day)** of geometric visibility with a single DSN antenna, using a ground-station elevation mask of at least 10°. This is a geometric lower bound, **not a guaranteed DSN booking or four distinct passes**.
+
+For preliminary TT&C operations, a separate **four contacts per spacecraft per day** planning case is proposed. Each nominal contact comprises 16.8 min of effective transmission and 7.2 min of operational overhead. A further 1.5 min per contact is reserved as a scheduling contingency to obtain a rounded planning allocation of 20% of the MAR minimum visibility.
+
+| Parameter | Per contact | Per spacecraft / day | Eight-spacecraft constellation / day |
+|---|---:|---:|---:|
+| Number of contacts | 1 | 4 | 32 |
+| Operational overhead* | 7.2 min | 28.8 min | 230.4 min |
+| Effective transmission | 16.8 min | 67.2 min | 537.6 min |
+| **Nominal contact duration** | **24 min** | **96 min** | **768 min (12.8 antenna-h)** |
+| Scheduling contingency | 1.5 min | 6 min | 48 min |
+| **Target DSN reservation** | **25.5 min** | **102 min** | **816 min (13.6 antenna-h)** |
+| MAR minimum geometric visibility | — | > 510 min | Not additive as shared station availability |
+| **Target fraction of MAR minimum visibility** | — | **20%** | **20% per spacecraft** |
+
+*Operational overhead comprises preparation (2.4 min), acquisition (2.4 min) and closure (2.4 min) per contact. The additional 1.5 min is contingency time, not additional nominal transmit time.*
+
+Calculations: `4 × 25.5 = 102 min/day/spacecraft`; `102 / 510 = 20%`; `8 × 102 = 816 min/day = 13.6 antenna-h/day`. The nominal fraction without contingency is `96 / 510 = 18.82%`; the extra 6 min/day is a **6.25% margin relative to the nominal 96-min reservation**. Since MAR visibility **exceeds** 510 min, 20% is a rounded **upper bound on the required fraction of actual daily geometric visibility**, provided the four reservations can be placed within it.
+
+**Scheduling and subsystem constraints.** Each entire 25.5-min reservation (including overhead and contingency) must lie within an actual geometric visibility interval; station/antenna and spacecraft reservations must not overlap, and contacts must be distributed appropriately to satisfy telemetry-age requirements. The MAR daily visibility aggregate alone cannot establish four schedulable slots or a station-by-station allocation. The 13.6 antenna-h/day requirement is **incompatible with the existing hypothetical 3 h/day shared DSN cap** and therefore represents a *requested planning capacity*, not the current allocator output or a confirmed NASA/JPL allocation. The 2.4/2.4/2.4-min phases are **new preliminary operational assumptions**, different from the legacy 45/10/15-min policy and 15-min simplified setup used elsewhere in this report and in current code. **Do not treat this new case as implemented or verified by the scheduler until its inputs and tests are reconciled.** RF data rate, antenna sizing, EPS and Thermal hardware parameters remain unchanged; compatibility of the longer reservation duty cycle with power and thermal limits still requires verification.
+
 ### 4.4 Scenario allocation and backlog (3 h/day shared fairly)
 
 140 candidate segments, 31 eligible contacts, 18.0 h assigned, 10.25 h of useful transmit time. The 18.0 h is 3 h on each of **six UTC calendar days** (14 to 19 July 2030): the daily cap applies per calendar day, and the first and last days are partial, so the simulated period is only about 4.4 days and the assigned hours are not proportional to its duration. All eight satellites receive time; the differences come from contact availability in the input windows, not from priority.
